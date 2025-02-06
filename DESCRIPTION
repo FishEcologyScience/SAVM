@@ -1,0 +1,23 @@
+Package: skeleton
+Title: Template 
+Version: 0.0.0.9000
+Date: 2024-03-16
+Authors@R: 
+    person(given = "Kevin",
+           family = "Cazelles",
+           role = c("aut", "cre"),
+           email = "kevin.cazelles@insileco.io",
+           comment = c(ORCID = "0000-0001-6619-9874"))
+Description: Here is the description made of sentences.
+URL: https://github.com/inSileco/R_package_skeleton
+BugReports: https://github.com/inSileco/R_package_skeleton/issues
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Imports: 
+    cli
+Suggests:
+    testthat,
+    knitr
+RoxygenNote: 7.3.1
