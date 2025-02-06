@@ -3,3 +3,5 @@
 ^README_files/
 ^\.github/workflows/R-CMD-check\.yaml$
 ^.github/
+^\.lintr$
+^fetchR$

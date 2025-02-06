@@ -1,2 +1,2 @@
 library(testthat)
-test_check("skeleton")
+test_check("SAVM")

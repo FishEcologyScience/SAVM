@@ -1,7 +1,7 @@
-Package: skeleton
+Package: SAVM
 Title: Template 
 Version: 0.0.0.9000
-Date: 2024-03-16
+Date: 2025-02-06
 Authors@R: 
     person(given = "Kevin",
            family = "Cazelles",
@@ -9,15 +9,18 @@ Authors@R:
            email = "kevin.cazelles@insileco.io",
            comment = c(ORCID = "0000-0001-6619-9874"))
 Description: Here is the description made of sentences.
-URL: https://github.com/inSileco/R_package_skeleton
-BugReports: https://github.com/inSileco/R_package_skeleton/issues
+URL: https://github.com/inSileco/SAVM
+BugReports: https://github.com/inSileco/SAVM/issues
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 4.2)
 Imports: 
-    cli
+    cli, 
+    sf (>= 1.0-19)
 Suggests:
     testthat,
     knitr
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
