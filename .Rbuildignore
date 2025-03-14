@@ -5,3 +5,7 @@
 ^.github/
 ^\.lintr$
 ^fetchR$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^tmp$

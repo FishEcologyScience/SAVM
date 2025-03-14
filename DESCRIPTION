@@ -1,13 +1,19 @@
 Package: SAVM
-Title: Template 
+Title: Submerged aquatic vegetation model
 Version: 0.0.0.9000
-Date: 2025-02-06
-Authors@R: 
+Date: 2025-03-14
+Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
            role = c("aut", "cre"),
            email = "kevin.cazelles@insileco.io",
-           comment = c(ORCID = "0000-0001-6619-9874"))
+           comment = c(ORCID = "0000-0001-6619-9874")),
+    person(given   = "David",
+           family  = "Beauchesne",
+           role    = c("aut"),
+           email   = "david.beauchesne@insileco.io",
+           comment = c(ORCID = "0000-0002-3590-8161"))
+    )
 Description: Here is the description made of sentences.
 URL: https://github.com/inSileco/SAVM
 BugReports: https://github.com/inSileco/SAVM/issues
@@ -18,9 +24,12 @@ Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 4.2)
 Imports: 
-    cli, 
+    cli (>= 3.6.4), 
+    randomForest (>= 4.7-1.2),
     sf (>= 1.0-19)
 Suggests:
     testthat,
-    knitr
+    knitr,
+    rmarkdown
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr

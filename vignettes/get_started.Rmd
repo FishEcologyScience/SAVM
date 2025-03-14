@@ -1,0 +1,25 @@
+---
+title: "Get started with SAVM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with SAVM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(SAVM)
+```
+
+# User input 
+
+# Compute fetch 
+
+# Use models 

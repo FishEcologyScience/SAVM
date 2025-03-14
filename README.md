@@ -1,5 +1,4 @@
-# R_package_skeleton
-[![R-CMD-check](https://github.com/inSilecoInc/R_package_skeleton/workflows/R-CMD-check/badge.svg)](https://github.com/inSilecoInc/R_package_skeleton/actions?query=workflow%3AR-CMD-check)
+# SAVM
 
 
 ## Background
