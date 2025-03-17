@@ -30,9 +30,10 @@ further details, see Croft-White (2022).
 }
 \examples{
 \dontrun{
- sav_load_model()
- sav_load_model("pa", "depth+fetch")
+sav_load_model()
+sav_load_model("pa", "depth+fetch")
 }
+
 }
 \references{
 \itemize{

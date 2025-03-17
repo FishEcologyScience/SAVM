@@ -24,12 +24,16 @@ Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 4.2)
 Imports: 
-    cli (>= 3.6.4), 
+    cli (>= 3.6.4),
+    dplyr (>= 1.1.4),
     randomForest (>= 4.7-1.2),
+    rlang (>= 1.1.5),
     sf (>= 1.0-19)
 Suggests:
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    withr
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
+Config/testthat/edition: 3
