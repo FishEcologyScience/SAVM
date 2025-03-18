@@ -2,7 +2,7 @@
 #'
 #' @noRd
 #' 
-globalVariables(c("Cover", "PA"))
+globalVariables(c("Cover", "PA", "direction", "fetch", "id_point", "weight"))
 
 
 #---- path helpers work
@@ -13,6 +13,10 @@ path_package <- function(...) {
 
 path_model <- function(...) {
     system.file("extdata", "models", ..., package = "SAVM", mustWork = TRUE)
+}
+
+path_example <- function(...) {
+    system.file("example", ..., package = "SAVM", mustWork = TRUE)
 }
 
 

@@ -2,7 +2,7 @@
 #'
 #' Load Random Forest models for SAV cover and presence absence.
 #'
-#' @param d_inputs {`data frame`}\cr{} A data frame with all inputs.
+#' @param d_inputs {`data.frame`}\cr{} A data frame with all inputs.
 #' @param type {`character` either `"cover"` or `"pa"`}\cr{} Model type.
 #' @param depth,fetch,substrate,secchi Column specification, see details.
 #' @return

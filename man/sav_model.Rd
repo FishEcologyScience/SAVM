@@ -14,7 +14,7 @@ sav_model(
 )
 }
 \arguments{
-\item{d_inputs}{{\verb{data frame}}\cr{} A data frame with all inputs.}
+\item{d_inputs}{{\code{data.frame}}\cr{} A data frame with all inputs.}
 
 \item{type}{{\code{character} either \code{"cover"} or \code{"pa"}}\cr{} Model type.}
 

@@ -1,7 +1,7 @@
 Package: SAVM
 Title: Submerged aquatic vegetation model
-Version: 0.0.0.9000
-Date: 2025-03-14
+Version: 0.0.0.9001
+Date: 2025-03-19
 Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
@@ -29,11 +29,13 @@ Imports:
     dplyr (>= 1.1.4),
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
-    stats
+    stats,
+    utils
 Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
+    units,
     withr
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr

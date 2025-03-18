@@ -1,4 +1,5 @@
 # SAVM
+[![R CMD Check](https://github.com/inSilecoInc/SAVM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/inSilecoInc/SAVM/actions/workflows/R-CMD-check.yaml)
 
 
 ## Background
