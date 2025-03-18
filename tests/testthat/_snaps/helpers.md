@@ -8,6 +8,13 @@
 ---
 
     Code
+      sav_msg_info("success {var1}")
+    Message
+      i success test
+
+---
+
+    Code
       sav_msg_success("success")
     Message
       v success

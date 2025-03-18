@@ -1,7 +1,7 @@
-#--- path 
+#--- path
 test_that("path helpers work", {
     expect_identical(
-        path_package("extdata/models/sav_rf_pa_depth.rds"), 
+        path_package("extdata/models/sav_rf_pa_depth.rds"),
         path_model("sav_rf_pa_depth.rds")
     )
     #
@@ -9,10 +9,12 @@ test_that("path helpers work", {
     expect_error(path_package("wrong"))
 })
 
-#--- messages 
+#--- messages
 
 test_that("alert message helpers works", {
     expect_snapshot(sav_msg_info("info"))
+    var1 <- "test"
+    expect_snapshot(sav_msg_info("success {var1}"))
     expect_snapshot(sav_msg_success("success"))
     expect_snapshot(sav_msg_warning("warning"))
     expect_snapshot(sav_msg_danger("danger"))

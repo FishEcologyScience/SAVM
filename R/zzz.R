@@ -1,6 +1,8 @@
 #' Helper functions
 #'
 #' @noRd
+#' 
+globalVariables(c("Cover", "PA"))
 
 
 #---- path helpers work
@@ -19,44 +21,44 @@ path_model <- function(...) {
 
 ## alerts
 
-sav_msg_info <- function(...) {
+sav_msg_info <- function(..., .envir = parent.frame()) {
     is_verbose_mode <- getOption("savm.verbose", "verbose") == "verbose"
     if (is_verbose_mode) {
-        cli::cli_alert_info(...)
+        cli::cli_alert_info(..., .envir = .envir)
     } else {
         return()
     }
 }
 
-sav_msg_success <- function(...) {
+sav_msg_success <- function(..., .envir = parent.frame()) {
     is_verbose_mode <- getOption("savm.verbose", "verbose") == "verbose"
     if (is_verbose_mode) {
-        cli::cli_alert_success(...)
+        cli::cli_alert_success(..., .envir = .envir)
     } else {
         return()
     }
 }
 
-sav_msg_warning <- function(...) {
+sav_msg_warning <- function(..., .envir = parent.frame()) {
     is_verbose_mode <- getOption("savm.verbose", "verbose") == "verbose"
     if (is_verbose_mode) {
-        cli::cli_alert_warning(...)
+        cli::cli_alert_warning(..., .envir = .envir)
     } else {
         return()
     }
 }
 
-sav_msg_danger <- function(...) {
+sav_msg_danger <- function(..., .envir = parent.frame()) {
     is_verbose_mode <- getOption("savm.verbose", "verbose") == "verbose"
     if (is_verbose_mode) {
-        cli::cli_alert_danger(...)
+        cli::cli_alert_danger(..., .envir = .envir)
     } else {
         return()
     }
 }
 
 
-# formal messages
+##---- formal messages
 sav_inform <- function(...) {
     is_verbose_mode <- (getOption("savm.verbose", "verbose") == "verbose")
     if (is_verbose_mode) {

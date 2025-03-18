@@ -2,4 +2,4 @@
 
 export(sav_check_points)
 export(sav_data_input)
-export(sav_load_model)
+export(sav_model)
