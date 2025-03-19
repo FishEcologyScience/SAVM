@@ -47,3 +47,4 @@ vignettes/*.pdf
 .Renviron
 inst/doc
 docs
+.DS_Store
