@@ -16,17 +16,49 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(SAVM)
+library(sf)
+library(stars)
 ```
 
 # User input 
 
 Reading files. 
 
+```r
+le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
+      sf::st_read()  |> 
+      sf::st_transform(crs = 3857)
+
+study_zone <- le_bound <- system.file("example", "study_zone.geojson", package = "SAVM") |>
+  read_sav(spacing = 2000)
+    
+study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
+
+#'  le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
+#'      sf::st_read(quiet = TRUE)
+
+fetch <- compute_fetch(study_zone$points, le_bound, n_quad_seg = 10, max_dist = 15000)
+
+depth <- stars::st_extract(study_depth, study_zone$points |> sf::st_transform(crs = sf::st_crs(study_depth)))
+
+d_inputs  <- data.frame(
+  depth = depth$le_bathy.tiff, 
+  fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
+)
+
+res  <- sav_model(d_inputs)
+
+plot(res$Fetch, res$Cover)
+
+
+```
+
+
 # Compiling data
 
+
+
 ## Compute fetch
-
-
 
 
 

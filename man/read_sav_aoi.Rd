@@ -9,7 +9,7 @@ read_sav_aoi(file_path, spacing = 500, crs = 3857)
 \arguments{
 \item{file_path}{{\code{character}}\cr{} Path to the spatial polygon file.}
 
-\item{spacing}{Numeric. Distance between points in meters.}
+\item{spacing}{{\code{numeric}}\cr{} Distance between points in meters.}
 
 \item{crs}{{\code{object}}\cr{} Coordinate reference system (CRS)
 of the input data (see \code{\link[sf:st_crs]{sf::st_crs()}}). Default is 3857.}

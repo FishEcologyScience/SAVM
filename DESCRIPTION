@@ -36,6 +36,7 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
+    stars,
     units,
     withr
 RoxygenNote: 7.3.2

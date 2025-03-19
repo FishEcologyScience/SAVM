@@ -83,7 +83,10 @@ compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_we
         }
     }
 
+    sav_msg_info("Creating fetch lines")
     fetch_lines <- create_fetch_lines(points, d_direction, max_dist)
+
+    sav_msg_info("Cropping fetch lines")
     fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
     geom_type <- sf::st_geometry_type(fetch_crop)
     # sf::st_intersection() generates multilinestring with extra lines if there

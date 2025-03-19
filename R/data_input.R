@@ -224,7 +224,7 @@ read_sav_pts <- function(file_path, crs = 3857) {
 #' Read a spatial polygon file and generate a grid of points
 #'
 #' @param file_path {`character`}\cr{} Path to the spatial polygon file.
-#' @param spacing Numeric. Distance between points in meters.
+#' @param spacing {`numeric`}\cr{} Distance between points in meters.
 #' @param crs {`object`}\cr{} Coordinate reference system (CRS)
 #' of the input data (see [sf::st_crs()]). Default is 3857.
 #'
@@ -259,8 +259,8 @@ read_sav_aoi <- function(file_path, spacing = 500, crs = 3857) {
 
     # Check CRS and transform if necessary
     if (sf::st_crs(polygon_sf)$epsg != sf::st_crs(crs)) {
-        sav_msg_info("Transforming spatial data to EPSG:3857.")
-        polygon_sf <- sf::st_transform(polygon_sf, crs = 3857)
+        sav_msg_info("Transforming spatial data.")
+        polygon_sf <- sf::st_transform(polygon_sf, crs = sf::st_crs(crs))
     }
 
     # Generate grid points
