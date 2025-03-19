@@ -20,6 +20,14 @@ library(SAVM)
 
 # User input 
 
-# Compute fetch 
+Reading files. 
+
+# Compiling data
+
+## Compute fetch
+
+
+
+
 
 # Use models 

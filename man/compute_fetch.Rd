@@ -23,12 +23,12 @@ is provided.}
 
 \item{max_dist}{{\code{numeric}}\cr{} Maximum fetch distance in meters. Fetch beyond this distance is capped.}
 
-\item{wind_weights}{{\code{data.frame}}\cr{} A data frame specifying directional weights for wind exposure.
-Must contain two columns: \code{direction} (numeric, in degrees) and \code{weight} (numeric). Currently this applies to all
-points.}
+\item{wind_weights}{{\code{data.frame}}\cr{} A data frame specifying directional
+weights for wind exposure. Must contain two columns: \code{direction} (numeric,
+in degrees) and \code{weight} (numeric). Currently this applies to all points.}
 
-\item{crs}{{\code{object}}\cr{} Coordinate reference system (CRS) passed to \code{\link[sf:st_crs]{sf::st_crs()}}, used to transform \code{points}
-and \code{polygon}.}
+\item{crs}{{\code{object}}\cr{} Coordinate reference system (CRS) passed to
+\code{\link[sf:st_crs]{sf::st_crs()}}, used to transform \code{points} and \code{polygon}.}
 }
 \value{
 A list of two elements:
