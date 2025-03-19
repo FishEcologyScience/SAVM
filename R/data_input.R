@@ -1,20 +1,13 @@
-#' Handle inputs
-#'
-#' @export
-
-sav_data_input <- function() {
-    cli::cli_inform("Handle input")
-}
-
 #' Master function to read SAV data from different formats
 #'
-#' @param file_path Character. Path to the input file.
-#' @param spacing Numeric. Spacing for grid generation (if AOI is used).
-#' @param layer Character. Layer name for multi-layer spatial files (default: NULL).
-#' @param crs Numeric. Coordinate Reference System (CRS) of the input data. Default is 3857
-#' @param export Optional. Folder path to export outputs as .gpkg.
+#' @param file_path {`character`}\cr{} Path to the input file.
+#' @param spacing {`numeric`}\cr{} Spacing for grid generation (if AOI is used).
+#' @param layer {`character`}\cr{} Layer name for multi-layer spatial files (default: NULL).
+#' @param crs {`numeric`}\cr{} Coordinate Reference System (CRS) of the input data. Default is 3857.
+#' @param export {`character`}\cr{} Optional. Folder path to export outputs as .gpkg.
+#'
 #' @return A list with `points` (sf object) and `polygon` (sf object).
-#' @importFrom sf st_read st_geometry_type st_union st_convex_hull st_sf st_transform st_crs
+
 #' @export
 #'
 #' @examples
@@ -50,12 +43,10 @@ sav_data_input <- function() {
 #' head(tmp$points)
 #' plot(st_geometry(tmp$polygon))
 #' plot(st_geometry(tmp$points), add = TRUE)
+#'
 read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export = NULL) {
-    if (!file.exists(file_path)) {
-        rlang::abort(glue::glue("File not found: {file_path}"))
-    }
+    
     sav_msg_info("Determining file type and processing: {file_path}")
-
     file_ext <- tools::file_ext(file_path)
 
     if (file_ext == "csv") {
@@ -85,8 +76,8 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
     }
 
     if (!is.null(export)) {
-        sf::st_write(points_sf, file.path(export, "sav_points.gpkg"), delete_dsn = TRUE)
-        sf::st_write(polygon_sf, file.path(export, "sav_polygon.gpkg"), delete_dsn = TRUE)
+        sf::st_write(points_sf, file.path(export, "sav_points.gpkg"), delete_dsn = TRUE, quiet = TRUE)
+        sf::st_write(polygon_sf, file.path(export, "sav_polygon.gpkg"), delete_dsn = TRUE, quiet = TRUE)
         sav_msg_success("Exported outputs to {export}.")
     }
 
@@ -96,12 +87,13 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 
 #' Read a CSV file and convert to sf object
 #'
-#' @param file_path Character. Path to the CSV file.
-#' @param crs Numeric. Coordinate Reference System (CRS) of the input data. Default is 3857
+#' @param file_path {`character`}\cr{} Path to the CSV file.
+#' @param crs {`object`}\cr{} Coordinate reference system (CRS)
+#' of the input data (see [sf::st_crs()]). Default is 3857.
+#' @param ... Further arguments passed on to [utils::read.csv()].
+#'
 #' @return An sf object with required and optional columns.
-#' @importFrom vroom vroom
-#' @importFrom sf st_as_sf st_transform st_crs
-#' @importFrom dplyr select any_of mutate
+#'
 #' @export
 #'
 #' @examples
@@ -118,14 +110,10 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 #'
 #' # Read the CSV and convert to sf
 #' read_sav_csv(temp_csv, crs = 4326)
-read_sav_csv <- function(file_path, crs = 3857) {
-    if (!file.exists(file_path)) {
-        rlang::abort(glue::glue("File not found: {file_path}"))
-    }
-    sav_msg_info("Reading CSV file: {file_path}")
+read_sav_csv <- function(file_path, crs = 3857, ...) {
 
     # Read CSV
-    df <- vroom::vroom(file_path, col_types = vroom::cols())
+    df <- utils::read.csv(file_path, ...)
 
     # Validate required columns
     required_cols <- c("longitude", "latitude")
@@ -133,39 +121,44 @@ read_sav_csv <- function(file_path, crs = 3857) {
     missing_cols <- setdiff(required_cols, names(df))
 
     if (length(missing_cols) > 0) {
-        rlang::abort("Missing required columns: {paste(missing_cols, collapse = ', ')}. Only the following formatting is allowed: Required - {paste(required_cols, collapse=', ')}, Optional - {paste(optional_cols, collapse=', ')}")
+        rlang::abort(
+            "Missing required columns: {paste(missing_cols, collapse = ', ')}.
+            Only the following formatting is allowed:
+            Required - {paste(required_cols, collapse=', ')},
+            Optional - {paste(optional_cols, collapse=', ')}"
+        )
     }
 
     # Select relevant columns
     retained_cols <- intersect(names(df), c(required_cols, optional_cols))
     removed_cols <- setdiff(names(df), retained_cols)
-    df <- df |> dplyr::select(any_of(c(required_cols, optional_cols)))
+    df <- df |> dplyr::select(dplyr::any_of(c(required_cols, optional_cols)))
 
-    sav_msg_info("Retained columns: {paste(retained_cols, collapse=', ')}. Removed columns: {ifelse(length(removed_cols) == 0, 'None',paste(removed_cols, collapse=', '))}")
+    sav_msg_info(
+        "Retained columns: {paste(retained_cols, collapse=', ')}.
+        Removed columns: {ifelse(length(removed_cols) == 0,
+        'None',paste(removed_cols, collapse=', '))}"
+    )
 
     # Convert to sf object with user-specified CRS
-    df_sf <- sf::st_as_sf(df, coords = c("longitude", "latitude"), crs = crs, remove = FALSE)
-
-    # Check CRS and transform if necessary
-    if (sf::st_crs(df_sf)$epsg != 3857) {
-        sav_msg_info("Transforming spatial data to EPSG:3857.")
-        df_sf <- sf::st_transform(df_sf, crs = 3857)
-        coords <- sf::st_coordinates(df_sf)
-        df_sf <- df_sf |> dplyr::mutate(longitude = coords[, 1], latitude = coords[, 2])
-    }
-
-    sav_msg_success("CSV successfully read and converted to sf object in EPSG:3857.")
-    return(df_sf)
+    sf::st_as_sf(
+        df,
+        coords = c("longitude", "latitude"),
+        crs = crs,
+        remove = FALSE
+    )
 }
 
 
 
 #' Read a spatial points file and convert to sf object
 #'
-#' @param file_path Character. Path to the spatial file.
-#' @return An sf object with required and optional columns.
-#' @importFrom sf st_read st_coordinates st_geometry_type st_transform st_crs
-#' @importFrom dplyr select mutate any_of
+#' @param file_path {`character`}\cr{} Path to the spatial file.
+#' @param crs {`object`}\cr{} Coordinate reference system (CRS)
+#' of the input data (see [sf::st_crs()]). Default is 3857.
+#'
+#' @return {`sf`}\cr{} An sf object with required and optional columns.
+#'
 #' @export
 #'
 #' @examples
@@ -187,11 +180,8 @@ read_sav_csv <- function(file_path, crs = 3857) {
 #'
 #' # Read the spatial file and convert to sf
 #' read_sav_pts(temp_file)
-read_sav_pts <- function(file_path) {
-    if (!file.exists(file_path)) {
-        rlang::abort(glue::glue("File not found: {file_path}"))
-    }
-    sav_msg_info("Reading spatial points file: {file_path}")
+#'
+read_sav_pts <- function(file_path, crs = 3857) {
 
     # Read spatial file
     sf_obj <- sf::st_read(file_path, quiet = TRUE)
@@ -202,9 +192,9 @@ read_sav_pts <- function(file_path) {
     }
 
     # Check CRS and transform if necessary
-    if (sf::st_crs(sf_obj)$epsg != 3857) {
-        sav_msg_info("Transforming spatial data to EPSG:3857.")
-        sf_obj <- sf::st_transform(sf_obj, crs = 3857)
+    if (sf::st_crs(sf_obj)$epsg != sf::st_crs(crs)) {
+        sav_msg_info("Transforming spatial data.")
+        sf_obj <- sf::st_transform(sf_obj, crs = sf::st_crs(crs))
     }
 
     # Extract coordinates regardless of original CRS
@@ -216,9 +206,14 @@ read_sav_pts <- function(file_path) {
     optional_cols <- c("depth_m", "mean_fetch_km", "turbidity", "substrate_limits")
     retained_cols <- intersect(names(sf_obj), c(required_cols, optional_cols))
     removed_cols <- setdiff(names(sf_obj), c(retained_cols, "geom"))
-    sf_obj <- sf_obj |> dplyr::select(any_of(c(required_cols, optional_cols)))
+    sf_obj <- sf_obj |>
+        dplyr::select(dplyr::any_of(c(required_cols, optional_cols)))
 
-    sav_msg_info("Retained columns: {paste(retained_cols, collapse=', ')}. Removed columns: {ifelse(length(removed_cols) == 0, 'None',paste(removed_cols, collapse=', '))}")
+    sav_msg_info(
+        "Retained columns: {paste(retained_cols, collapse=', ')}.
+        Removed columns: {ifelse(length(removed_cols) == 0,
+        'None',paste(removed_cols, collapse=', '))}"
+    )
 
     sav_msg_success("Spatial points file successfully read and processed.")
     return(sf_obj)
@@ -228,10 +223,13 @@ read_sav_pts <- function(file_path) {
 
 #' Read a spatial polygon file and generate a grid of points
 #'
-#' @param file_path Character. Path to the spatial polygon file.
+#' @param file_path {`character`}\cr{} Path to the spatial polygon file.
 #' @param spacing Numeric. Distance between points in meters.
+#' @param crs {`object`}\cr{} Coordinate reference system (CRS)
+#' of the input data (see [sf::st_crs()]). Default is 3857.
+#'
 #' @return A list with the original polygon and a grid of points.
-#' @importFrom sf st_read st_geometry_type st_make_grid st_intersection st_sf st_transform st_crs
+#'
 #' @export
 #'
 #' @examples
@@ -249,12 +247,8 @@ read_sav_pts <- function(file_path) {
 #'
 #' # Read the spatial polygon file and generate a grid
 #' read_sav_aoi(temp_file, spacing = 500)
-read_sav_aoi <- function(file_path, spacing = 500) {
-    if (!file.exists(file_path)) {
-        rlang::abort(glue::glue("File not found: {file_path}"))
-    }
-    sav_msg_info("Reading spatial polygon file: {file_path}")
-
+read_sav_aoi <- function(file_path, spacing = 500, crs = 3857) {
+    
     # Read spatial file
     polygon_sf <- sf::st_read(file_path, quiet = TRUE)
 
@@ -264,7 +258,7 @@ read_sav_aoi <- function(file_path, spacing = 500) {
     }
 
     # Check CRS and transform if necessary
-    if (sf::st_crs(polygon_sf)$epsg != 3857) {
+    if (sf::st_crs(polygon_sf)$epsg != sf::st_crs(crs)) {
         sav_msg_info("Transforming spatial data to EPSG:3857.")
         polygon_sf <- sf::st_transform(polygon_sf, crs = 3857)
     }

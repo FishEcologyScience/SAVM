@@ -5,11 +5,11 @@
 #' @param n_quad_seg {`integer`}\cr{} Number of segments per quadrant for fetch calculation. Ignored if `wind_weights`
 #' is provided.
 #' @param max_dist {`numeric`}\cr{} Maximum fetch distance in meters. Fetch beyond this distance is capped.
-#' @param wind_weights {`data.frame`}\cr{} A data frame specifying directional weights for wind exposure. 
-#' Must contain two columns: `direction` (numeric, in degrees) and `weight` (numeric). Currently this applies to all 
-#' points.
-#' @param crs {`object`}\cr{} Coordinate reference system (CRS) passed to [sf::st_crs()], used to transform `points`
-#' and `polygon`.
+#' @param wind_weights {`data.frame`}\cr{} A data frame specifying directional 
+#' weights for wind exposure. Must contain two columns: `direction` (numeric, 
+#' in degrees) and `weight` (numeric). Currently this applies to all points.
+#' @param crs {`object`}\cr{} Coordinate reference system (CRS) passed to 
+#' [sf::st_crs()], used to transform `points` and `polygon`.
 #'
 #' @return
 #' A list of two elements:
