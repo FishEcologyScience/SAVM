@@ -4,7 +4,7 @@
 #' data by depth (m) and fetch (km). It visualizes SAV presence/absence (PA) and percent cover (Cover) when
 #' the corresponding columns are available in the input data.
 #'
-#' @param data A `data.frame` containing some or all of the following columns:
+#' @param dat A `data.frame` containing some or all of the following columns:
 #'   - `depth_m`: Numeric, depth in meters.
 #'   - `fetch_km`: Numeric, fetch in kilometers.
 #'   - `pa`: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
@@ -25,7 +25,7 @@
 #'
 #' @examples
 #' # Example dataset
-#' data <- data.frame(
+#' dat <- data.frame(
 #'     depth_m = runif(100, 0, 15),
 #'     fetch_km = runif(100, 0, 15),
 #'     pa = sample(0:1, 100, replace = TRUE),
@@ -35,19 +35,19 @@
 #' )
 #'
 #' # Generate all available plots
-#' plot_sav_distribution(data)
+#' plot_sav_distribution(dat)
 #'
 #' # Generate only presence/absence plots
-#' plot_sav_distribution(data, type = "pa")
+#' plot_sav_distribution(dat, type = "pa")
 #'
 #' # Generate cover plots using only fetch as predictor
-#' plot_sav_distribution(data, type = "cover", predictors = "fetch")
+#' plot_sav_distribution(dat, type = "cover", predictors = "fetch")
 #'
 #' # Generate plots using post-hoc analyzed data
-#' plot_sav_distribution(data, post_hoc = TRUE)
+#' plot_sav_distribution(dat, post_hoc = TRUE)
 #'
 #' @export
-plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c("depth", "fetch"), post_hoc = FALSE, max_depth = 30, max_fetch = 15) {
+plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("depth", "fetch"), post_hoc = FALSE, max_depth = 30, max_fetch = 15) {
     plots <- list()
 
     # Determine which columns to use based on post_hoc flag
@@ -55,17 +55,17 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
     cover_col <- if (post_hoc) "cover_post_hoc" else "cover"
 
     # Check for required columns
-    has_depth <- "depth_m" %in% names(data)
-    has_fetch <- "fetch_km" %in% names(data)
-    has_pa <- pa_col %in% names(data)
-    has_cover <- cover_col %in% names(data)
+    has_depth <- "depth_m" %in% names(dat)
+    has_fetch <- "fetch_km" %in% names(dat)
+    has_pa <- pa_col %in% names(dat)
+    has_cover <- cover_col %in% names(dat)
 
     # Process data
-    data <- dplyr::mutate(
-        data,
+    dat <- dplyr::mutate(
+        dat,
         Depth_Bin = if (has_depth) {
             cut(
-                data$depth_m,
+                dat$depth_m,
                 breaks = c(seq(0, max_depth, by = 1), Inf),
                 include.lowest = TRUE, right = FALSE,
                 labels = c(paste0(seq(0, max_depth - 1, by = 1), "-", seq(1, max_depth, by = 1)), paste0(max_depth, "+"))
@@ -75,7 +75,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
         },
         Fetch_Bin = if (has_fetch) {
             cut(
-                data$fetch_km,
+                dat$fetch_km,
                 breaks = c(seq(0, max_fetch, by = 1), Inf),
                 include.lowest = TRUE, right = FALSE,
                 labels = c(paste0(seq(0, max_fetch - 1, by = 1), "-", seq(1, max_fetch, by = 1)), paste0(max_fetch, "+"))
@@ -83,8 +83,8 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
         } else {
             NULL
         },
-        PA_Factor = if (has_pa) factor(data[, pa_col], labels = c("Absent", "Present")) else NULL,
-        Cover_Bin = if (has_cover) cut(data[, cover_col], breaks = seq(0, 100, by = 10), include.lowest = TRUE, right = FALSE) else NULL
+        PA_Factor = if (has_pa) factor(dat[, pa_col], labels = c("Absent", "Present")) else NULL,
+        Cover_Bin = if (has_cover) cut(dat[, cover_col], breaks = seq(0, 100, by = 10), include.lowest = TRUE, right = FALSE) else NULL
     )
 
     # Define colors
@@ -96,7 +96,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 
     # Presence/Absence by Fetch
     if ("pa" %in% type && "fetch" %in% predictors && has_fetch && has_pa) {
-        plots[["PA_Fetch"]] <- ggplot2::ggplot(data, ggplot2::aes(x = Fetch_Bin, fill = PA_Factor)) +
+        plots[["PA_Fetch"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = Fetch_Bin, fill = PA_Factor)) +
             ggplot2::geom_bar() +
             ggplot2::scale_fill_manual(values = cols) +
             ggplot2::labs(x = "Fetch Bin", y = "Number of Records", fill = "SAV P/A") +
@@ -105,7 +105,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 
     # Presence/Absence by Depth
     if ("pa" %in% type && "depth" %in% predictors && has_depth && has_pa) {
-        plots[["PA_Depth"]] <- ggplot2::ggplot(data, ggplot2::aes(x = Depth_Bin, fill = PA_Factor)) +
+        plots[["PA_Depth"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = Depth_Bin, fill = PA_Factor)) +
             ggplot2::geom_bar() +
             ggplot2::scale_fill_manual(values = cols) +
             ggplot2::labs(x = "Depth Bin", y = "Number of Records", fill = "SAV P/A") +
@@ -114,7 +114,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 
     # Cover by Fetch
     if ("cover" %in% type && "fetch" %in% predictors && has_fetch && has_cover) {
-        plots[["Cover_Fetch"]] <- ggplot2::ggplot(data, ggplot2::aes(x = Fetch_Bin, fill = Cover_Bin)) +
+        plots[["Cover_Fetch"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = Fetch_Bin, fill = Cover_Bin)) +
             ggplot2::geom_bar() +
             ggplot2::scale_fill_manual(values = cover_palette, drop = FALSE) +
             ggplot2::labs(x = "Fetch Bin", y = "Number of Records", fill = "SAV Cover") +
@@ -123,7 +123,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 
     # Cover by Depth
     if ("cover" %in% type && "depth" %in% predictors && has_depth && has_cover) {
-        plots[["Cover_Depth"]] <- ggplot2::ggplot(data, ggplot2::aes(x = Depth_Bin, fill = Cover_Bin)) +
+        plots[["Cover_Depth"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = Depth_Bin, fill = Cover_Bin)) +
             ggplot2::geom_bar() +
             ggplot2::scale_fill_manual(values = cover_palette, drop = FALSE) +
             ggplot2::labs(x = "Depth Bin", y = "Number of Records", fill = "SAV Cover") +
@@ -147,7 +147,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 #' and absence (blue) as a function of depth (m) and/or fetch (km). It includes vertical dotted lines
 #' indicating the mean values for each.
 #'
-#' @param data A `data.frame` containing:
+#' @param dat A `data.frame` containing:
 #'   - `depth_m` (optional): Numeric, depth in meters.
 #'   - `fetch_km` (optional): Numeric, fetch in kilometers.
 #'   - `pa`: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
@@ -163,7 +163,7 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 #'
 #' @examples
 #' # Example dataset
-#' data <- data.frame(
+#' dat <- data.frame(
 #'     depth_m = runif(100, 0, 15),
 #'     fetch_km = runif(100, 0, 15),
 #'     pa = sample(0:1, 100, replace = TRUE),
@@ -171,45 +171,45 @@ plot_sav_distribution <- function(data, type = c("pa", "cover"), predictors = c(
 #' )
 #'
 #' # Generate all available plots
-#' plot_sav_density(data)
+#' plot_sav_density(dat)
 #'
 #' # Generate depth-based density plot only
-#' plot_sav_density(data, predictors = "depth")
+#' plot_sav_density(dat, predictors = "depth")
 #'
 #' # Generate fetch-based density plot only
-#' plot_sav_density(data, predictors = "fetch")
+#' plot_sav_density(dat, predictors = "fetch")
 #'
 #' # Generate plots using post-hoc analyzed data
-#' plot_sav_density(data, post_hoc = TRUE)
+#' plot_sav_density(dat, post_hoc = TRUE)
 #' @export
-plot_sav_density <- function(data, predictors = c("depth", "fetch"), max_depth = 30, post_hoc = FALSE) {
+plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 30, post_hoc = FALSE) {
     plots <- list()
 
     # Determine which column to use based on post_hoc flag
     pa_col <- if (post_hoc) "pa_post_hoc" else "pa"
 
     # Check if PA column exists
-    if (!pa_col %in% names(data)) {
+    if (!pa_col %in% names(dat)) {
         stop("Data must contain the specified PA column.")
     }
 
     # Convert PA to factor
-    data$PA_Factor <- factor(data[[pa_col]], labels = c("Absent", "Present"))
+    dat$PA_Factor <- factor(dat[[pa_col]], labels = c("Absent", "Present"))
 
     # Colors
     cols <- c("#56B4E9", "#52854C")
 
     # Density plot for Depth
-    if ("depth" %in% predictors && "depth_m" %in% names(data)) {
+    if ("depth" %in% predictors && "depth_m" %in% names(dat)) {
         mean_depths <- dplyr::summarise(
-            dplyr::group_by(data, PA_Factor),
+            dplyr::group_by(dat, PA_Factor),
             Mean_Value = mean(depth_m, na.rm = TRUE)
         )
 
-        plots[["Depth"]] <- ggplot2::ggplot(data, ggplot2::aes(x = depth_m, fill = PA_Factor)) +
+        plots[["Depth"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = depth_m, fill = PA_Factor)) +
             ggplot2::geom_density(alpha = 0.5) +
             ggplot2::geom_vline(
-                data = mean_depths, ggplot2::aes(xintercept = Mean_Value, color = PA_Factor),
+                dat = mean_depths, ggplot2::aes(xintercept = Mean_Value, color = PA_Factor),
                 linetype = "dotted", linewidth = 1
             ) +
             ggplot2::scale_fill_manual(values = cols) +
@@ -224,13 +224,13 @@ plot_sav_density <- function(data, predictors = c("depth", "fetch"), max_depth =
     }
 
     # Density plot for Fetch
-    if ("fetch" %in% predictors && "fetch_km" %in% names(data)) {
+    if ("fetch" %in% predictors && "fetch_km" %in% names(dat)) {
         mean_fetch <- dplyr::summarise(
-            dplyr::group_by(data, PA_Factor),
+            dplyr::group_by(dat, PA_Factor),
             Mean_Value = mean(fetch_km, na.rm = TRUE)
         )
 
-        plots[["Fetch"]] <- ggplot2::ggplot(data, ggplot2::aes(x = fetch_km, fill = PA_Factor)) +
+        plots[["Fetch"]] <- ggplot2::ggplot(dat, ggplot2::aes(x = fetch_km, fill = PA_Factor)) +
             ggplot2::geom_density(alpha = 0.5) +
             ggplot2::geom_vline(
                 data = mean_fetch, ggplot2::aes(xintercept = Mean_Value, color = PA_Factor),

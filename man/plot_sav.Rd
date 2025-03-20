@@ -6,7 +6,7 @@
 \title{Plot SAV Data Distribution}
 \usage{
 plot_sav_distribution(
-  data,
+  dat,
   type = c("pa", "cover"),
   predictors = c("depth", "fetch"),
   post_hoc = FALSE,
@@ -15,14 +15,14 @@ plot_sav_distribution(
 )
 
 plot_sav_density(
-  data,
+  dat,
   predictors = c("depth", "fetch"),
   max_depth = 30,
   post_hoc = FALSE
 )
 }
 \arguments{
-\item{data}{A \code{data.frame} containing:
+\item{dat}{A \code{data.frame} containing:
 \itemize{
 \item \code{depth_m} (optional): Numeric, depth in meters.
 \item \code{fetch_km} (optional): Numeric, fetch in kilometers.
@@ -63,7 +63,7 @@ indicating the mean values for each.
 }
 \examples{
 # Example dataset
-data <- data.frame(
+dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
     pa = sample(0:1, 100, replace = TRUE),
@@ -73,19 +73,19 @@ data <- data.frame(
 )
 
 # Generate all available plots
-plot_sav_distribution(data)
+plot_sav_distribution(dat)
 
 # Generate only presence/absence plots
-plot_sav_distribution(data, type = "pa")
+plot_sav_distribution(dat, type = "pa")
 
 # Generate cover plots using only fetch as predictor
-plot_sav_distribution(data, type = "cover", predictors = "fetch")
+plot_sav_distribution(dat, type = "cover", predictors = "fetch")
 
 # Generate plots using post-hoc analyzed data
-plot_sav_distribution(data, post_hoc = TRUE)
+plot_sav_distribution(dat, post_hoc = TRUE)
 
 # Example dataset
-data <- data.frame(
+dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
     pa = sample(0:1, 100, replace = TRUE),
@@ -93,14 +93,14 @@ data <- data.frame(
 )
 
 # Generate all available plots
-plot_sav_density(data)
+plot_sav_density(dat)
 
 # Generate depth-based density plot only
-plot_sav_density(data, predictors = "depth")
+plot_sav_density(dat, predictors = "depth")
 
 # Generate fetch-based density plot only
-plot_sav_density(data, predictors = "fetch")
+plot_sav_density(dat, predictors = "fetch")
 
 # Generate plots using post-hoc analyzed data
-plot_sav_density(data, post_hoc = TRUE)
+plot_sav_density(dat, post_hoc = TRUE)
 }
