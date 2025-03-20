@@ -29,7 +29,7 @@
 #' and any lines that are not connected to the points are removed. The length of
 #' all clipped transects is computed using [`sf::st_length()`] and ranked using
 #' `rank()`. The resulting spatial object is stored as the `transect_lines`
-#' element in the returned list and it used to genreare the second element:
+#' element in the returned list and it used to generate the second element:
 #' `mean_fetch` that included wind fetch averages.
 #'
 #' Ensure that max_dist is specified in meters. An error will be thrown if the

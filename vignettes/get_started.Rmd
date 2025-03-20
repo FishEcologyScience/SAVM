@@ -71,7 +71,7 @@ depth <- stars::st_extract(study_depth, study_zone$points |>
 Create an input data frame
 
 ```{r }
-d_inputs <- data.frame(
+dat <- data.frame(
   depth = depth$le_bathy.tiff,
   fetch = fetch$mean_fetch$fetch_km
 )
@@ -81,14 +81,14 @@ d_inputs <- data.frame(
 
 ```{r}
 # get input 
-res <- sav_model(d_inputs)
+res <- sav_model(dat)
 res
 ```
 
 
 ## Vizualize
 
-```{r}
+```
 # Visualize results 
 library(ggplot2)
 library(units)
@@ -104,7 +104,7 @@ plot_sav_density(study_zone$points |> sf::st_drop_geometry())
 ```
 
 
-```{r}
+```
 mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
 mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
 mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +

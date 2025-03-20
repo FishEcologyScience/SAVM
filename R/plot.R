@@ -125,7 +125,7 @@ plot_sav_distribution <- function(data) {
 #' plot_sav_density(data)
 #' @export
 plot_sav_density <- function(data) {
-    library(units)
+    #library(units)
     plots <- list()
 
     # Check if PA column exists

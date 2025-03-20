@@ -74,7 +74,7 @@ transects are then clipped with the polygon using \code{\link[sf:geos_binary_ops
 and any lines that are not connected to the points are removed. The length of
 all clipped transects is computed using \code{\link[sf:geos_measures]{sf::st_length()}} and ranked using
 \code{rank()}. The resulting spatial object is stored as the \code{transect_lines}
-element in the returned list and it used to genreare the second element:
+element in the returned list and it used to generate the second element:
 \code{mean_fetch} that included wind fetch averages.
 
 Ensure that max_dist is specified in meters. An error will be thrown if the
