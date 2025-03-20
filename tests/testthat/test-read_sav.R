@@ -9,12 +9,13 @@ withr::with_options(
         latitude = c(42.5, 42.8, 42.6),
         depth_m = c(5, 10, 7),
         mean_fetch_km = c(2.5, 3.0, 2.8),
-        turbidity = c(1.2, 2.3, 1.8),
-        substrate_limits = c(TRUE, FALSE, TRUE)
+        secchi = c(1.2, 2.3, 1.8),
+        substrate = c(TRUE, FALSE, TRUE),
+        limitation = c(FALSE, FALSE, TRUE)
       ), temp_csv, row.names = FALSE)
 
       # Run the function
-      result <- read_sav(temp_csv, crs = 3857)
+      result <- read_sav(temp_csv)
 
       # Check outputs
       expect_type(result, "list")
@@ -22,7 +23,7 @@ withr::with_options(
       expect_s3_class(result$polygon, "sf") # Should return a polygon
       expect_true("geometry" %in% colnames(result$points)) # Points should have geometry
       expect_gt(nrow(result$points), 0) # Ensure at least one point exists
-      expect_true(sf::st_crs(result$points)$epsg == 3857) # CRS should be transformed to 3857
+      expect_true(sf::st_crs(result$points)$epsg == 32617) # CRS should be transformed to 32617
     })
 
     test_that("read_sav() correctly reads a spatial polygon file (AOI)", {
@@ -40,14 +41,14 @@ withr::with_options(
       sf::st_write(temp_poly, temp_file, quiet = TRUE)
 
       # Run the function
-      result <- read_sav(temp_file, spacing = 500, crs = 3857)
+      result <- read_sav(temp_file, spacing = 500, crs = 32617)
 
       # Check outputs
       expect_type(result, "list")
       expect_s3_class(result$points, "sf")
       expect_s3_class(result$polygon, "sf")
       expect_gt(nrow(result$points), 0) # Ensure points were created
-      expect_true(sf::st_crs(result$polygon)$epsg == 3857) # CRS should be transformed to 3857
+      expect_true(sf::st_crs(result$polygon)$epsg == 32617) # CRS should be transformed to 32617
     })
 
     test_that("read_sav() correctly reads a spatial points file", {
@@ -67,14 +68,14 @@ withr::with_options(
       sf::st_write(temp_pts, temp_file, quiet = TRUE)
 
       # Run the function
-      result <- read_sav(temp_file, crs = 3857)
+      result <- read_sav(temp_file)
 
       # Check outputs
       expect_type(result, "list")
       expect_s3_class(result$points, "sf")
       expect_s3_class(result$polygon, "sf")
       expect_gt(nrow(result$points), 0)
-      expect_true(sf::st_crs(result$points)$epsg == 3857) # CRS should be transformed to 3857
+      expect_true(sf::st_crs(result$points)$epsg == 32617) # CRS should be transformed to 32617
     })
 
     test_that("read_sav() throws an error when provided an unsupported file type", {
@@ -104,7 +105,7 @@ withr::with_options(
       temp_dir <- tempdir()
 
       # Run function with export
-      result <- read_sav(temp_csv, export = temp_dir, crs = 3857)
+      result <- read_sav(temp_csv, export = temp_dir)
 
       # Check if files were created
       expect_true(file.exists(file.path(temp_dir, "sav_points.gpkg")))
@@ -120,8 +121,8 @@ withr::with_options(
         depth_m = c(5, 10)
       ), temp_csv, row.names = FALSE)
 
-      # Run function (should transform to EPSG:3857)
-      result <- read_sav(temp_csv, crs = 3857)
+      # Run function (should transform to EPSG:32617)
+      result <- read_sav(temp_csv)
 
       # Extract transformed coordinates
       transformed_coords <- sf::st_coordinates(result$points)
@@ -146,10 +147,10 @@ withr::with_options(
       sf::st_write(temp_poly, temp_file, quiet = TRUE)
 
       # Run function with EPSG:26917 (UTM zone 17N)
-      result <- read_sav(temp_file, spacing = 500, crs = 3857)
+      result <- read_sav(temp_file, spacing = 500, crs = 26917)
 
-      # Check that CRS is transformed to EPSG:3857
-      expect_true(sf::st_crs(result$polygon)$epsg == 3857)
+      # Check that CRS is transformed to EPSG:26917
+      expect_true(sf::st_crs(result$polygon)$epsg == 26917)
     })
   }
 )

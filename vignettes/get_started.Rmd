@@ -36,20 +36,21 @@ required data are included on in the package SAVM.
 ```{r}
 # Lake Erie boundaries polygon
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-      sf::st_read() |> 
-      sf::st_transform(crs = 3857)
+  sf::st_read() |>
+  sf::st_transform(crs = 3857)
 
-# Lake Erie study zone: read 
+# Lake Erie study zone: read
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
 
 # Depth
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 
-# Using mapview to map objects 
+# Using mapview to map objects
 mapview(study_depth) + mapview(study_zone$polygon) + mapview(study_zone$points)
 ```
 
+> ***Note on spatial projections***: *The `SAVM` package works with spatial coordinates in meters and the WGS 84 / UTM zone 17N ([epsg:32617](https://epsg.io/32617)) projection as a default option since it was originally developped for use in the Great Lakes (WGS 84 / UTM zone 18N ([epsg:32618](https://epsg.io/32618)) is also a an option). Other viable options in a North American context are NAD83 / UTM zone 17N ([epsg:26917](https://epsg.io/26917)) and NAD83(CSRS) / UTM zone 17N ([egsg::2958](https://epsg.io/2958)).*
 
 ## Compute fetch and extract depth
 
@@ -79,8 +80,8 @@ d_inputs <- data.frame(
 ## Model 
 
 ```{r}
-# get input 
-res  <- sav_model(d_inputs)
+# get input
+res <- sav_model(d_inputs)
 res
 ```
 
@@ -88,7 +89,7 @@ res
 ## Vizualize
 
 ```{r}
-# Visualize results 
+# Visualize results
 library(ggplot2)
 library(units)
 
@@ -97,18 +98,18 @@ study_zone$points$PA <- res$PA
 study_zone$points$Depth <- res$Depth
 study_zone$points$Fetch <- res$Fetch
 
-plot_sav_distribution(study_zone$points  |> sf::st_drop_geometry())
+plot_sav_distribution(study_zone$points |> sf::st_drop_geometry())
 
 plot_sav_density(study_zone$points |> sf::st_drop_geometry())
 ```
 
 
 ```{r}
-mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
-mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
-mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
-mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
+mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") +
+  mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0, 100)) +
+  mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
+  mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
+  mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
 ```
 
 

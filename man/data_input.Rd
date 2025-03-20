@@ -7,13 +7,20 @@
 \alias{read_sav_aoi}
 \title{Read SAV data from different formats}
 \usage{
-read_sav(file_path, spacing = 500, layer = NULL, crs = 3857, export = NULL)
+read_sav(
+  file_path,
+  spacing = 500,
+  layer = NULL,
+  crs = 32617,
+  crs_input = 4326,
+  export = NULL
+)
 
-read_sav_csv(file_path, crs = 3857, ...)
+read_sav_csv(file_path, crs = 32617, crs_input = 4326, ...)
 
-read_sav_pts(file_path, crs = 3857)
+read_sav_pts(file_path, crs = 32617)
 
-read_sav_aoi(file_path, spacing = 500, crs = 3857)
+read_sav_aoi(file_path, spacing = 500, crs = 32617)
 }
 \arguments{
 \item{file_path}{{\code{character}}\cr{} Path to the spatial polygon file.}
@@ -23,7 +30,9 @@ read_sav_aoi(file_path, spacing = 500, crs = 3857)
 \item{layer}{{\code{character}}\cr{} Layer name for multi-layer spatial files (default: NULL).}
 
 \item{crs}{{\code{object}}\cr{} Coordinate reference system (CRS)
-of the input data (see \code{\link[sf:st_crs]{sf::st_crs()}}). Default is 3857.}
+of the output data (see \code{\link[sf:st_crs]{sf::st_crs()}}). Default is 32617.}
+
+\item{crs_input}{{\code{numeric}}\cr{} Coordinate Reference System (CRS) of the input data, used for CSV import. Default is 4326.}
 
 \item{export}{{\code{character}}\cr{} Optional. Folder path to export outputs as .gpkg.}
 
@@ -56,11 +65,11 @@ write.csv(data.frame(
     latitude = c(42.5, 42.8, 42.6),
     depth_m = c(5, 10, 7),
     mean_fetch_km = c(2.5, 3.0, 2.8),
-    turbidity = c(1.2, 2.3, 1.8),
-    substrate_limits = c(TRUE, FALSE, TRUE)
+    secchi = c(1.2, 2.3, 1.8),
+    substrate = c(TRUE, FALSE, TRUE)
 ), temp_csv, row.names = FALSE)
 
-tmp <- read_sav(temp_csv, crs = 3857)
+tmp <- read_sav(temp_csv, crs = 32617, crs_input = 4326)
 head(tmp$points)
 plot(st_geometry(tmp$polygon))
 plot(st_geometry(tmp$points), add = TRUE)
@@ -76,7 +85,7 @@ temp_poly <- st_sf(
 temp_file <- tempfile(fileext = ".gpkg")
 st_write(temp_poly, temp_file, quiet = TRUE)
 
-tmp <- read_sav(temp_file, spacing = 500, crs = 3857)
+tmp <- read_sav(temp_file, spacing = 500, crs = 32617)
 head(tmp$points)
 plot(st_geometry(tmp$polygon))
 plot(st_geometry(tmp$points), add = TRUE)
@@ -88,12 +97,13 @@ write.csv(data.frame(
     latitude = c(42.5, 42.8, 42.6),
     depth_m = c(5, 10, 7),
     mean_fetch_km = c(2.5, 3.0, 2.8),
-    turbidity = c(1.2, 2.3, 1.8),
-    substrate_limits = c(TRUE, FALSE, TRUE)
+    secchi = c(1.2, 2.3, 1.8),
+    substrate = c(TRUE, FALSE, TRUE),
+    limitation = c(FALSE, FALSE, TRUE)
 ), temp_csv, row.names = FALSE)
 
 # Read the CSV and convert to sf
-read_sav_csv(temp_csv, crs = 4326)
+read_sav_csv(temp_csv, crs = 32614, crs_input = 4326)
 # Example spatial points file creation (requires sf package)
 library(sf)
 temp_sf <- st_sf(
