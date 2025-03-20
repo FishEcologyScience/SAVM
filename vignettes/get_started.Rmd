@@ -25,68 +25,6 @@ library(stars)
 This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation (SAV) Model R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
 
 
-# Package functionalities 
-
-## User input 
-
-The `read_sav()` function is the primary data input function in the package, although a user may directly supply a properly formatted data.frame or spatial object to functions presented later in this workflow (more on this later). The `read_sav()` function supports three types of input files:
-
-1. **CSV files (`.csv`)**: Tabular data containing coordinate columns (`longitude`, `latitude`) and optional environmental attributes (`depth_m`, `mean_fetch_km`, `turbidity`, `substrate_limits`).
-2. **Spatial Points Files (`.shp`, `.geojson`, `.gpkg`, `.gbd`)**: Geospatial data with point features, extracted into an `sf` object and optional environmental attributes (`depth_m`, `mean_fetch_km`, `turbidity`, `substrate_limits`).
-3. **Spatial Polygon Files (AOI) (`.shp`, `.geojson`, `.gpkg`, `.gbd`)**: Polygon data representing an Area of Interest (AOI), which is converted into a grid of points for analysis.
-
-Let us begin by creating these files to showcase the use of `read_sav()`:
-
-```{r data_creation}
-# Create temporary csv and point files
-temp_csv <- tempfile(fileext = ".csv")
-temp_pts <- tempfile(fileext = ".gpkg")
-dat <- data.frame(
-  longitude = c(-82.5, -83.0, -84.8),
-  latitude = c(42.5, 42.8, 42.6),
-  depth_m = c(5, 10, 7)
-)
-write.csv(dat, temp_csv, row.names = FALSE)
-st_as_sf(dat, coords = c("longitude", "latitude"), crs = 4326) |>
-  st_write(temp_pts, quiet = TRUE)
-
-# Create temporaty area of interest polygon
-poly <- st_sf(
-  geometry = st_sfc(st_polygon(list(
-    rbind(
-      c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
-    )
-  )), crs = 4326)
-)
-temp_poly <- tempfile(fileext = ".gpkg")
-st_write(poly, temp_poly, quiet = TRUE)
-```
-
-Now we can use the `read_sav()` function to import and format these temporary files. The output of the `read_sav()` function is a list containing a spatial point object containing the coordinates and environmental variables supplied by the user, and a spatial polygon object containing the area of interest covering the coordinates of the spatial point object. 
-
-```{r read_sav}
-# Read the CSV file into an sf object
-sav_data <- read_sav(temp_csv, crs = 4326)
-
-# Check the first few rows
-sav_data
-head(sav_data$points)
-```
-
-
-
-
-## Compiling data
-
-
-
-## Fetch calculation
-
-
-
-## Model predictions 
-
-
 
 
 # User workflow 
@@ -97,9 +35,15 @@ Reading files.
 
 ```{r}
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
+<<<<<<< HEAD
   sf::st_read() |>
   sf::st_transform(crs = 3857)
+=======
+      sf::st_read() |> 
+      sf::st_transform(crs = 3857)
+>>>>>>> 9af13f4 (CST-489 add PA to vignette)
 
+# read and create 
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
 
@@ -117,9 +61,15 @@ d_inputs <- data.frame(
   fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
 )
 
+<<<<<<< HEAD
 res <- sav_model(d_inputs)
 
 # Visualize results
+=======
+# get input 
+res  <- sav_model(d_inputs)
+# Visualize results 
+>>>>>>> 9af13f4 (CST-489 add PA to vignette)
 library(ggplot2)
 library(units)
 
@@ -143,17 +93,57 @@ ggplot(res, aes(x = Fetch, y = Cover)) +
 plot(res$Fetch, res$Cover)
 
 study_zone$points$Cover <- res$Cover
+<<<<<<< HEAD
 mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0, 100)) +
   mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
+=======
+study_zone$points$PA <- res$PA
+mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0,100)) +
+  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
+
+mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Predictions", zlim = c(0, 100)) +
+  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
+
+
+>>>>>>> 9af13f4 (CST-489 add PA to vignette)
 ```
 
 
-# Compiling data
+
+# Questions 
+
+## Inputs 
+
+- Naming rules
+  - longitude
+  - latitude
+  - depth_m or depth
+  - fetch or fetch_km
+  - substrate 
+  - secchi or turbidity
+
+- default porjection 3857? https://epsg.io/3857
+
+- should the user ne 
+
+## Fetch 
+
+- default number of direction per quadrant 
+- what would the most natural way to use wind weight
+  - Should wind-weights be defined per point?
+
+## Model
+
+- Post-hoc
+
+  - Why not applying upfront?
+
+  - Should the parameters of the Chambers and Kalff's equation be editable?
+
+> (VMaxA)0.5 = 1.33 log(D) + 1.40, correct?
 
 
+# Plot 
 
-## Compute fetch
-
-
-
-# Use models 
+- 1,2 or 4 => depending on type and predictor combinations
+- map using tmap?

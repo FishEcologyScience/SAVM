@@ -35,6 +35,8 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     knitr,
+    ggplot2,
+    mapview,
     rmarkdown,
     stars,
     units,
