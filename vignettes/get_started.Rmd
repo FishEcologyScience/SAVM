@@ -35,15 +35,10 @@ Reading files.
 
 ```{r}
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-<<<<<<< HEAD
   sf::st_read() |>
   sf::st_transform(crs = 3857)
-=======
-      sf::st_read() |> 
-      sf::st_transform(crs = 3857)
->>>>>>> 9af13f4 (CST-489 add PA to vignette)
 
-# read and create 
+# read and create
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
 
@@ -61,15 +56,10 @@ d_inputs <- data.frame(
   fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
 )
 
-<<<<<<< HEAD
+# get input
 res <- sav_model(d_inputs)
-
 # Visualize results
-=======
-# get input 
-res  <- sav_model(d_inputs)
-# Visualize results 
->>>>>>> 9af13f4 (CST-489 add PA to vignette)
+
 library(ggplot2)
 library(units)
 
@@ -93,19 +83,12 @@ ggplot(res, aes(x = Fetch, y = Cover)) +
 plot(res$Fetch, res$Cover)
 
 study_zone$points$Cover <- res$Cover
-<<<<<<< HEAD
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0, 100)) +
-  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
-=======
 study_zone$points$PA <- res$PA
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0,100)) +
+mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0, 100)) +
   mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
 
 mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Predictions", zlim = c(0, 100)) +
   mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
-
-
->>>>>>> 9af13f4 (CST-489 add PA to vignette)
 ```
 
 
