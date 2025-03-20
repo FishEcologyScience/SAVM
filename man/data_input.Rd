@@ -64,7 +64,7 @@ write.csv(data.frame(
     longitude = c(-82.5, -83.0, -84.8),
     latitude = c(42.5, 42.8, 42.6),
     depth_m = c(5, 10, 7),
-    mean_fetch_km = c(2.5, 3.0, 2.8),
+    fetch_km = c(2.5, 3.0, 2.8),
     secchi = c(1.2, 2.3, 1.8),
     substrate = c(TRUE, FALSE, TRUE)
 ), temp_csv, row.names = FALSE)
@@ -96,7 +96,7 @@ write.csv(data.frame(
     longitude = c(-82.5, -83.0, -83.2),
     latitude = c(42.5, 42.8, 42.6),
     depth_m = c(5, 10, 7),
-    mean_fetch_km = c(2.5, 3.0, 2.8),
+    fetch_km = c(2.5, 3.0, 2.8),
     secchi = c(1.2, 2.3, 1.8),
     substrate = c(TRUE, FALSE, TRUE),
     limitation = c(FALSE, FALSE, TRUE)

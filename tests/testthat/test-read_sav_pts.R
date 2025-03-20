@@ -113,7 +113,7 @@ withr::with_options(
       result <- read_sav_pts(temp_file)
 
       # Expected columns
-      expected_cols <- c("longitude", "latitude", "depth_m", "mean_fetch_km", "secchi", "substrate", "limitation", "geom")
+      expected_cols <- c("longitude", "latitude", "depth_m", "fetch_km", "secchi", "substrate", "limitation", "geom")
 
       expect_setequal(colnames(result), intersect(colnames(result), expected_cols)) # Ensure only expected columns exist
       expect_false("extra_col" %in% colnames(result)) # Extra column should be removed

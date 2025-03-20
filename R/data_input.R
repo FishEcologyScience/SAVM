@@ -21,7 +21,7 @@
 #'     longitude = c(-82.5, -83.0, -84.8),
 #'     latitude = c(42.5, 42.8, 42.6),
 #'     depth_m = c(5, 10, 7),
-#'     mean_fetch_km = c(2.5, 3.0, 2.8),
+#'     fetch_km = c(2.5, 3.0, 2.8),
 #'     secchi = c(1.2, 2.3, 1.8),
 #'     substrate = c(TRUE, FALSE, TRUE)
 #' ), temp_csv, row.names = FALSE)
@@ -97,9 +97,9 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_in
 #'
 #' @return An sf object with required and optional columns.
 #'
-#' @export
-#'
 #' @rdname data_input
+#'
+#' @export
 #'
 #' @examples
 #' # Example CSV file creation
@@ -108,7 +108,7 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_in
 #'     longitude = c(-82.5, -83.0, -83.2),
 #'     latitude = c(42.5, 42.8, 42.6),
 #'     depth_m = c(5, 10, 7),
-#'     mean_fetch_km = c(2.5, 3.0, 2.8),
+#'     fetch_km = c(2.5, 3.0, 2.8),
 #'     secchi = c(1.2, 2.3, 1.8),
 #'     substrate = c(TRUE, FALSE, TRUE),
 #'     limitation = c(FALSE, FALSE, TRUE)
@@ -122,7 +122,7 @@ read_sav_csv <- function(file_path, crs = 32617, crs_input = 4326, ...) {
 
     # Validate required columns
     required_cols <- c("longitude", "latitude")
-    optional_cols <- c("depth_m", "mean_fetch_km", "secchi", "substrate", "limitation")
+    optional_cols <- c("depth_m", "fetch_km", "secchi", "substrate", "limitation")
     missing_cols <- setdiff(required_cols, names(df))
 
     if (length(missing_cols) > 0) {
@@ -219,7 +219,7 @@ read_sav_pts <- function(file_path, crs = 32617) {
 
     # Select relevant columns
     required_cols <- c("longitude", "latitude")
-    optional_cols <- c("depth_m", "mean_fetch_km", "secchi", "substrate", "limitation")
+    optional_cols <- c("depth_m", "fetch_km", "secchi", "substrate", "limitation")
     retained_cols <- intersect(names(sf_obj), c(required_cols, optional_cols))
     removed_cols <- setdiff(names(sf_obj), c(retained_cols, "geom"))
     sf_obj <- sf_obj |>
