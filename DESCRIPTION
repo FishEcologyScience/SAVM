@@ -27,6 +27,8 @@ Depends:
 Imports: 
     cli (>= 3.6.4),
     dplyr (>= 1.1.4),
+    ggplot2,
+    gridExtra,
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
     stats,
@@ -35,7 +37,6 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    ggplot2,
     mapview,
     rmarkdown,
     stars,

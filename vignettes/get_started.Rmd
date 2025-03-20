@@ -92,31 +92,20 @@ res
 library(ggplot2)
 library(units)
 
-# Example scatterplot with improved aesthetics
-ggplot(res, aes(x = Fetch, y = Cover)) +
-  geom_point(color = "#2C7BB6", size = 3, alpha = 0.7) + # Blue points, slightly transparent
-  geom_smooth(method = "lm", color = "#D7191C", linetype = "dashed", se = FALSE) + # Red trendline
-  labs(
-    x = "Fetch Distance (km)",
-    y = "SAV Cover (%)",
-    title = "Relationship Between Fetch and SAV Cover"
-  ) +
-  theme_minimal(base_size = 14) + # Clean minimal theme
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5), # Centered bold title
-    axis.title = element_text(face = "bold"),
-    axis.text = element_text(color = "black"),
-    panel.grid.major = element_line(color = "gray80", linetype = "dashed")
-  )
-
-plot(res$Fetch, res$Cover)
-
 study_zone$points$Cover <- res$Cover
 study_zone$points$PA <- res$PA
 study_zone$points$Depth <- res$Depth
 study_zone$points$Fetch <- res$Fetch
-  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
-  mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
+
+plot_sav_distribution(study_zone$points  |> sf::st_drop_geometry())
+
+plot_sav_density(study_zone$points |> sf::st_drop_geometry())
+```
+
+
+```{r}
+mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
+mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
 mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
 mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
 mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
