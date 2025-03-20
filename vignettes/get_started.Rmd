@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 library(SAVM)
 library(sf)
 library(stars)
+library(mapview)
 ```
 
 # Introduction
@@ -25,39 +26,68 @@ library(stars)
 This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation (SAV) Model R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
 
 
-
-
 # User workflow 
 
-## Reading file
+## Reading files
 
-Reading files. 
+As an example, we consider a zone near Buffalo in the Lake Erie. Note that all the data 
+required data are included on in the package SAVM.  
 
 ```{r}
+# Lake Erie boundaries polygon
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
       sf::st_read() |> 
       sf::st_transform(crs = 3857)
 
-# read and create 
+# Lake Erie study zone: read 
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
 
+# Depth
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 
-#'  le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
-#'      sf::st_read(quiet = TRUE)
+# Using mapview to map objects 
+mapview(study_depth) + mapview(study_zone$polygon) + mapview(study_zone$points)
+```
 
+
+## Compute fetch and extract depth
+
+### Copute fetch 
+
+```{r fetch}
 fetch <- compute_fetch(study_zone$points, le_bound, n_quad_seg = 10, max_dist = 15000)
+fetch
+```
 
+
+### Extract depth 
+
+```{r extract_depth}
 depth <- stars::st_extract(study_depth, study_zone$points |> sf::st_transform(crs = sf::st_crs(study_depth)))
+```
 
+Create an input data frame
+
+```{r }
 d_inputs <- data.frame(
   depth = depth$le_bathy.tiff,
   fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
 )
+```
 
+## Model 
+
+```{r}
 # get input 
 res  <- sav_model(d_inputs)
+res
+```
+
+
+## Vizualize
+
+```{r}
 # Visualize results 
 library(ggplot2)
 library(units)
@@ -83,18 +113,18 @@ plot(res$Fetch, res$Cover)
 
 study_zone$points$Cover <- res$Cover
 study_zone$points$PA <- res$PA
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0,100)) +
-  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
-
-mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Predictions", zlim = c(0, 100)) +
-  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
-
-
+study_zone$points$Depth <- res$Depth
+study_zone$points$Fetch <- res$Fetch
+  mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
+  mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
+mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
+mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
+mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
 ```
 
 
 
-# Questions 
+# Questions / Discussion 
 
 ## Inputs 
 
@@ -131,3 +161,9 @@ mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Predictions", zli
 
 - 1,2 or 4 => depending on type and predictor combinations
 - map using tmap?
+
+
+# Package 
+
+- Files in the package
+- Public or private 
