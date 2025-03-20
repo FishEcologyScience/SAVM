@@ -33,6 +33,7 @@ Imports:
     sf (>= 1.0-19),
     stats,
     tools,
+    units,
     utils
 Suggests:
     testthat (>= 3.0.0),
@@ -40,7 +41,6 @@ Suggests:
     mapview,
     rmarkdown,
     stars,
-    units,
     withr
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr

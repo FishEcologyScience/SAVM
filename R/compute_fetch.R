@@ -1,46 +1,98 @@
-#' Compute fetch and wind-weighted fetch
+#' Compute wind fetch and wind weighted fetch
 #'
-#' @param points {`sf`}\cr{} An `sf` point object representing the locations for which fetch will be calculated.
-#' @param polygon {`sf`}\cr{} An `sf` polygon object defining land boundaries used to compute fetch distances.
-#' @param n_quad_seg {`integer`}\cr{} Number of segments per quadrant for fetch calculation. Ignored if `wind_weights`
-#' is provided.
-#' @param max_dist {`numeric`}\cr{} Maximum fetch distance in meters. Fetch beyond this distance is capped.
-#' @param wind_weights {`data.frame`}\cr{} A data frame specifying directional 
-#' weights for wind exposure. Must contain two columns: `direction` (numeric, 
-#' in degrees) and `weight` (numeric). Currently this applies to all points.
-#' @param crs {`object`}\cr{} Coordinate reference system (CRS) passed to 
-#' [sf::st_crs()], used to transform `points` and `polygon`.
+#' @param points {`sf`}\cr{}
+#' Points representing the locations for which fetch will be calculated.
+#' @param polygon {`sf`}\cr{}
+#' Polygon defining land boundaries used to compute fetch distances.
+#' @param max_dist {`numeric`}\cr{}
+#' Maximum fetch distance in kilometers. Fetch beyond this distance is capped.
+#' @param n_quad_seg {`integer`}\cr{}
+#' Number of segments per quadrant for fetch calculation.
+#' Ignored if `wind_weights` is provided.
+#' @param wind_weights {`data.frame`}\cr{}
+#' A data frame specifying directional weights for wind exposure.
+#' Must contain two columns: `direction` (numeric, in degrees) and `weight`
+#' (numeric). Note that the weighting applies to all points.
+#' @param crs {`object`}\cr{}
+#' Coordinate reference system (CRS) passed to [sf::st_crs()], used to
+#' transform `points` and `polygon`.
 #'
-#' @return
-#' A list of two elements:
-#'  * `mean_fetch`: data frame with 3 columns:
+#' @details Wind fetch is the unobstructed distance over which wind travels
+#' across a body of water before reaching a specific point. It plays a crucial
+#' role in wave generation, as longer fetch distances allow wind to transfer
+#' more energy to the water surface, leading to larger waves.
+#'
+#' For all points in `points`, 4 × `n_quad_seg` radial transects are generated
+#' by default. If `wind_weights` is specified, the column `direction`, which
+#' contains angles in degrees, is used instead to generate the transects. The
+#' transects are then clipped with the polygon using [`sf::st_intersection()`],
+#' and any lines that are not connected to the points are removed. The length of
+#' all clipped transects is computed using [`sf::st_length()`] and ranked using
+#' `rank()`. The resulting spatial object is stored as the `transect_lines`
+#' element in the returned list and it used to genreare the second element:
+#' `mean_fetch` that included wind fetch averages.
+#'
+#' Ensure that max_dist is specified in meters. An error will be thrown if the
+#' spatial projection of points and polygon is not in a meter-based coordinate
+#' system.
+#'
+#' @return A list of two elements:
+#'  * `mean_fetch`: data frame with 5 columns:
 #'      * `id_point`: point identifier
-#'      * `mean_fetch``: mean fetch
-#'      * `mean_weighted_fetch``: mean fetch
-#'  * `sf_fetch_lines`: a `sf` object containing all fetch lines.
+#'      * `fetch`: mean wind fetch based on the four highest values
+#'      * `weighted_fetch`: mean weighted wind fetch based on the four highest values
+#'      * `fetch_all`: mean wind fetch based on all values
+#'      * `weighted_fetch_all`: mean wind weighted fetch based on all values
+#'  * `transect_lines`: a `sf` object containing all radial transect with the
+#'    same columns as `points` and the following additional columns:
+#'      * `id_point`: point identifier
+#'      * `direction`: direction (in degree)
+#'      * `weight`: wind weight
+#'      * `transect_length`: transect length in meter computed using [`sf::st_length()`].
+#'      * `rank`: transect ranks (the lower the rank the higher the length).
 #'
 #' @references
-#' * For an implementation leveraging st_buffer(), see <https://github.com/blasee/windfetch>.
+#' * For an implementation leveraging  [`sf::st_buffer()`], see
+#'   <https://github.com/blasee/windfetch>.
+#' * Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
+#' D. 2022. Modelling submerged aquatic vegetation presence and percent cover to
+#' support the development of a freshwater fish habitat management tool. Can.
+#' Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
 #'
 #' @export
 #'
 #' @examples
 #' \donttest{
+#'
 #' le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-#'      sf::st_read() 
+#'     sf::st_read()
 #' le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
-#'      sf::st_read(quiet = TRUE)
-#' res <- compute_fetch(le_pt, le_bound, 10, max_dist = 15000, crs = 3857)
-#' # resultat 
+#'     sf::st_read(quiet = TRUE)
+#' res <- compute_fetch(le_pt, le_bound, crs = 32617)
+#' # use wind-weight 
+#' res2 <- compute_fetch(
+#'      le_pt, le_bound, max_dist = 20, 
+#'      wind_weights = data.frame(
+#'               direction = seq(0, 360, by = 360 / 16)[-1],
+#'               weight = rep(c(0, 1), each = 8)
+#'      ),
+#'      crs = 32617)
+#'
+#' # resultat
 #' res$mean_fetch
+#' res2$mean_fetch
+#'
 #' # visualizing fetch lines
-#' plot(le_bound |> sf::st_transform(crs = 3857) |> sf::st_geometry())
-#' plot(res$sf_fetch_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
+#' plot(le_bound |> sf::st_transform(crs = 32617) |> sf::st_geometry())
+#' plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
-compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_weights = NULL, crs = NULL) {
+compute_fetch <- function(points, polygon, max_dist = 15, n_quad_seg = 9, wind_weights = NULL, crs = NULL) {
     valid_points(points)
     points$id_point <- seq_len(nrow(points))
     valid_polygon(polygon)
+    sav_stop_if_not(max_dist > 0)
+    max_dist <- 1e3 * max_dist
+    sav_stop_if_not(n_quad_seg > 0)
 
     if (!is.null(crs)) {
         if (!is_proj_unit_meter(crs)) {
@@ -82,6 +134,7 @@ compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_we
         sav_msg_info("Using `wind_weights`, ignoring `n_quad_seg`")
         if (all(c("direction", "weight") %in% names(wind_weights))) {
             d_direction <- wind_weights[c("direction", "weight")]
+            valid_direction(d_direction$direction)
         } else {
             rlang::abort("`wind_weights` must include two columns names `direction` and `weight`")
         }
@@ -95,7 +148,7 @@ compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_we
     geom_type <- sf::st_geometry_type(fetch_crop)
     # sf::st_intersection() generates multilinestring with extra lines if there
     # are intersections within the fetch lines
-    sf_fetch_lines <- rbind(
+    transect_lines <- rbind(
         fetch_crop |>
             dplyr::filter(geom_type == "LINESTRING"),
         fetch_crop |>
@@ -104,20 +157,33 @@ compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_we
     ) |>
         dplyr::arrange(id_point, direction)
 
-    sf_fetch_lines$fetch <- sf::st_length(sf_fetch_lines)
+    transect_lines <- transect_lines |>
+        dplyr::mutate(transect_length = sf::st_length(transect_lines)) |>
+        dplyr::group_by(id_point) |>
+        dplyr::mutate(rank = rank(transect_length, ties.method = "min"))
 
     list(
-        mean_fetch = sf_fetch_lines |>
+        mean_fetch = transect_lines |>
             sf::st_drop_geometry() |>
             dplyr::group_by(id_point) |>
+            # dplyr::mutate(rank = rank(transect_length)) |>
             dplyr::summarise(
-                mean_fetch = mean(fetch),
-                mean_weighted_fetch = mean(fetch * weight)
+                fetch_km = mean(transect_length[rank < 5]),
+                weighted_fetch_km = mean(transect_length[rank < 5] * weight[rank < 5]),
+                fetch_km_all = mean(transect_length),
+                weighted_fetch_km_all = mean(transect_length * weight)
+            )  |>
+            dplyr::mutate(
+                dplyr::across(
+                    !id_point, 
+                    ~ as.numeric(units::set_units(.x, "km"))
+                )
             ),
-        sf_fetch_lines = sf_fetch_lines
+        transect_lines = transect_lines
     )
 }
 
+# HELPERS
 
 is_proj_unit_meter <- function(x) {
     proj <- sf::st_crs(x)
@@ -160,6 +226,22 @@ valid_polygon_contains_points <- function(points, polygon) {
     } else {
         rlang::abort("`polygon` must include `points`.")
     }
+}
+
+valid_direction <- function(direction) {
+    if (!all(direction >= 0 & direction <= 360)) {
+        rlang::abort("All directions must be within the range [0, 360].")
+    } else {
+        interv <- findInterval(
+            direction,
+            seq(0, 360, by = 90),
+            all.inside = TRUE
+        )
+        if (!all(1:4 %in% interv)) {
+            sav_warn("Not all quadrants are covered.")
+        }
+    }
+    TRUE
 }
 
 # NB: code in windfetch use st_buffer()

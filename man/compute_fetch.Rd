@@ -2,65 +2,118 @@
 % Please edit documentation in R/compute_fetch.R
 \name{compute_fetch}
 \alias{compute_fetch}
-\title{Compute fetch and wind-weighted fetch}
+\title{Compute wind fetch and wind weighted fetch}
 \usage{
 compute_fetch(
   points,
   polygon,
-  n_quad_seg,
-  max_dist = 15000,
+  max_dist = 15,
+  n_quad_seg = 9,
   wind_weights = NULL,
   crs = NULL
 )
 }
 \arguments{
-\item{points}{{\code{sf}}\cr{} An \code{sf} point object representing the locations for which fetch will be calculated.}
+\item{points}{{\code{sf}}\cr{}
+Points representing the locations for which fetch will be calculated.}
 
-\item{polygon}{{\code{sf}}\cr{} An \code{sf} polygon object defining land boundaries used to compute fetch distances.}
+\item{polygon}{{\code{sf}}\cr{}
+Polygon defining land boundaries used to compute fetch distances.}
 
-\item{n_quad_seg}{{\code{integer}}\cr{} Number of segments per quadrant for fetch calculation. Ignored if \code{wind_weights}
-is provided.}
+\item{max_dist}{{\code{numeric}}\cr{}
+Maximum fetch distance in kilometers. Fetch beyond this distance is capped.}
 
-\item{max_dist}{{\code{numeric}}\cr{} Maximum fetch distance in meters. Fetch beyond this distance is capped.}
+\item{n_quad_seg}{{\code{integer}}\cr{}
+Number of segments per quadrant for fetch calculation.
+Ignored if \code{wind_weights} is provided.}
 
-\item{wind_weights}{{\code{data.frame}}\cr{} A data frame specifying directional
-weights for wind exposure. Must contain two columns: \code{direction} (numeric,
-in degrees) and \code{weight} (numeric). Currently this applies to all points.}
+\item{wind_weights}{{\code{data.frame}}\cr{}
+A data frame specifying directional weights for wind exposure.
+Must contain two columns: \code{direction} (numeric, in degrees) and \code{weight}
+(numeric). Note that the weighting applies to all points.}
 
-\item{crs}{{\code{object}}\cr{} Coordinate reference system (CRS) passed to
-\code{\link[sf:st_crs]{sf::st_crs()}}, used to transform \code{points} and \code{polygon}.}
+\item{crs}{{\code{object}}\cr{}
+Coordinate reference system (CRS) passed to \code{\link[sf:st_crs]{sf::st_crs()}}, used to
+transform \code{points} and \code{polygon}.}
 }
 \value{
 A list of two elements:
 \itemize{
-\item \code{mean_fetch}: data frame with 3 columns:
+\item \code{mean_fetch}: data frame with 5 columns:
 \itemize{
 \item \code{id_point}: point identifier
-\item `mean_fetch``: mean fetch
-\item `mean_weighted_fetch``: mean fetch
+\item \code{fetch}: mean wind fetch based on the four highest values
+\item \code{weighted_fetch}: mean weighted wind fetch based on the four highest values
+\item \code{fetch_all}: mean wind fetch based on all values
+\item \code{weighted_fetch_all}: mean wind weighted fetch based on all values
 }
-\item \code{sf_fetch_lines}: a \code{sf} object containing all fetch lines.
+\item \code{transect_lines}: a \code{sf} object containing all radial transect with the
+same columns as \code{points} and the following additional columns:
+\itemize{
+\item \code{id_point}: point identifier
+\item \code{direction}: direction (in degree)
+\item \code{weight}: wind weight
+\item \code{transect_length}: transect length in meter computed using \code{\link[sf:geos_measures]{sf::st_length()}}.
+\item \code{rank}: transect ranks (the lower the rank the higher the length).
+}
 }
 }
 \description{
-Compute fetch and wind-weighted fetch
+Compute wind fetch and wind weighted fetch
+}
+\details{
+Wind fetch is the unobstructed distance over which wind travels
+across a body of water before reaching a specific point. It plays a crucial
+role in wave generation, as longer fetch distances allow wind to transfer
+more energy to the water surface, leading to larger waves.
+
+For all points in \code{points}, 4 × \code{n_quad_seg} radial transects are generated
+by default. If \code{wind_weights} is specified, the column \code{direction}, which
+contains angles in degrees, is used instead to generate the transects. The
+transects are then clipped with the polygon using \code{\link[sf:geos_binary_ops]{sf::st_intersection()}},
+and any lines that are not connected to the points are removed. The length of
+all clipped transects is computed using \code{\link[sf:geos_measures]{sf::st_length()}} and ranked using
+\code{rank()}. The resulting spatial object is stored as the \code{transect_lines}
+element in the returned list and it used to genreare the second element:
+\code{mean_fetch} that included wind fetch averages.
+
+Ensure that max_dist is specified in meters. An error will be thrown if the
+spatial projection of points and polygon is not in a meter-based coordinate
+system.
 }
 \examples{
 \donttest{
+
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-     sf::st_read() 
+    sf::st_read()
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
-     sf::st_read(quiet = TRUE)
-res <- compute_fetch(le_pt, le_bound, 10, max_dist = 15000, crs = 3857)
-# resultat 
+    sf::st_read(quiet = TRUE)
+res <- compute_fetch(le_pt, le_bound, crs = 32617)
+# use wind-weight 
+res2 <- compute_fetch(
+     le_pt, le_bound, max_dist = 20, 
+     wind_weights = data.frame(
+              direction = seq(0, 360, by = 360 / 16)[-1],
+              weight = rep(c(0, 1), each = 8)
+     ),
+     crs = 32617)
+
+# resultat
 res$mean_fetch
+res2$mean_fetch
+
 # visualizing fetch lines
-plot(le_bound |> sf::st_transform(crs = 3857) |> sf::st_geometry())
-plot(res$sf_fetch_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
+plot(le_bound |> sf::st_transform(crs = 32617) |> sf::st_geometry())
+plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 }
 }
 \references{
 \itemize{
-\item For an implementation leveraging st_buffer(), see \url{https://github.com/blasee/windfetch}.
+\item For an implementation leveraging  \code{\link[sf:geos_unary]{sf::st_buffer()}}, see
+\url{https://github.com/blasee/windfetch}.
+\item Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
+D. 2022. Modelling submerged aquatic vegetation presence and percent cover to
+support the development of a freshwater fish habitat management tool. Can.
+Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
 }
 }

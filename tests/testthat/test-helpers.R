@@ -36,4 +36,5 @@ test_that("message helpers should work", {
             sav_debug_msg("debug")
         )
     )
+    expect_error(sav_stop_if_not(1 > 2, "wrong"), "wrong")
 })
