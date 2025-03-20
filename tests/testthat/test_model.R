@@ -12,69 +12,63 @@ df_ok_1 <- data.frame(depth = c(5, 10))
 df_ok_2 <- data.frame(FETCH = c(1, 2))
 df_ok_3 <- cbind(df_ok_1, df_ok_2)
 
-res_1 <- structure(
+res1 <- structure(
     list(Depth = c(5, 10), Cover = c(
         85.4316666666667,
         21.144
     )),
-    class = "data.frame", row.names = c("1", "2")
+    row.names = c(NA, -2L), class = "data.frame"
 )
 
-res_2 <- structure(
+res2 <- structure(
     list(Fetch = c(1, 2), Cover = c(78.8616666666666, 98.5113333333333)),
-    class = "data.frame", row.names = c("1", "2")
+    row.names = c(NA, -2L), class = "data.frame"
 )
 
-res_3 <- structure(
+res3 <- structure(
     list(Depth = c(5, 10), Fetch = c(1, 2), Cover = c(
         77.1123333333333,
         44.6653333333333
     )),
-    class = "data.frame", row.names = c(
-        "1",
-        "2"
-    )
+    row.names = c(NA, -2L), class = "data.frame"
 )
 
-res1_pa <- structure(
-    list(Depth = c(5, 10), PA = 1:0),
-    class = "data.frame", row.names = c(
-        "1",
-        "2"
-    )
+res1_b <- structure(
+    list(
+        Depth = c(5, 10), PA = 1:0, Cover = c(85.4316666666667, 21.144)
+    ),
+    row.names = c(NA, -2L), class = "data.frame"
 )
 
-res2_pa <- structure(
-    list(Fetch = c(1, 2), PA = 0:1),
-    class = "data.frame", row.names = c(
-        "1",
-        "2"
-    )
-)
-res3_pa <- structure(
-    list(Depth = c(5, 10), Fetch = c(1, 2), PA = c(
-        0L,
-        0L
+res2_b <- structure(
+    list(Fetch = c(1, 2), PA = 0:1, Cover = c(
+        78.8616666666666,
+        98.5113333333333
     )),
-    class = "data.frame", row.names = c("1", "2")
+    row.names = c(NA, -2L), class = "data.frame"
 )
 
-
+res3_b <- structure(
+    list(
+        Depth = c(5, 10), Fetch = c(1, 2), PA = c(0L, 0L), Cover = c(77.1123333333333, 44.6653333333333)
+    ),
+    row.names = c(NA, -2L), class = "data.frame"
+)
 
 
 test_that("sav_model() works", {
     withr::with_options(
         list(savm.verbose = "q"),
         {
-            expect_equal(sav_model(df_ok_1), res_1)
-            expect_equal(sav_model(df_ok_2), res_2)
-            expect_equal(sav_model(df_ok_3), res_3)
+            expect_equal(sav_model(df_ok_1, type = "cover"), res1)
+            expect_equal(sav_model(df_ok_2, type = "cover"), res2)
+            expect_equal(sav_model(df_ok_3, type = "cover"), res3)
             #
-            expect_equal(sav_model(df_ok_1, depth = "depth"), res_1)
+            expect_equal(sav_model(df_ok_1), res1_b)
+            expect_equal(sav_model(df_ok_2), res2_b)
+            expect_equal(sav_model(df_ok_3), res3_b)
             #
-            expect_identical(sav_model(df_ok_1, type = "pa"), res1_pa)
-            expect_identical(sav_model(df_ok_2, type = "pa"), res2_pa)
-            expect_identical(sav_model(df_ok_3, type = "pa"), res3_pa)
+            expect_equal(sav_model(df_ok_1, depth = "depth"), res1_b)
         }
     )
 })

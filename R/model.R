@@ -3,10 +3,13 @@
 #' Load Random Forest models for SAV cover and presence absence.
 #'
 #' @param d_inputs {`data.frame`}\cr{} A data frame with all inputs.
-#' @param type {`character` either `"cover"` or `"pa"`}\cr{} Model type.
+#' @param type {`character` vector, either `"cover"` or `"pa"`}\cr{}
+#' Model type(s).
 #' @param depth,fetch,substrate,secchi Column specification, see details.
+#'
 #' @return
-#' A data frame  object of class `randomForest`.
+#' A data frame object with input column and predictionc: `Cover` if `type`= and/or `PA` depending
+#' on `type`
 #'
 #' @details
 #' There are two sets of models available. The first set consists of models
@@ -15,14 +18,14 @@
 #' a predictor, another using fetch, and a third combining both variables. For
 #' further details, see Croft-White (2022).
 #'
-#' The selected model for generating predictions is determined by the type 
-#' argument, which specifies the output as either cover or presence-absence, 
-#' depending on the available predictors. The required input variables—depth, 
+#' The selected model for generating predictions is determined by the type
+#' argument, which specifies the output as either cover or presence-absence,
+#' depending on the available predictors. The required input variables—depth,
 #' fetch, substrate, and secchi—must correspond to column names in d_inputs;
-#' otherwise, an error is thrown. If neither depth nor fetch is explicitly 
-#' provided, the function will attempt to infer them from the column names. 
-#' Matching is case-insensitive but must be exact. 
-#' 
+#' otherwise, an error is thrown. If neither depth nor fetch is explicitly
+#' provided, the function will attempt to infer them from the column names.
+#' Matching is case-insensitive but must be exact.
+#'
 #' @references
 #' * Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
 #' D. 2022. Modelling submerged aquatic vegetation presence and percent cover
@@ -32,13 +35,17 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' sav_model(data.frame(depth = c(5, 10)))
+#' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 #' }
-#'
 sav_model <- function(d_inputs, type = c("cover", "pa"), depth = NULL, fetch = NULL, substrate = NULL, secchi = NULL) {
     stopifnot(inherits(d_inputs, "data.frame"))
-    type <- match.arg(type)
+
+    type <- unique(type)
+    if (!all(type %in% c("cover", "pa"))) {
+        rlang::abort("`type` value(s) must be 'cover' or 'pa'.")
+    }
 
     d_inputs <- d_inputs |>
         rename_if_valid(depth, "Depth") |>
@@ -63,20 +70,24 @@ sav_model <- function(d_inputs, type = c("cover", "pa"), depth = NULL, fetch = N
     ind <- ("Depth" %in% names(d_inputs)) + ("Fetch" %in% names(d_inputs)) * 2
     predictors <- c("depth", "fetch", "depth+fetch")[ind]
     sav_msg_info("Using {type} with {predictors}")
-    mod <- sav_load_model(type, predictors)
 
-    out <- cbind(
-        d_inputs,
-        data.frame(
-            Cover = stats::predict(mod, d_predict)
-        )
-    )
-    if (type == "pa") {
-        out <- out |>
-            dplyr::rename(PA = Cover) |>
-            # convert factor to 0/1
-            dplyr::mutate(PA = as.character(PA) |> as.integer()) 
+    out <- d_inputs
+    rownames(out) <- NULL
+    if ("pa" %in% type) {
+        out$PA <- stats::predict(
+            sav_load_model("pa", predictors),
+            d_predict
+        ) |>
+            as.character() |>
+            as.integer()
     }
+    if ("cover" %in% type) {
+        out$Cover <- stats::predict(
+            sav_load_model("cover", predictors),
+            d_predict
+        )
+    }
+    
 
     if (!is.null(substrate)) {
         out <- out |>

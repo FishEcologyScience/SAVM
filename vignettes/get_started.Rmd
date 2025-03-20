@@ -91,9 +91,7 @@ head(sav_data$points)
 
 # User workflow 
 
-
-
-# User input 
+## Reading file
 
 Reading files. 
 

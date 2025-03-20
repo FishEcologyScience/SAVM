@@ -16,12 +16,14 @@ sav_model(
 \arguments{
 \item{d_inputs}{{\code{data.frame}}\cr{} A data frame with all inputs.}
 
-\item{type}{{\code{character} either \code{"cover"} or \code{"pa"}}\cr{} Model type.}
+\item{type}{{\code{character} vector, either \code{"cover"} or \code{"pa"}}\cr{}
+Model type(s).}
 
 \item{depth, fetch, substrate, secchi}{Column specification, see details.}
 }
 \value{
-A data frame  object of class \code{randomForest}.
+A data frame object with input column and predictionc: \code{Cover} if \code{type}= and/or \code{PA} depending
+on \code{type}
 }
 \description{
 Load Random Forest models for SAV cover and presence absence.
@@ -42,10 +44,10 @@ provided, the function will attempt to infer them from the column names.
 Matching is case-insensitive but must be exact.
 }
 \examples{
-\dontrun{
+\donttest{
 sav_model(data.frame(depth = c(5, 10)))
+sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 }
-
 }
 \references{
 \itemize{

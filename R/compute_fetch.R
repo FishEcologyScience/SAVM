@@ -25,14 +25,18 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
 #'      sf::st_read() 
-#'  le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
+#' le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
 #'      sf::st_read(quiet = TRUE)
-#' compute_fetch(le_pt, le_bound, 10, max_dist = 15000, crs = 3857)
+#' res <- compute_fetch(le_pt, le_bound, 10, max_dist = 15000, crs = 3857)
+#' # resultat 
+#' res$mean_fetch
+#' # visualizing fetch lines
+#' plot(le_bound |> sf::st_transform(crs = 3857) |> sf::st_geometry())
+#' plot(res$sf_fetch_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
-#'
 compute_fetch <- function(points, polygon, n_quad_seg, max_dist = 15000, wind_weights = NULL, crs = NULL) {
     valid_points(points)
     points$id_point <- seq_len(nrow(points))
