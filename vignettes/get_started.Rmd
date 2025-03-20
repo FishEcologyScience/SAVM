@@ -95,14 +95,14 @@ head(sav_data$points)
 
 Reading files. 
 
-```r
+```{r}
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-      sf::st_read()  |> 
-      sf::st_transform(crs = 3857)
+  sf::st_read() |>
+  sf::st_transform(crs = 3857)
 
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
-    
+
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 
 #'  le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
@@ -112,26 +112,27 @@ fetch <- compute_fetch(study_zone$points, le_bound, n_quad_seg = 10, max_dist = 
 
 depth <- stars::st_extract(study_depth, study_zone$points |> sf::st_transform(crs = sf::st_crs(study_depth)))
 
-d_inputs  <- data.frame(
-  depth = depth$le_bathy.tiff, 
+d_inputs <- data.frame(
+  depth = depth$le_bathy.tiff,
   fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
 )
 
-res  <- sav_model(d_inputs)
+res <- sav_model(d_inputs)
 
-# Visualize results 
+# Visualize results
 library(ggplot2)
+library(units)
 
 # Example scatterplot with improved aesthetics
 ggplot(res, aes(x = Fetch, y = Cover)) +
-  geom_point(color = "#2C7BB6", size = 3, alpha = 0.7) +  # Blue points, slightly transparent
-  geom_smooth(method = "lm", color = "#D7191C", linetype = "dashed", se = FALSE) +  # Red trendline
+  geom_point(color = "#2C7BB6", size = 3, alpha = 0.7) + # Blue points, slightly transparent
+  geom_smooth(method = "lm", color = "#D7191C", linetype = "dashed", se = FALSE) + # Red trendline
   labs(
     x = "Fetch Distance (km)",
     y = "SAV Cover (%)",
     title = "Relationship Between Fetch and SAV Cover"
   ) +
-  theme_minimal(base_size = 14) +  # Clean minimal theme
+  theme_minimal(base_size = 14) + # Clean minimal theme
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5), # Centered bold title
     axis.title = element_text(face = "bold"),
@@ -142,9 +143,8 @@ ggplot(res, aes(x = Fetch, y = Cover)) +
 plot(res$Fetch, res$Cover)
 
 study_zone$points$Cover <- res$Cover
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0,100)) +
+mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Predictions", zlim = c(0, 100)) +
   mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#000000", alpha.regions = 0.2, layer.name = "Area of interest")
-
 ```
 
 

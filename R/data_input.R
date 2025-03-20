@@ -1,4 +1,4 @@
-#' Master function to read SAV data from different formats
+#' Read SAV data from different formats
 #'
 #' @param file_path {`character`}\cr{} Path to the input file.
 #' @param spacing {`numeric`}\cr{} Spacing for grid generation (if AOI is used).
@@ -7,7 +7,9 @@
 #' @param export {`character`}\cr{} Optional. Folder path to export outputs as .gpkg.
 #'
 #' @return A list with `points` (sf object) and `polygon` (sf object).
-
+#'
+#' @rdname data_input
+#'
 #' @export
 #'
 #' @examples
@@ -45,7 +47,6 @@
 #' plot(st_geometry(tmp$points), add = TRUE)
 #'
 read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export = NULL) {
-    
     sav_msg_info("Determining file type and processing: {file_path}")
     file_ext <- tools::file_ext(file_path)
 
@@ -96,6 +97,8 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 #'
 #' @export
 #'
+#' @rdname data_input
+#'
 #' @examples
 #' # Example CSV file creation
 #' temp_csv <- tempfile(fileext = ".csv")
@@ -111,7 +114,6 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 #' # Read the CSV and convert to sf
 #' read_sav_csv(temp_csv, crs = 4326)
 read_sav_csv <- function(file_path, crs = 3857, ...) {
-
     # Read CSV
     df <- utils::read.csv(file_path, ...)
 
@@ -159,6 +161,8 @@ read_sav_csv <- function(file_path, crs = 3857, ...) {
 #'
 #' @return {`sf`}\cr{} An sf object with required and optional columns.
 #'
+#' @rdname data_input
+#'
 #' @export
 #'
 #' @examples
@@ -182,7 +186,6 @@ read_sav_csv <- function(file_path, crs = 3857, ...) {
 #' read_sav_pts(temp_file)
 #'
 read_sav_pts <- function(file_path, crs = 3857) {
-
     # Read spatial file
     sf_obj <- sf::st_read(file_path, quiet = TRUE)
 
@@ -230,6 +233,8 @@ read_sav_pts <- function(file_path, crs = 3857) {
 #'
 #' @return A list with the original polygon and a grid of points.
 #'
+#' @rdname data_input
+#'
 #' @export
 #'
 #' @examples
@@ -248,7 +253,6 @@ read_sav_pts <- function(file_path, crs = 3857) {
 #' # Read the spatial polygon file and generate a grid
 #' read_sav_aoi(temp_file, spacing = 500)
 read_sav_aoi <- function(file_path, spacing = 500, crs = 3857) {
-    
     # Read spatial file
     polygon_sf <- sf::st_read(file_path, quiet = TRUE)
 
