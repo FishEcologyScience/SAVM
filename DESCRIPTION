@@ -43,6 +43,7 @@ Suggests:
     stars,
     tmap,
     vdiffr,
+    viridis,
     withr
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
