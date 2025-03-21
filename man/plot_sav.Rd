@@ -3,13 +3,14 @@
 \name{plot_sav_distribution}
 \alias{plot_sav_distribution}
 \alias{plot_sav_density}
+\alias{plot_sav_tmap}
 \title{Plot SAV Data Distribution}
 \usage{
 plot_sav_distribution(
   dat,
   type = c("pa", "cover"),
   predictors = c("depth", "fetch"),
-  post_hoc = FALSE,
+  post_hoc = TRUE,
   max_depth = 30,
   max_fetch = 15
 )
@@ -18,7 +19,15 @@ plot_sav_density(
   dat,
   predictors = c("depth", "fetch"),
   max_depth = 30,
-  post_hoc = FALSE
+  post_hoc = TRUE
+)
+
+plot_sav_tmap(
+  study_zone,
+  layers = c("pa", "cover", "depth", "fetch"),
+  interactive = TRUE,
+  export_path = NULL,
+  post_hoc = TRUE
 )
 }
 \arguments{
@@ -41,16 +50,36 @@ plot_sav_density(
 \item \code{"fetch"} (default) for fetch-based plots
 }}
 
-\item{post_hoc}{Logical value indicating whether to use post-hoc analyzed column (\code{pa_post_hoc}) instead of raw column (\code{pa}). Default is \code{FALSE}.}
+\item{post_hoc}{Logical value indicating whether to use post-hoc analyzed columns (\code{pa_post_hoc}, \code{cover_post_hoc}) instead of raw columns (\code{pa}, \code{cover}). Default is \code{FALSE}.}
 
 \item{max_depth}{Numeric value specifying the maximum depth bin (default: 30 meters).}
 
 \item{max_fetch}{Numeric value specifying the maximum fetch bin (default: 15 km).}
+
+\item{study_zone}{A list containing spatial objects:
+\itemize{
+\item \code{polygon}: An \code{sf} polygon object representing the area of interest.
+\item \code{points}: An \code{sf} points object containing SAV-related attributes.
+}}
+
+\item{layers}{Character vector specifying the layers to generate. Options:
+\itemize{
+\item \code{"pa"} (default) for presence/absence model predictions
+\item \code{"cover"} (default) for cover percentage model predictions
+\item \code{"depth"} (default) for depth predictor vavlues
+\item \code{"fetch"} (default) for fetch predictor vavlues
+}}
+
+\item{interactive}{Logical. If \code{TRUE} (default), generates an interactive map. If \code{FALSE}, creates a static map.}
+
+\item{export_path}{Character. If provided, saves the map to the specified file path. Default is \code{NULL}.}
 }
 \value{
 A set of ggplot2 plots displayed in a grid layout.
 
 One or two ggplot2 density plots visualizing SAV presence/absence by depth and/or fetch.
+
+A \code{tmap} map object, optionally saved to a file.
 }
 \description{
 This function generates up to four plots representing the distribution of submerged aquatic vegetation (SAV)
@@ -60,6 +89,9 @@ the corresponding columns are available in the input data.
 This function generates one or two density plots for submerged aquatic vegetation (SAV) presence (green)
 and absence (blue) as a function of depth (m) and/or fetch (km). It includes vertical dotted lines
 indicating the mean values for each.
+
+This function generates an interactive or static map of submerged aquatic vegetation (SAV) data,
+visualizing cover, presence/absence, depth, and fetch values.
 }
 \examples{
 # Example dataset
@@ -103,4 +135,42 @@ plot_sav_density(dat, predictors = "fetch")
 
 # Generate plots using post-hoc analyzed data
 plot_sav_density(dat, post_hoc = TRUE)
+polygon <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
+    sf::st_read() |>
+    sf::st_simplify(dTolerance = 1000)
+
+# Create sample points with attributes
+set.seed(42)
+points <- sf::st_sample(polygon, 100) |>
+    sf::st_sf() |>
+    dplyr::mutate(
+        cover = runif(100, 0, 100),
+        pa = sample(0:1, 100, replace = TRUE) |>
+            factor(levels = c(0, 1), labels = c("Absent", "Present")),
+        depth_m = runif(100, 0, 15),
+        fetch_km = runif(100, 0, 10),
+        cover_post_hoc = runif(100, 0, 100),
+        pa_post_hoc = sample(0:1, 100, replace = TRUE) |>
+            factor(levels = c(0, 1), labels = c("Absent", "Present")),
+    )
+
+# Combine into study_zone list
+study_zone <- list(polygon = polygon, points = points)
+
+# Generate an interactive map
+plot_sav_tmap(study_zone, interactive = TRUE)
+
+# Generate a static map
+plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+
+# Save map to html file
+\dontrun{
+plot_sav_tmap(study_zone, export_path = "sav_map.html")
+}
+
+# Visualize interactive map & save map to static png file
+\dontrun{
+plot_sav_tmap(study_zone, layers = "pa", export_path = "sav_map.png")
+}
+
 }

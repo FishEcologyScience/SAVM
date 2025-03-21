@@ -3,6 +3,7 @@
 export(compute_fetch)
 export(plot_sav_density)
 export(plot_sav_distribution)
+export(plot_sav_tmap)
 export(read_sav)
 export(read_sav_aoi)
 export(read_sav_csv)
