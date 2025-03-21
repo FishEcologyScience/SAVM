@@ -1,6 +1,6 @@
 # --------- plot_sav_distribution
 # Sample dataset for testing
-set.seed(123)
+withr::with_seed(123, {
 test_data <- data.frame(
   depth_m = runif(100, 0, 15),
   fetch_km = runif(100, 0, 15),
@@ -8,7 +8,7 @@ test_data <- data.frame(
   cover = runif(100, 0, 100),
   pa_post_hoc = sample(0:1, 100, replace = TRUE),
   cover_post_hoc = runif(100, 0, 100)
-)
+})
 
 test_that("Function runs without errors for default parameters", {
   pdf(NULL)
