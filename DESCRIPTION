@@ -32,18 +32,17 @@ Imports:
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
     stats,
+    tmap (>= 4.0),
     tools,
     units,
-    utils
+    utils,
+    viridis (>= 0.6.5)
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    mapview,
     rmarkdown,
     stars,
-    tmap,
     vdiffr,
-    viridis,
     withr
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr

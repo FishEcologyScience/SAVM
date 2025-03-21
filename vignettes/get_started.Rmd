@@ -18,7 +18,6 @@ knitr::opts_chunk$set(
 library(SAVM)
 library(sf)
 library(stars)
-library(mapview)
 ```
 
 # Introduction
@@ -30,8 +29,8 @@ This vignette provides an overview of the workflow offered by the **Submerged Aq
 
 ## Reading files
 
-As an example, we consider a zone near Buffalo in the Lake Erie. Note that all the data 
-required data are included on in the package SAVM.  
+As an example, we consider a zone near Buffalo in the Lake Erie. Note that all 
+the data required data are included on in the package SAVM.  
 
 ```{r}
 # Lake Erie boundaries polygon
@@ -45,40 +44,52 @@ study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
 
 # Depth
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
-
-# Using mapview to map objects
-mapview(study_depth) + mapview(study_zone$polygon) + mapview(study_zone$points)
 ```
 
 > ***Note on spatial projections***: *The `SAVM` package works with spatial coordinates in meters and the WGS 84 / UTM zone 17N ([epsg:32617](https://epsg.io/32617)) projection as a default option since it was originally developped for use in the Great Lakes (WGS 84 / UTM zone 18N ([epsg:32618](https://epsg.io/32618)) is also a an option). Other viable options in a North American context are NAD83 / UTM zone 17N ([epsg:26917](https://epsg.io/26917)) and NAD83(CSRS) / UTM zone 17N ([egsg::2958](https://epsg.io/2958)).*
 
+
 ## Compute fetch and extract depth
 
-### Copute fetch 
+### Compute fetch 
+
+To compute wind fetch (in kilometers, we called `compute_fetch()`), by default, the maximum distance is set to 15 km (see argument `max_dist`) and the default number of radial transect by quadrant is 9 (see argument `n_quad_seg`).
 
 ```{r fetch}
-fetch <- compute_fetch(study_zone$points, le_bound, max_dist = 15)
+fetch <- compute_fetch(study_zone$points, le_bound)
 fetch
 ```
 
 
 ### Extract depth 
 
+To extract depth data from an raster file for our study points, we use `st_extract()` from the package `stars`. Note that the points and the raster must use the same projection.
+
 ```{r extract_depth}
-depth <- stars::st_extract(study_depth, study_zone$points |>
-  sf::st_transform(crs = sf::st_crs(study_depth)))
+depth <- st_extract(
+  study_depth, 
+  study_zone$points |>
+    sf::st_transform(crs = sf::st_crs(study_depth))
+)
+depth
 ```
 
-Create an input data frame
+This return an sf object ad the `le_bathy.tiff` contain the depth values. 
+
+
+
+## Model 
+
+With the `depth` and `fetch`, we create an data frame that contains the predictor value for all points.
 
 ```{r }
 dat <- data.frame(
-  depth = depth$le_bathy.tiff,
-  fetch = fetch$mean_fetch$fetch_km
+  depth_m = depth$le_bathy.tiff,
+  fetch_km = fetch$mean_fetch$fetch_km
 )
 ```
 
-## Model 
+You can generate predictions using `sav_model(dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
 
 ```{r}
 # get input
@@ -86,29 +97,58 @@ res <- sav_model(dat)
 res
 ```
 
+Even without additional columns, the model will return columns containing post hoc results. For SAV cover, if presence-absence predictions are available, the cover_post_hoc column will contain cover values set to 0 where absence is predicted.
+
+There are three additionnal limitaions that can be used as posthoc treatement. The `secchi` parameter should contain Secchi depth values and is used to compute Vmax following the equation from Chambers and Kalff (1985). If `depth` is also provided, it is compared to Vmax: when the depth exceeds Vmax, both cover and presence-absence are set to 0. The `substrate` and `limitation` parameters are binary variables that can be used to set cover and presence-absence to 0 based on external knowledge or site-specific constraints.
+
+Below we used an example with random Secchi depth values:
+
+```{r}
+res_secchi <- sav_model(
+  cbind(dat, secchi = runif(nrow(dat), 4, 12))
+  )
+res_secchi
+```
+
+
 
 ## Vizualize
 
-```
-# Visualize results 
-library(ggplot2)
-library(units)
+The package includes plotting helper functions. `plot_sav_distribution(res)` allows users to visualize the distribution of SAV cover and presence/absence across predictor bins. Alternatively, `plot_sav_density(res)` provides a density-based visualization rather than using binned values.
 
-study_zone$points$Cover <- res$Cover
-study_zone$points$PA <- res$PA
-study_zone$points$Depth <- res$Depth
-study_zone$points$Fetch <- res$Fetch
-
-plot_sav_distribution(study_zone$points |> sf::st_drop_geometry())
-
-plot_sav_density(study_zone$points |> sf::st_drop_geometry())
+```{r}
+# Visualize results
+plot_sav_distribution(res_secchi)
+plot_sav_density(res_secchi)
 ```
 
+Note that these functions include an option to force the use of raw predictions without applying the post hoc treatment.
 
+```{r}
+plot_sav_distribution(res_secchi, post_hoc = FALSE)
+plot_sav_density(res_secchi, post_hoc = FALSE)
 ```
-mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
-mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
-mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
-mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
-mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
+
+
+Finally, the function `plot_sav_tmap()` allows to draw map by leveraging the 
+package `tmap` (https://r-tmap.github.io/tmap/).
+
+
+```{r}
+study_zone$points <- cbind(study_zone$points, res)
+plot_sav_tmap(study_zone)
+plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
 ```
+
+
+
+# References 
+
+* Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
+D. 2022. Modelling submerged aquatic vegetation presence and percent cover
+to support the development of a freshwater fish habitat management tool.
+Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
+
+* Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of
+Submerged aquatic macrophyte communities in relation to secchi depth.
+Can. J. Fish. Aquat. Sci. 42: 701–709
