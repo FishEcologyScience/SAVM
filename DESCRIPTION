@@ -27,8 +27,9 @@ Depends:
 Imports: 
     cli (>= 3.6.4),
     dplyr (>= 1.1.4),
-    ggplot2,
+    ggplot2 (>= 3.5.1),
     gridExtra,
+    patchwork (>= 1.3.0),
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
     stats,
