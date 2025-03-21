@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{sav_model}
 \alias{sav_model}
-\title{Load Random Forest models}
+\title{Apply Random Forest models}
 \usage{
 sav_model(
   dat,
@@ -12,7 +12,7 @@ sav_model(
   substrate = NULL,
   secchi = NULL,
   limitation = NULL,
-  vmax_par = list(intercept = 1.14, slope = 1.32)
+  vmax_par = list(intercept = 1.4, slope = 1.33)
 )
 }
 \arguments{
@@ -21,30 +21,44 @@ following columns:
 \itemize{
 \item \code{depth_m}: Numeric, depth in meters.
 \item \code{fetch_km}: Numeric, fetch in kilometers.
-\item \code{secchi}: Numeric Secchi depth (post_hoc)
+\item \code{secchi}: Numeric Secchi depth in meters (post_hoc)
 \item \code{substrate}: Binary (0 = absent, 1 = present), indicating substrate
 limitations. (post_hoc)
 \item \code{limitation}: Binary (0 = absent, 1 = present), indicating user-supplied
 limitations.
+Additionnal columns will be ignored.
 }}
 
 \item{type}{{\verb{character vector}, either \code{"cover"} or \code{"pa"}}\cr{}
 Model type(s).}
 
-\item{depth, fetch, substrate, secchi, limitation}{Column specification, see details.}
+\item{depth, fetch}{{\code{character}} Column specification for the predictors,
+see \emph{Details}.}
+
+\item{substrate, secchi, limitation}{Column specification for post_hoc
+variables, see \emph{Details}.}
 
 \item{vmax_par}{{\verb{named list}}\cr{} intercept and slope of the equation from
 Chambers and Kalff (1985) to compute the maximum depth of plant colonization
-(Vmax). Default values taken from model A in Croft-White et al. (2022). See
-section details for more details.}
+(Vmax), see \emph{Details} below.}
 }
 \value{
-A data frame object with input columns and predictions: \code{Cover} if \code{type}=
-and/or \code{PA} depending
-on \code{type}
+A data frame containing the input columns along with model predictions.
+
+The prediction column names match the values specified in \code{type}, and contain
+the raw model outputs (i.e., without post-hoc adjustment).
+
+Post-hoc adjusted predictions (see \emph{Details}) are included in additional
+columns with the same names as the \code{type} values, but with the suffix
+\verb{_post_hoc}.
+
+If a column \code{secchi} is present, then two additionnal columns are
+returned: \code{vmax} and \code{limitation_secchi}, see details for further
+explanation.
 }
 \description{
-Load Random Forest models for SAV cover and presence absence.
+Apply Random Forest models to predict SAV cover and presence/absence, with
+optional post-hoc processing.
 }
 \details{
 There are two sets of models available. The first set consists of models
@@ -62,13 +76,44 @@ explicitly provided, the function will attempt to infer them from the column
 names. Matching is case-insensitive and will detect 'depth_m', 'depth',
 'fetch_km' and 'fetch'.
 
-If \code{secchi} is present, then a column \code{vmax} is returned that includes the
-maximum depth of plant colonization that can be used in post-hoc with de
+If \code{secchi} is provided, two additional columns are returned:
+\itemize{
+\item \code{vmax}: Predicted maximum colonization depth calculated using the Chambers
+and Kalff equation.
+\item \code{limitation_secchi}: Logical column indicating light limitation. \code{TRUE} if
+\code{vmax >= depth_m},  indicating the site is light-limited; \code{FALSE} otherwise.
+}
+
+The regression parameters for the Chambers and Kalff equation can be
+adjusted via the \code{vmax_par} argument. By default, parameters from Model A
+(Quebec and international lakes) in Croft-White et al. (2022) are used. To
+apply Model B (Quebec lakes only), use:
+
+\code{vmax_par = list(intercept = 1.32, slope = 1.14)}
+
+The post-hoc treatment adjusts raw predictions by setting them to 0 wherever
+limitations are present. Possible limitation columns include \code{substrate},
+\code{limitation}, and \code{limitation_secchi} (see descriptions above). These
+columns are treated as binary indicators: any value greater than 0 is
+interpreted as a limiting condition. If a limitation is detected, the
+corresponding prediction is set to 0 in the post-hoc adjusted output.
 }
 \examples{
 \donttest{
+
+# basic usage 
 sav_model(data.frame(depth = c(5, 10)))
 sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
+
+# using post-hoc tretment 
+sav_model(
+ data.frame(
+  depth = c(5, 10, 5), 
+  fetch = c(1, 2, 10), 
+  secchi = c(1, 10, 10), 
+  substrate = c(TRUE, TRUE, FALSE)
+ )
+)
 }
 }
 \references{

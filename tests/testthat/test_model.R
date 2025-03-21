@@ -49,7 +49,6 @@ res1_pa <- structure(list(depth_m = c(5, 10), pa = 1:0, pa_post_hoc = 1:0), row.
 ), class = "data.frame")
 
 
-
 test_that("sav_model() works", {
     withr::with_options(
         list(savm.verbose = "q"),
@@ -80,6 +79,51 @@ test_that("sav_load_model() fails gracefully", {
                 sav_model(df_ok_1, depth = "depth2"),
                 "`depth2` is not a column of `dat`"
             )
+        }
+    )
+})
+
+
+df_ok_ph_2 <- df_ok_ph_1 <- data.frame(
+    depth_m = c(2, 2, 5),
+    fetch_km = c(1, 1, 1),
+    substrate = c(TRUE, TRUE, FALSE),
+    secchi = c(20, 1, 20),
+    custom = c(FALSE, TRUE, TRUE)
+)
+df_ok_ph_2[["depth_m"]] <- NULL
+
+res_ph1a <- structure(list(depth_m = c(2, 2, 5), fetch_km = c(1, 1, 1), substrate = c(
+    TRUE,
+    TRUE, FALSE
+), secchi = c(20, 1, 20), limitation_secchi = c(
+    TRUE,
+    FALSE, TRUE
+), vmax = c(28.242038767358, 1.7689, 28.242038767358), pa = c(1L, 1L, 0L), cover = c(
+    62.7603333333334, 62.7603333333334,
+    77.1123333333333
+), pa_post_hoc = c(1L, 0L, 0L), cover_post_hoc = c(
+    62.7603333333334,
+    0, 0
+)), row.names = c(NA, -3L), class = "data.frame")
+
+
+# next call
+res_ph1b <- res_ph1a
+res_ph1b$limitation <- df_ok_ph_2$custom
+res_ph1b <- res_ph1b |>
+    dplyr::relocate(limitation, .after = vmax)
+res_ph1b$pa_post_hoc[1L] <- 0L
+res_ph1b$cover_post_hoc[1L] <- 0
+
+
+test_that("sav_model() works", {
+    withr::with_options(
+        list(savm.verbose = "warning"),
+        {
+            expect_equal(sav_model(df_ok_ph_1), res_ph1a)
+            expect_equal(sav_model(df_ok_ph_1, limitation = "custom"), res_ph1b)
+            expect_warning(sav_model(df_ok_ph_2))
         }
     )
 })
