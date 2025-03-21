@@ -40,11 +40,11 @@ withr::with_options(
       temp_file <- tempfile(fileext = ".gpkg")
       sf::st_write(temp_sf, temp_file, quiet = TRUE)
 
-      # Run function (should transform to EPSG:3857)
+      # Run function (should transform to EPSG:32617)
       result <- read_sav_pts(temp_file)
 
-      # Check that CRS is transformed to EPSG:3857
-      expect_true(sf::st_crs(result)$epsg == 3857)
+      # Check that CRS is transformed to EPSG:32617
+      expect_true(sf::st_crs(result)$epsg == 32617)
     })
 
     test_that("read_sav_pts() correctly updates longitude and latitude after CRS transformation", {
@@ -60,7 +60,7 @@ withr::with_options(
       temp_file <- tempfile(fileext = ".gpkg")
       sf::st_write(temp_sf, temp_file, quiet = TRUE)
 
-      # Run function (should transform to EPSG:3857)
+      # Run function (should transform to EPSG:32617)
       result <- read_sav_pts(temp_file)
 
       # Extract transformed coordinates
@@ -113,7 +113,7 @@ withr::with_options(
       result <- read_sav_pts(temp_file)
 
       # Expected columns
-      expected_cols <- c("longitude", "latitude", "depth_m", "mean_fetch_km", "turbidity", "substrate_limits", "geom")
+      expected_cols <- c("longitude", "latitude", "depth_m", "fetch_km", "secchi", "substrate", "limitation", "geom")
 
       expect_setequal(colnames(result), intersect(colnames(result), expected_cols)) # Ensure only expected columns exist
       expect_false("extra_col" %in% colnames(result)) # Extra column should be removed
@@ -139,8 +139,8 @@ withr::with_options(
 
     test_that("read_sav_pts() handles missing files gracefully", {
       expect_error(
-        read_sav_pts("nonexistent_file.gpkg"), 
-        "The file doesn't seem to exist"  
+        read_sav_pts("nonexistent_file.gpkg"),
+        "The file doesn't seem to exist"
       )
     })
 
@@ -160,8 +160,8 @@ withr::with_options(
       # Run function with EPSG:26917 (UTM zone 17N)
       result <- read_sav_pts(temp_file)
 
-      # Check that CRS is transformed to EPSG:3857
-      expect_true(sf::st_crs(result)$epsg == 3857)
+      # Check that CRS is transformed to EPSG:32617
+      expect_true(sf::st_crs(result)$epsg == 32617)
     })
 
     test_that("read_sav_pts() correctly exports data when export path is provided", {
@@ -187,7 +187,7 @@ withr::with_options(
       result <- read_sav_pts(temp_file)
 
       # Check if CRS was correctly transformed
-      expect_true(sf::st_crs(result)$epsg == 3857)
+      expect_true(sf::st_crs(result)$epsg == 32617)
     })
   }
 )

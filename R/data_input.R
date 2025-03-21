@@ -3,7 +3,8 @@
 #' @param file_path {`character`}\cr{} Path to the input file.
 #' @param spacing {`numeric`}\cr{} Spacing for grid generation (if AOI is used).
 #' @param layer {`character`}\cr{} Layer name for multi-layer spatial files (default: NULL).
-#' @param crs {`numeric`}\cr{} Coordinate Reference System (CRS) of the input data. Default is 3857.
+#' @param crs {`numeric`}\cr{} Coordinate Reference System (CRS) of the output data. Default is 32617.
+#' @param crs_input {`numeric`}\cr{} Coordinate Reference System (CRS) of the input data, used for CSV import. Default is 4326.
 #' @param export {`character`}\cr{} Optional. Folder path to export outputs as .gpkg.
 #'
 #' @return A list with `points` (sf object) and `polygon` (sf object).
@@ -20,12 +21,12 @@
 #'     longitude = c(-82.5, -83.0, -84.8),
 #'     latitude = c(42.5, 42.8, 42.6),
 #'     depth_m = c(5, 10, 7),
-#'     mean_fetch_km = c(2.5, 3.0, 2.8),
-#'     turbidity = c(1.2, 2.3, 1.8),
-#'     substrate_limits = c(TRUE, FALSE, TRUE)
+#'     fetch_km = c(2.5, 3.0, 2.8),
+#'     secchi = c(1.2, 2.3, 1.8),
+#'     substrate = c(TRUE, FALSE, TRUE)
 #' ), temp_csv, row.names = FALSE)
 #'
-#' tmp <- read_sav(temp_csv, crs = 3857)
+#' tmp <- read_sav(temp_csv, crs = 32617, crs_input = 4326)
 #' head(tmp$points)
 #' plot(st_geometry(tmp$polygon))
 #' plot(st_geometry(tmp$points), add = TRUE)
@@ -41,12 +42,12 @@
 #' temp_file <- tempfile(fileext = ".gpkg")
 #' st_write(temp_poly, temp_file, quiet = TRUE)
 #'
-#' tmp <- read_sav(temp_file, spacing = 500, crs = 3857)
+#' tmp <- read_sav(temp_file, spacing = 500, crs = 32617)
 #' head(tmp$points)
 #' plot(st_geometry(tmp$polygon))
 #' plot(st_geometry(tmp$points), add = TRUE)
 #'
-read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export = NULL) {
+read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_input = 4326, export = NULL) {
     sav_msg_info("Determining file type and processing: {file_path}")
     file_ext <- tools::file_ext(file_path)
 
@@ -63,10 +64,10 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
         geom_type <- sf::st_geometry_type(sf_obj)
 
         if (all(geom_type %in% c("POINT", "MULTIPOINT"))) {
-            points_sf <- read_sav_pts(file_path)
+            points_sf <- read_sav_pts(file_path, crs = crs)
             polygon_sf <- sf::st_sf(geometry = sf::st_union(points_sf) |> sf::st_convex_hull())
         } else if (all(geom_type %in% c("POLYGON", "MULTIPOLYGON"))) {
-            aoi_result <- read_sav_aoi(file_path, spacing)
+            aoi_result <- read_sav_aoi(file_path, spacing, crs)
             points_sf <- aoi_result$points
             polygon_sf <- aoi_result$polygon
         } else {
@@ -90,14 +91,15 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 #'
 #' @param file_path {`character`}\cr{} Path to the CSV file.
 #' @param crs {`object`}\cr{} Coordinate reference system (CRS)
-#' of the input data (see [sf::st_crs()]). Default is 3857.
+#' of the output data (see [sf::st_crs()]). Default is 32617.
+#' @param crs_input {`numeric`}\cr{} Coordinate Reference System (CRS) of the input data, used for CSV import. Default is 4326.
 #' @param ... Further arguments passed on to [utils::read.csv()].
 #'
 #' @return An sf object with required and optional columns.
 #'
-#' @export
-#'
 #' @rdname data_input
+#'
+#' @export
 #'
 #' @examples
 #' # Example CSV file creation
@@ -106,20 +108,21 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 3857, export 
 #'     longitude = c(-82.5, -83.0, -83.2),
 #'     latitude = c(42.5, 42.8, 42.6),
 #'     depth_m = c(5, 10, 7),
-#'     mean_fetch_km = c(2.5, 3.0, 2.8),
-#'     turbidity = c(1.2, 2.3, 1.8),
-#'     substrate_limits = c(TRUE, FALSE, TRUE)
+#'     fetch_km = c(2.5, 3.0, 2.8),
+#'     secchi = c(1.2, 2.3, 1.8),
+#'     substrate = c(TRUE, FALSE, TRUE),
+#'     limitation = c(FALSE, FALSE, TRUE)
 #' ), temp_csv, row.names = FALSE)
 #'
 #' # Read the CSV and convert to sf
-#' read_sav_csv(temp_csv, crs = 4326)
-read_sav_csv <- function(file_path, crs = 3857, ...) {
+#' read_sav_csv(temp_csv, crs = 32614, crs_input = 4326)
+read_sav_csv <- function(file_path, crs = 32617, crs_input = 4326, ...) {
     # Read CSV
     df <- utils::read.csv(file_path, ...)
 
     # Validate required columns
     required_cols <- c("longitude", "latitude")
-    optional_cols <- c("depth_m", "mean_fetch_km", "turbidity", "substrate_limits")
+    optional_cols <- c("depth_m", "fetch_km", "secchi", "substrate", "limitation")
     missing_cols <- setdiff(required_cols, names(df))
 
     if (length(missing_cols) > 0) {
@@ -143,12 +146,22 @@ read_sav_csv <- function(file_path, crs = 3857, ...) {
     )
 
     # Convert to sf object with user-specified CRS
-    sf::st_as_sf(
+    sf_obj <- sf::st_as_sf(
         df,
         coords = c("longitude", "latitude"),
-        crs = crs,
+        crs = crs_input,
         remove = FALSE
     )
+
+    # Check CRS and transform if necessary
+    if (sf::st_crs(sf_obj)$epsg != sf::st_crs(crs)) {
+        sav_msg_info("Transforming spatial data.")
+        sf_obj <- sf::st_transform(sf_obj, crs = sf::st_crs(crs))
+        coords <- sf::st_coordinates(sf_obj)
+        sf_obj <- sf_obj |> dplyr::mutate(longitude = coords[, 1], latitude = coords[, 2])
+    }
+
+    return(sf_obj)
 }
 
 
@@ -157,7 +170,7 @@ read_sav_csv <- function(file_path, crs = 3857, ...) {
 #'
 #' @param file_path {`character`}\cr{} Path to the spatial file.
 #' @param crs {`object`}\cr{} Coordinate reference system (CRS)
-#' of the input data (see [sf::st_crs()]). Default is 3857.
+#' of the output data (see [sf::st_crs()]). Default is 32617.
 #'
 #' @return {`sf`}\cr{} An sf object with required and optional columns.
 #'
@@ -185,7 +198,7 @@ read_sav_csv <- function(file_path, crs = 3857, ...) {
 #' # Read the spatial file and convert to sf
 #' read_sav_pts(temp_file)
 #'
-read_sav_pts <- function(file_path, crs = 3857) {
+read_sav_pts <- function(file_path, crs = 32617) {
     # Read spatial file
     sf_obj <- sf::st_read(file_path, quiet = TRUE)
 
@@ -206,7 +219,7 @@ read_sav_pts <- function(file_path, crs = 3857) {
 
     # Select relevant columns
     required_cols <- c("longitude", "latitude")
-    optional_cols <- c("depth_m", "mean_fetch_km", "turbidity", "substrate_limits")
+    optional_cols <- c("depth_m", "fetch_km", "secchi", "substrate", "limitation")
     retained_cols <- intersect(names(sf_obj), c(required_cols, optional_cols))
     removed_cols <- setdiff(names(sf_obj), c(retained_cols, "geom"))
     sf_obj <- sf_obj |>
@@ -229,7 +242,7 @@ read_sav_pts <- function(file_path, crs = 3857) {
 #' @param file_path {`character`}\cr{} Path to the spatial polygon file.
 #' @param spacing {`numeric`}\cr{} Distance between points in meters.
 #' @param crs {`object`}\cr{} Coordinate reference system (CRS)
-#' of the input data (see [sf::st_crs()]). Default is 3857.
+#' of the output data (see [sf::st_crs()]). Default is 32617.
 #'
 #' @return A list with the original polygon and a grid of points.
 #'
@@ -252,7 +265,7 @@ read_sav_pts <- function(file_path, crs = 3857) {
 #'
 #' # Read the spatial polygon file and generate a grid
 #' read_sav_aoi(temp_file, spacing = 500)
-read_sav_aoi <- function(file_path, spacing = 500, crs = 3857) {
+read_sav_aoi <- function(file_path, spacing = 500, crs = 32617) {
     # Read spatial file
     polygon_sf <- sf::st_read(file_path, quiet = TRUE)
 

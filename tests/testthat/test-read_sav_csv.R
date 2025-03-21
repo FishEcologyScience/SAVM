@@ -8,13 +8,14 @@ withr::with_options(
         longitude = c(-82.5, -83.0, -83.2),
         latitude = c(42.5, 42.8, 42.6),
         depth_m = c(5, 10, 7),
-        mean_fetch_km = c(2.5, 3.0, 2.8),
-        turbidity = c(1.2, 2.3, 1.8),
-        substrate_limits = c(TRUE, FALSE, TRUE)
+        fetch_km = c(2.5, 3.0, 2.8),
+        secchi = c(1.2, 2.3, 1.8),
+        substrate = c(TRUE, FALSE, TRUE),
+        limitation = c(FALSE, FALSE, TRUE)
       ), temp_csv, row.names = FALSE)
 
       # Run the function
-      result <- read_sav_csv(temp_csv, crs = 4326)
+      result <- read_sav_csv(temp_csv, crs = 32617, crs_input = 4326)
 
       # Check outputs
       expect_s3_class(result, "sf") # Should return an sf object
@@ -29,14 +30,15 @@ withr::with_options(
         longitude = c(-82.5, -83.0, -83.2),
         latitude = c(42.5, 42.8, 42.6),
         depth_m = c(5, 10, 7),
-        mean_fetch_km = c(2.5, 3.0, 2.8),
-        turbidity = c(1.2, 2.3, 1.8),
-        substrate_limits = c(TRUE, FALSE, TRUE)
+        fetch_km = c(2.5, 3.0, 2.8),
+        secchi = c(1.2, 2.3, 1.8),
+        substrate = c(TRUE, FALSE, TRUE),
+        limitation = c(FALSE, FALSE, TRUE)
       ), temp_csv, row.names = FALSE)
 
-      # Run the function with default CRS (should transform to EPSG:3857)
-      result <- read_sav_csv(temp_csv, crs = 4326)
-      expect_true(sf::st_crs(result)$epsg == 4326)
+      # Run the function with default CRS (should transform to EPSG:32617)
+      result <- read_sav_csv(temp_csv, crs_input = 4326)
+      expect_true(sf::st_crs(result)$epsg == 32617)
     })
 
     test_that("read_sav_csv() correctly retains required and optional columns", {
@@ -49,10 +51,10 @@ withr::with_options(
         extra_col = c("A", "B") # This column should be removed
       ), temp_csv, row.names = FALSE)
 
-      result <- read_sav_csv(temp_csv, crs = 3857)
+      result <- read_sav_csv(temp_csv, crs = 32617)
 
       # Expected columns
-      expected_cols <- c("longitude", "latitude", "depth_m", "mean_fetch_km", "turbidity", "substrate_limits", "geometry")
+      expected_cols <- c("longitude", "latitude", "depth_m", "fetch_km", "secchi", "substrate", "limitation", "geometry")
 
       expect_setequal(colnames(result), intersect(colnames(result), expected_cols)) # Ensure only expected columns exist
       expect_false("extra_col" %in% colnames(result)) # Extra column should be removed
@@ -64,9 +66,9 @@ withr::with_options(
       write.csv(data.frame(
         longitude = c(-82.5, -83.0, -83.2),
         depth_m = c(5, 10, 7),
-        mean_fetch_km = c(2.5, 3.0, 2.8),
-        turbidity = c(1.2, 2.3, 1.8),
-        substrate_limits = c(TRUE, FALSE, TRUE)
+        fetch_km = c(2.5, 3.0, 2.8),
+        secchi = c(1.2, 2.3, 1.8),
+        substrate = c(TRUE, FALSE, TRUE)
       ), temp_csv, row.names = FALSE)
       # Expect an error about missing required columns
       expect_error(read_sav_csv(temp_csv), "Missing required columns")
@@ -87,12 +89,12 @@ withr::with_options(
         longitude = c(-82.5, -83.0, -83.2),
         latitude = c(42.5, 42.8, 42.6),
         depth_m = c(5, 10, 7),
-        mean_fetch_km = c(2.5, 3.0, 2.8),
-        turbidity = c(1.2, 2.3, 1.8),
-        substrate_limits = c(TRUE, FALSE, TRUE)
+        fetch_km = c(2.5, 3.0, 2.8),
+        secchi = c(1.2, 2.3, 1.8),
+        substrate = c(TRUE, FALSE, TRUE)
       ), temp_csv, row.names = FALSE)
-      # Run function with a non-3857 CRS (to trigger transformation)
-      result <- read_sav_csv(temp_csv, crs = 4326)
+      # Run function with a non-32617 CRS (to trigger transformation)
+      result <- read_sav_csv(temp_csv, crs = 32617, crs_input = 4326)
 
       # Extract transformed coordinates
       transformed_coords <- sf::st_coordinates(result)
@@ -112,25 +114,8 @@ withr::with_options(
       ), temp_csv, row.names = FALSE)
 
       # Run function with EPSG:26917 (UTM zone 17N)
-      result <- read_sav_csv(temp_csv, crs = 26917)
+      result <- read_sav_csv(temp_csv, crs = 26917, crs_input = 4326)
       expect_true(sf::st_crs(result)$epsg == 26917)
-    })
-
-    test_that("read_sav_csv() correctly exports data when export path is provided", {
-      # Create a temporary CSV file
-      temp_csv <- tempfile(fileext = ".csv")
-      write.csv(data.frame(
-        longitude = c(-82.5, -83.0),
-        latitude = c(42.5, 42.8),
-        depth_m = c(5, 10)
-      ), temp_csv, row.names = FALSE)
-
-      # Temporary export directory
-      temp_dir <- tempdir()
-
-      # Run function with export
-      result <- read_sav_csv(temp_csv)
-      expect_true(sf::st_crs(result)$epsg == 3857)
     })
   }
 )

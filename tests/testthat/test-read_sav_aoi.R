@@ -23,7 +23,7 @@ withr::with_options(
       expect_s3_class(result$polygon, "sf")
       expect_s3_class(result$points, "sf")
       expect_gt(nrow(result$points), 0) # Ensure points were created
-      expect_true(sf::st_crs(result$polygon)$epsg == 3857) # default proj
+      expect_true(sf::st_crs(result$polygon)$epsg == 32617) # default proj
     })
 
 
@@ -85,7 +85,7 @@ withr::with_options(
       temp_file <- tempfile(fileext = ".gpkg")
       sf::st_write(temp_poly, temp_file, quiet = TRUE)
 
-      # Run function (should transform to EPSG:3857)
+      # Run function (should transform to EPSG:32617)
       result <- read_sav_aoi(temp_file, spacing = 500)
 
       # Extract transformed coordinates
@@ -113,8 +113,8 @@ withr::with_options(
       # Run function with EPSG:26917 (UTM zone 17N)
       result <- read_sav_aoi(temp_file, spacing = 500)
 
-      # Check that CRS is transformed to EPSG:3857
-      expect_true(sf::st_crs(result$polygon)$epsg == 3857)
+      # Check that CRS is transformed to EPSG:32617
+      expect_true(sf::st_crs(result$polygon)$epsg == 32617)
     })
   }
 )
