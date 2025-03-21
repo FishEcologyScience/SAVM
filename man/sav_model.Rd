@@ -5,24 +5,42 @@
 \title{Load Random Forest models}
 \usage{
 sav_model(
-  d_inputs,
+  dat,
   type = c("cover", "pa"),
   depth = NULL,
   fetch = NULL,
   substrate = NULL,
-  secchi = NULL
+  secchi = NULL,
+  limitation = NULL,
+  vmax_par = list(intercept = 1.14, slope = 1.32)
 )
 }
 \arguments{
-\item{d_inputs}{{\code{data.frame}}\cr{} A data frame with all inputs.}
+\item{dat}{{\code{data.frame}}\cr{} A \code{data.frame} containing some or all of the
+following columns:
+\itemize{
+\item \code{depth_m}: Numeric, depth in meters.
+\item \code{fetch_km}: Numeric, fetch in kilometers.
+\item \code{secchi}: Numeric Secchi depth (post_hoc)
+\item \code{substrate}: Binary (0 = absent, 1 = present), indicating substrate
+limitations. (post_hoc)
+\item \code{limitation}: Binary (0 = absent, 1 = present), indicating user-supplied
+limitations.
+}}
 
-\item{type}{{\code{character} vector, either \code{"cover"} or \code{"pa"}}\cr{}
+\item{type}{{\verb{character vector}, either \code{"cover"} or \code{"pa"}}\cr{}
 Model type(s).}
 
-\item{depth, fetch, substrate, secchi}{Column specification, see details.}
+\item{depth, fetch, substrate, secchi, limitation}{Column specification, see details.}
+
+\item{vmax_par}{{\verb{named list}}\cr{} intercept and slope of the equation from
+Chambers and Kalff (1985) to compute the maximum depth of plant colonization
+(Vmax). Default values taken from model A in Croft-White et al. (2022). See
+section details for more details.}
 }
 \value{
-A data frame object with input column and predictionc: \code{Cover} if \code{type}= and/or \code{PA} depending
+A data frame object with input columns and predictions: \code{Cover} if \code{type}=
+and/or \code{PA} depending
 on \code{type}
 }
 \description{
@@ -38,10 +56,14 @@ further details, see Croft-White (2022).
 The selected model for generating predictions is determined by the type
 argument, which specifies the output as either cover or presence-absence,
 depending on the available predictors. The required input variables—depth,
-fetch, substrate, and secchi—must correspond to column names in d_inputs;
-otherwise, an error is thrown. If neither depth nor fetch is explicitly
-provided, the function will attempt to infer them from the column names.
-Matching is case-insensitive but must be exact.
+fetch, substrate, secchi, limitation—must correspond to column names in
+\code{dat}; otherwise, an error is thrown. If neither 'depth' nor 'fetch' is
+explicitly provided, the function will attempt to infer them from the column
+names. Matching is case-insensitive and will detect 'depth_m', 'depth',
+'fetch_km' and 'fetch'.
+
+If \code{secchi} is present, then a column \code{vmax} is returned that includes the
+maximum depth of plant colonization that can be used in post-hoc with de
 }
 \examples{
 \donttest{
@@ -55,5 +77,8 @@ sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 D. 2022. Modelling submerged aquatic vegetation presence and percent cover
 to support the development of a freshwater fish habitat management tool.
 Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
+\item Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of
+Submerged aquatic macrophyte communities in relation to secchi depth.
+Can. J. Fish. Aquat. Sci. 42: 701–709
 }
 }

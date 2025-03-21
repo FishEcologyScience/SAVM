@@ -26,7 +26,7 @@ library(mapview)
 This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation (SAV) Model R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
 
 
-# User workflow 
+# User workflow
 
 ## Reading files
 
@@ -57,7 +57,7 @@ mapview(study_depth) + mapview(study_zone$polygon) + mapview(study_zone$points)
 ### Copute fetch 
 
 ```{r fetch}
-fetch <- compute_fetch(study_zone$points, le_bound, n_quad_seg = 10, max_dist = 15000)
+fetch <- compute_fetch(study_zone$points, le_bound, max_dist = 15)
 fetch
 ```
 
@@ -65,15 +65,16 @@ fetch
 ### Extract depth 
 
 ```{r extract_depth}
-depth <- stars::st_extract(study_depth, study_zone$points |> sf::st_transform(crs = sf::st_crs(study_depth)))
+depth <- stars::st_extract(study_depth, study_zone$points |>
+  sf::st_transform(crs = sf::st_crs(study_depth)))
 ```
 
 Create an input data frame
 
 ```{r }
-d_inputs <- data.frame(
+dat <- data.frame(
   depth = depth$le_bathy.tiff,
-  fetch = units::set_units(fetch$mean_fetch$mean_fetch, "km")
+  fetch = fetch$mean_fetch$fetch_km
 )
 ```
 
@@ -81,15 +82,15 @@ d_inputs <- data.frame(
 
 ```{r}
 # get input
-res <- sav_model(d_inputs)
+res <- sav_model(dat)
 res
 ```
 
 
 ## Vizualize
 
-```{r}
-# Visualize results
+```
+# Visualize results 
 library(ggplot2)
 library(units)
 
@@ -104,56 +105,10 @@ plot_sav_density(study_zone$points |> sf::st_drop_geometry())
 ```
 
 
-```{r}
-mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") +
-  mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0, 100)) +
-  mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
-  mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
-  mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
 ```
-
-
-
-# Questions / Discussion 
-
-## Inputs 
-
-- Naming rules
-  - longitude
-  - latitude
-  - depth_m or depth
-  - fetch or fetch_km
-  - substrate 
-  - secchi or turbidity
-
-- default porjection 3857? https://epsg.io/3857
-
-- should the user ne 
-
-## Fetch 
-
-- default number of direction per quadrant 
-- what would the most natural way to use wind weight
-  - Should wind-weights be defined per point?
-
-## Model
-
-- Post-hoc
-
-  - Why not applying upfront?
-
-  - Should the parameters of the Chambers and Kalff's equation be editable?
-
-> (VMaxA)0.5 = 1.33 log(D) + 1.40, correct?
-
-
-# Plot 
-
-- 1,2 or 4 => depending on type and predictor combinations
-- map using tmap?
-
-
-# Package 
-
-- Files in the package
-- Public or private 
+mapview::mapview(study_zone$polygon, legend = FALSE, col.regions = "#7cdadc", alpha.regions = 0.2, layer.name = "Area of interest") + 
+mapview::mapview(study_zone$points, zcol = "Cover", layer.name = "Cover", zlim = c(0,100)) +
+mapview::mapview(study_zone$points, zcol = "PA", layer.name = "Presence", hide = TRUE) +
+mapview::mapview(study_zone$points, zcol = "Depth", layer.name = "Depth", hide = TRUE) +
+mapview::mapview(study_zone$points, zcol = "Fetch", layer.name = "Fetch", hide = TRUE)
+```

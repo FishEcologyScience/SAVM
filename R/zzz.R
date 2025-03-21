@@ -87,3 +87,11 @@ sav_debug_msg <- function(...) {
         rlang::inform(...) # or rlang::warn, cli::cli_alert_info, whatever
     }
 }
+
+sav_stop_if_not <-  function(cond, ...) {
+    if (cond) {
+        return()
+    } else {
+        rlang::abort(...)
+    }
+}
