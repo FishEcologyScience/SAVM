@@ -1,5 +1,7 @@
 #' Helper functions
 #'
+#' @import randomForest
+#' 
 #' @noRd
 #' 
 globalVariables(c(

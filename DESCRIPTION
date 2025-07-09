@@ -1,7 +1,7 @@
 Package: SAVM
 Title: Submerged aquatic vegetation model
-Version: 0.0.1
-Date: 2025-03-21
+Version: 0.0.1.9000
+Date: 2025-07-09
 Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
@@ -12,7 +12,12 @@ Authors@R: c(
            family  = "Beauchesne",
            role    = c("aut"),
            email   = "david.beauchesne@insileco.io",
-           comment = c(ORCID = "0000-0002-3590-8161"))
+           comment = c(ORCID = "0000-0002-3590-8161")),
+    person(
+        given   = "Paul",
+        family  = "Bozneck",
+        role    = c("aut"),
+    )
     )
 Description: Here is the description made of sentences.
 URL: https://github.com/inSileco/SAVM

@@ -8,7 +8,7 @@ compute_fetch(
   points,
   polygon,
   max_dist = 15,
-  n_quad_seg = 9,
+  n_bearings = 16,
   wind_weights = NULL,
   crs = NULL
 )
@@ -23,8 +23,8 @@ Polygon defining land boundaries used to compute fetch distances.}
 \item{max_dist}{{\code{numeric}}\cr{}
 Maximum fetch distance in kilometers. Fetch beyond this distance is capped.}
 
-\item{n_quad_seg}{{\code{integer}}\cr{}
-Number of segments per quadrant for fetch calculation.
+\item{n_bearings}{{\code{integer}}\cr{}
+Total number of bearing for fetch calculation.
 Ignored if \code{wind_weights} is provided.}
 
 \item{wind_weights}{{\code{data.frame}}\cr{}
@@ -67,7 +67,7 @@ across a body of water before reaching a specific point. It plays a crucial
 role in wave generation, as longer fetch distances allow wind to transfer
 more energy to the water surface, leading to larger waves.
 
-For all points in \code{points}, 4 × \code{n_quad_seg} radial transects are generated
+For all points in \code{points}, \code{n_bearings} radial transects are generated
 by default. If \code{wind_weights} is specified, the column \code{direction}, which
 contains angles in degrees, is used instead to generate the transects. The
 transects are then clipped with the polygon using \code{\link[sf:geos_binary_ops]{sf::st_intersection()}},
@@ -89,14 +89,16 @@ le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
     sf::st_read(quiet = TRUE)
 res <- compute_fetch(le_pt, le_bound, crs = 32617)
-# use wind-weight 
+# use wind-weight
 res2 <- compute_fetch(
-     le_pt, le_bound, max_dist = 20, 
-     wind_weights = data.frame(
-              direction = seq(0, 360, by = 360 / 16)[-1],
-              weight = rep(c(0, 1), each = 8)
-     ),
-     crs = 32617)
+    le_pt, le_bound,
+    max_dist = 20,
+    wind_weights = data.frame(
+        direction = seq(0, 360, by = 360 / 16)[-1],
+        weight = rep(c(0, 1), each = 8)
+    ),
+    crs = 32617
+)
 
 # resultat
 res$mean_fetch

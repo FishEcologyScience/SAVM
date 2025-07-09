@@ -6,8 +6,8 @@
 #' Polygon defining land boundaries used to compute fetch distances.
 #' @param max_dist {`numeric`}\cr{}
 #' Maximum fetch distance in kilometers. Fetch beyond this distance is capped.
-#' @param n_quad_seg {`integer`}\cr{}
-#' Number of segments per quadrant for fetch calculation.
+#' @param n_bearings {`integer`}\cr{}
+#' Total number of bearing for fetch calculation.
 #' Ignored if `wind_weights` is provided.
 #' @param wind_weights {`data.frame`}\cr{}
 #' A data frame specifying directional weights for wind exposure.
@@ -22,7 +22,7 @@
 #' role in wave generation, as longer fetch distances allow wind to transfer
 #' more energy to the water surface, leading to larger waves.
 #'
-#' For all points in `points`, 4 × `n_quad_seg` radial transects are generated
+#' For all points in `points`, `n_bearings` radial transects are generated
 #' by default. If `wind_weights` is specified, the column `direction`, which
 #' contains angles in degrees, is used instead to generate the transects. The
 #' transects are then clipped with the polygon using [`sf::st_intersection()`],
@@ -69,14 +69,16 @@
 #' le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
 #'     sf::st_read(quiet = TRUE)
 #' res <- compute_fetch(le_pt, le_bound, crs = 32617)
-#' # use wind-weight 
+#' # use wind-weight
 #' res2 <- compute_fetch(
-#'      le_pt, le_bound, max_dist = 20, 
-#'      wind_weights = data.frame(
-#'               direction = seq(0, 360, by = 360 / 16)[-1],
-#'               weight = rep(c(0, 1), each = 8)
-#'      ),
-#'      crs = 32617)
+#'     le_pt, le_bound,
+#'     max_dist = 20,
+#'     wind_weights = data.frame(
+#'         direction = seq(0, 360, by = 360 / 16)[-1],
+#'         weight = rep(c(0, 1), each = 8)
+#'     ),
+#'     crs = 32617
+#' )
 #'
 #' # resultat
 #' res$mean_fetch
@@ -86,13 +88,14 @@
 #' plot(le_bound |> sf::st_transform(crs = 32617) |> sf::st_geometry())
 #' plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
-compute_fetch <- function(points, polygon, max_dist = 15, n_quad_seg = 9, wind_weights = NULL, crs = NULL) {
+
+compute_fetch <- function(points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL) {
     valid_points(points)
     points$id_point <- seq_len(nrow(points))
     valid_polygon(polygon)
     sav_stop_if_not(max_dist > 0)
     max_dist <- 1e3 * max_dist
-    sav_stop_if_not(n_quad_seg > 0)
+    sav_stop_if_not(n_bearings >= 4)
 
     if (!is.null(crs)) {
         if (!is_proj_unit_meter(crs)) {
@@ -127,11 +130,11 @@ compute_fetch <- function(points, polygon, max_dist = 15, n_quad_seg = 9, wind_w
 
     if (is.null(wind_weights)) {
         d_direction <- data.frame(
-            direction = utils::head(seq(0, 360, by = 360 / (n_quad_seg * 4)), -1),
+            direction = utils::head(seq(0, 360, by = 360 / n_bearings), -1),
             weight = 1
         )
     } else {
-        sav_msg_info("Using `wind_weights`, ignoring `n_quad_seg`")
+        sav_msg_info("Using `wind_weights`, ignoring `n_bearings`")
         if (all(c("direction", "weight") %in% names(wind_weights))) {
             d_direction <- wind_weights[c("direction", "weight")]
             valid_direction(d_direction$direction)
@@ -146,7 +149,7 @@ compute_fetch <- function(points, polygon, max_dist = 15, n_quad_seg = 9, wind_w
     sav_msg_info("Cropping fetch lines")
     fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
     geom_type <- sf::st_geometry_type(fetch_crop)
-    # sf::st_intersection() generates multilinestring with extra lines if there
+    # sf::st_intersection() generates MULTILINESTRING with extra lines if there
     # are intersections within the fetch lines
     transect_lines <- rbind(
         fetch_crop |>
@@ -172,10 +175,10 @@ compute_fetch <- function(points, polygon, max_dist = 15, n_quad_seg = 9, wind_w
                 weighted_fetch_km = mean(transect_length[rank < 5] * weight[rank < 5]),
                 fetch_km_all = mean(transect_length),
                 weighted_fetch_km_all = mean(transect_length * weight)
-            )  |>
+            ) |>
             dplyr::mutate(
                 dplyr::across(
-                    !id_point, 
+                    !id_point,
                     ~ as.numeric(units::set_units(.x, "km"))
                 )
             ),
