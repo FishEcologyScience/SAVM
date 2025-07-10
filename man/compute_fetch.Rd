@@ -9,6 +9,7 @@ compute_fetch(
   polygon,
   max_dist = 15,
   n_bearings = 16,
+  mean_method = c("all", "four longest"),
   wind_weights = NULL,
   crs = NULL
 )
@@ -26,6 +27,10 @@ Maximum fetch distance in kilometers. Fetch beyond this distance is capped.}
 \item{n_bearings}{{\code{integer}}\cr{}
 Total number of bearing for fetch calculation.
 Ignored if \code{wind_weights} is provided.}
+
+\item{mean_method}{{\code{character}}\cr{} Mean fetch calculation method. Either
+\code{'all'} (default) to use all the bearings or \code{'four longest'} to use the the
+four longest bearings. NOT USED YET.}
 
 \item{wind_weights}{{\code{data.frame}}\cr{}
 A data frame specifying directional weights for wind exposure.

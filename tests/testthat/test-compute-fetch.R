@@ -109,8 +109,8 @@ test_that("compute_fetch() with wind_weight", {
                     weight = rep(c(0, 1), each = 8)
                 )
             )
-            expect_equal(round(res2$mean_fetch$fetch_km, 4), 1.0327)
-            expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 0.2533)
+            expect_equal(round(res2$mean_fetch$fetch_km, 4), 5.4913)
+            expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 4.4147)
             expect_equal(round(res2$mean_fetch$fetch_km_all, 4), 2.3682)
             expect_equal(round(res2$mean_fetch$weighted_fetch_km_all, 4), 1.6387)
         }

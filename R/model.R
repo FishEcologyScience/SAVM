@@ -12,12 +12,12 @@
 #'      limitations. (post_hoc)
 #'   - `limitation`: Binary (0 = absent, 1 = present), indicating user-supplied
 #'      limitations.
-#'  Additionnal columns will be ignored.
+#'  Additional columns will be ignored.
 #' @param type {`character vector`, either `"cover"` or `"pa"`}\cr{}
 #' Model type(s).
-#' @param depth,fetch {`character`} Column specification for the predictors, 
+#' @param depth,fetch {`character`}\cr{} Column specification for the predictors,
 #' see *Details*.
-#' @param substrate,secchi,limitation Column specification for post_hoc 
+#' @param substrate,secchi,limitation {`character`}\cr{}Column specification for post_hoc
 #' variables, see *Details*.
 #' @param vmax_par {`named list`}\cr{} intercept and slope of the equation from
 #' Chambers and Kalff (1985) to compute the maximum depth of plant colonization
@@ -33,7 +33,7 @@
 #' columns with the same names as the `type` values, but with the suffix 
 #' `_post_hoc`.
 #' 
-#' If a column `secchi` is present, then two additionnal columns are 
+#' If a column `secchi` is present, then two additional columns are 
 #' returned: `vmax` and `limitation_secchi`, see details for further 
 #' explanation.
 #' 
@@ -92,7 +92,7 @@
 #' sav_model(data.frame(depth = c(5, 10)))
 #' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 #' 
-#' # using post-hoc tretment 
+#' # using post-hoc treatment 
 #' sav_model(
 #'  data.frame(
 #'   depth = c(5, 10, 5), 

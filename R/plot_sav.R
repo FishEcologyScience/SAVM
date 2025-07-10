@@ -4,20 +4,26 @@
 #' data by depth (m) and fetch (km). It visualizes SAV presence/absence (PA) and percent cover (Cover) when
 #' the corresponding columns are available in the input data.
 #'
-#' @param dat A `data.frame` containing some or all of the following columns:
+#' @param dat {`data.frame`}\cr{}
+#' A data frame containing some or all of the following columns:
 #'   - `depth_m`: Numeric, depth in meters.
 #'   - `fetch_km`: Numeric, fetch in kilometers.
 #'   - `pa`: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
 #'   - `cover`: Numeric, percent cover of SAV.
-#' @param type Character vector specifying the type of plots to generate. Options:
+#' @param type {`character vector`}\cr{}
+#' Character vector specifying the type of plots to generate. Options:
 #'   - `"pa"` (default) for presence/absence plots
 #'   - `"cover"` (default) for cover percentage plots
-#' @param predictors Character vector specifying which predictors to use. Options:
+#' @param predictors {`character vector`}\cr{}
+#' Character vector specifying which predictors to use. Options:
 #'   - `"depth"` (default) for depth-based plots
 #'   - `"fetch"` (default) for fetch-based plots
-#' @param post_hoc Logical value indicating whether to use post-hoc analyzed columns (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). Default is `TRUE`.
-#' @param max_depth Numeric value specifying the maximum depth bin (default: 30 meters).
-#' @param max_fetch Numeric value specifying the maximum fetch bin (default: 15 km).
+#' @param post_hoc {`logical`}\cr{}
+#' Logical value indicating whether to use post-hoc analyzed columns (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). Default is `TRUE`.
+#' @param max_depth {`numeric`}\cr{}
+#' Numeric value specifying the maximum depth bin (default: 30 meters).
+#' @param max_fetch {`numeric`}\cr{}
+#' Numeric value specifying the maximum fetch bin (default: 15 km).
 #'
 #' @return A set of ggplot2 plots displayed in a grid layout.
 #'
@@ -73,31 +79,33 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
     if (!has_cover && "cover" %in% type) rlang::abort("Requested layer `cover` is unavailable in provided data)")
 
     # Process data
-    dat <- dplyr::mutate(
-        dat,
-        Depth_Bin = if (has_depth) {
-            cut(
-                dat$depth_m,
-                breaks = c(seq(0, max_depth, by = 1), Inf),
-                include.lowest = TRUE, right = FALSE,
-                labels = c(paste0(seq(0, max_depth - 1, by = 1), "-", seq(1, max_depth, by = 1)), paste0(max_depth, "+"))
-            )
-        } else {
-            NULL
-        },
-        Fetch_Bin = if (has_fetch) {
-            cut(
-                dat$fetch_km,
-                breaks = c(seq(0, max_fetch, by = 1), Inf),
-                include.lowest = TRUE, right = FALSE,
-                labels = c(paste0(seq(0, max_fetch - 1, by = 1), "-", seq(1, max_fetch, by = 1)), paste0(max_fetch, "+"))
-            )
-        } else {
-            NULL
-        },
-        PA_Factor = if (has_pa) factor(dat[, pa_col], labels = c("Absent", "Present")) else NULL,
-        Cover_Bin = if (has_cover) cut(dat[, cover_col], breaks = seq(0, 100, by = 10), include.lowest = TRUE, right = FALSE) else NULL
-    )
+    dat <- dat |>
+        dplyr::mutate(
+            Depth_Bin = if (has_depth) {
+                cut(
+                    dat$depth_m,
+                    breaks = c(seq(0, max_depth, by = 1), Inf),
+                    include.lowest = TRUE, right = FALSE,
+                    labels = c(paste0(seq(0, max_depth - 1, by = 1), "-", seq(1, max_depth, by = 1)), paste0(max_depth, "+"))
+                )
+            } else {
+                NULL
+            },
+            Fetch_Bin = if (has_fetch) {
+                cut(
+                    dat$fetch_km,
+                    breaks = c(seq(0, max_fetch, by = 1), Inf),
+                    include.lowest = TRUE, right = FALSE,
+                    labels = c(paste0(seq(0, max_fetch - 1, by = 1), "-", seq(1, max_fetch, by = 1)), paste0(max_fetch, "+"))
+                )
+            } else {
+                NULL
+            },
+            PA_Factor = if (has_pa) {
+                factor(c("Absent", "Present")[dat[[pa_col]] + 1])
+                } else NULL,
+            Cover_Bin = if (has_cover) cut(dat[, cover_col], breaks = seq(0, 100, by = 10), include.lowest = TRUE, right = FALSE) else NULL
+        )
 
     # Define colors
     cover_palette <- c(
@@ -207,13 +215,14 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 
     # Check for requested predictors, abort if unavailable
     has_depth <- "depth_m" %in% names(dat)
-    if (!has_depth && "depth" %in% predictors) rlang::abort("Requested layer `depth` is unavailable in provided data)")
+    if (!has_depth && "depth" %in% predictors) 
+        rlang::abort("Requested layer `depth` is unavailable in provided data)")
     has_fetch <- "fetch_km" %in% names(dat)
-    if (!has_fetch && "fetch" %in% predictors) rlang::abort("Requested layer `fetch` is unavailable in provided data)")
-
+    if (!has_fetch && "fetch" %in% predictors) 
+        rlang::abort("Requested layer `fetch` is unavailable in provided data)")
 
     # Convert PA to factor
-    dat$PA_Factor <- factor(dat[[pa_col]], labels = c("Absent", "Present"))
+    dat$PA_Factor <- factor(c("Absent", "Present")[dat[[pa_col]] + 1])
 
     # Colors
     cols <- c("#56B4E9", "#52854C")

@@ -20,20 +20,85 @@ library(sf)
 library(stars)
 ```
 
+
+
 # Introduction
 
-This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation (SAV) Model R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
+This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation Model (SAVM) R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
 
 
 # User workflow
 
-## Reading files
+## R as a GIS 
 
-As an example, we consider a zone near Buffalo in the Lake Erie. Note that all 
+To use SAVM, basic knowledge about using R to work with spatial objects. 
+There are several packages that turn R into a powerful Geospatial Information System (GIS). 
+One of the most popular is [`sf`](https://r-spatial.github.io/sf/), 
+which can read a wide variety of spatial file formats, including ESRI shapefiles. 
+Assuming you have the following shapefile files:
+
+```
+lake_erie_land
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.cpg
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.dbf
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.prj
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.sbn
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.sbx
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shp
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shp.xml
+└── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx
+```
+
+then `st_read(lake_erie_land/LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx)` is used to read the shapefile into a `sf` object used to do spatial operations with R. For instance, the shapefile can be plot as follows:
+
+
+```R
+erie_land <- st_read("lake_erie_land/LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx")
+plot(erie_land)
+```
+
+```{r echo = FALSE}
+erie_land <- system.file(
+ "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
+  package = "SAVM", mustWork = TRUE
+) |> 
+  st_read()
+
+erie_land |> 
+  st_geometry() |> # to plot only the geometry
+  plot(col = 1)
+```
+
+The package `SAVM` includes a util function to invert a polygon. 
+
+```{r invert}
+erie_lake  <- erie_land |>
+  invert_polygon()
+  
+erie_lake |>
+  st_geometry() |>
+  plot(col = 1)
+```
+
+The file can then be exported in various format, for instance in [GeoPackage](https://www.geopackage.org/):
+
+```R
+erie_lake |> sf::st_write(erie_lake, "lake_erie.gpkg")
+```
+
+Note that `sf` focuses on vector files, to read and manipulate raster file
+we will use the package [`stars`](https://r-spatial.github.io/stars/) that works seamlessly with `sf`.
+
+
+
+
+## Reading file 
+
+Now we consider a zone near Buffalo in the Lake Erie. Note that all 
 the data required data are included on in the package SAVM.  
 
-```{r}
-# Lake Erie boundaries polygon
+```{r reading}
+# Lake Erie boundaries polygon (reading from SAVM internal files)
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
   sf::st_read() |>
   sf::st_transform(crs = 3857)
@@ -42,7 +107,7 @@ le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
 
-# Depth
+# Depth (reading with stars)
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 ```
 
@@ -82,7 +147,7 @@ This return an sf object ad the `le_bathy.tiff` contain the depth values.
 
 With the `depth` and `fetch`, we create an data frame that contains the predictor value for all points.
 
-```{r }
+```{r create_df}
 dat <- data.frame(
   depth_m = depth$le_bathy.tiff,
   fetch_km = fetch$mean_fetch$fetch_km
@@ -91,7 +156,7 @@ dat <- data.frame(
 
 You can generate predictions using `sav_model(dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
 
-```{r}
+```{r model1}
 # get input
 res <- sav_model(dat)
 res
@@ -103,7 +168,7 @@ There are three additionnal limitaions that can be used as posthoc treatement. T
 
 Below we used an example with random Secchi depth values:
 
-```{r}
+```{r model2}
 res_secchi <- sav_model(
   cbind(dat, secchi = runif(nrow(dat), 4, 12))
   )

@@ -38,7 +38,8 @@ plot_sav_tmap(
 \item \code{pa}: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
 }}
 
-\item{type}{Character vector specifying the type of plots to generate. Options:
+\item{type}{{\verb{character vector}}\cr{}
+Character vector specifying the type of plots to generate. Options:
 \itemize{
 \item \code{"pa"} (default) for presence/absence plots
 \item \code{"cover"} (default) for cover percentage plots
@@ -54,7 +55,8 @@ plot_sav_tmap(
 
 \item{max_depth}{Numeric value specifying the maximum depth bin (default: 30 meters).}
 
-\item{max_fetch}{Numeric value specifying the maximum fetch bin (default: 15 km).}
+\item{max_fetch}{{\code{numeric}}\cr{}
+Numeric value specifying the maximum fetch bin (default: 15 km).}
 
 \item{study_zone}{A list containing spatial objects:
 \itemize{
