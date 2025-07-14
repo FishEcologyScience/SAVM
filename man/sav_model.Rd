@@ -45,8 +45,9 @@ Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 \value{
 A data frame containing the input columns along with model predictions.
 
-The prediction column names match the values specified in \code{type}, and contain
-the raw model outputs (i.e., without post-hoc adjustment).
+The prediction column names match the values specified in \code{type} followed
+by the suffix \verb{_pred}, and contain the raw model outputs (i.e., without
+post-hoc adjustment).
 
 Post-hoc adjusted predictions (see \emph{Details}) are included in additional
 columns with the same names as the \code{type} values, but with the suffix

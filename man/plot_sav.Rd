@@ -68,8 +68,8 @@ Numeric value specifying the maximum fetch bin (default: 15 km).}
 \itemize{
 \item \code{"pa"} (default) for presence/absence model predictions
 \item \code{"cover"} (default) for cover percentage model predictions
-\item \code{"depth"} (default) for depth predictor vavlues
-\item \code{"fetch"} (default) for fetch predictor vavlues
+\item \code{"depth"} (default) for depth predictor values
+\item \code{"fetch"} (default) for fetch predictor values
 }}
 
 \item{interactive}{Logical. If \code{TRUE} (default), generates an interactive map. If \code{FALSE}, creates a static map.}
@@ -100,8 +100,8 @@ visualizing cover, presence/absence, depth, and fetch values.
 dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
-    cover = runif(100, 0, 100),
+    pa_pred = sample(0:1, 100, replace = TRUE),
+    cover_pred = runif(100, 0, 100),
     pa_post_hoc = sample(0:1, 100, replace = TRUE),
     cover_post_hoc = runif(100, 0, 100)
 )
@@ -122,7 +122,7 @@ plot_sav_distribution(dat, post_hoc = TRUE)
 dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
+    pa_pred = sample(0:1, 100, replace = TRUE),
     pa_post_hoc = sample(0:1, 100, replace = TRUE)
 )
 
@@ -146,8 +146,8 @@ set.seed(42)
 points <- sf::st_sample(polygon, 100) |>
     sf::st_sf() |>
     dplyr::mutate(
-        cover = runif(100, 0, 100),
-        pa = sample(0:1, 100, replace = TRUE) |>
+        cover_pred = runif(100, 0, 100),
+        pa_pred = sample(0:1, 100, replace = TRUE) |>
             factor(levels = c(0, 1), labels = c("Absent", "Present")),
         depth_m = runif(100, 0, 15),
         fetch_km = runif(100, 0, 10),

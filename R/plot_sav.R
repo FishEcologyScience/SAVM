@@ -34,8 +34,8 @@
 #' dat <- data.frame(
 #'     depth_m = runif(100, 0, 15),
 #'     fetch_km = runif(100, 0, 15),
-#'     pa = sample(0:1, 100, replace = TRUE),
-#'     cover = runif(100, 0, 100),
+#'     pa_pred = sample(0:1, 100, replace = TRUE),
+#'     cover_pred = runif(100, 0, 100),
 #'     pa_post_hoc = sample(0:1, 100, replace = TRUE),
 #'     cover_post_hoc = runif(100, 0, 100)
 #' )
@@ -65,8 +65,8 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
     }
 
     # Determine which columns to use based on post_hoc flag
-    pa_col <- if (post_hoc) "pa_post_hoc" else "pa"
-    cover_col <- if (post_hoc) "cover_post_hoc" else "cover"
+    pa_col <- if (post_hoc) "pa_post_hoc" else "pa_pred"
+    cover_col <- if (post_hoc) "cover_post_hoc" else "cover_pred"
 
     # Check for requested columns, abort if unavailable
     has_depth <- "depth_m" %in% names(dat)
@@ -186,7 +186,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
 #' dat <- data.frame(
 #'     depth_m = runif(100, 0, 15),
 #'     fetch_km = runif(100, 0, 15),
-#'     pa = sample(0:1, 100, replace = TRUE),
+#'     pa_pred = sample(0:1, 100, replace = TRUE),
 #'     pa_post_hoc = sample(0:1, 100, replace = TRUE)
 #' )
 #'
@@ -206,7 +206,7 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
     plots <- list()
 
     # Determine which column to use based on post_hoc flag
-    pa_col <- if (post_hoc) "pa_post_hoc" else "pa"
+    pa_col <- if (post_hoc) "pa_post_hoc" else "pa_pred"
 
     # Check if PA column exists
     if (!pa_col %in% names(dat)) {
@@ -296,8 +296,8 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 #' @param layers Character vector specifying the layers to generate. Options:
 #'   - `"pa"` (default) for presence/absence model predictions
 #'   - `"cover"` (default) for cover percentage model predictions
-#'   - `"depth"` (default) for depth predictor vavlues
-#'   - `"fetch"` (default) for fetch predictor vavlues
+#'   - `"depth"` (default) for depth predictor values
+#'   - `"fetch"` (default) for fetch predictor values
 #' @param post_hoc Logical value indicating whether to use post-hoc analyzed columns (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). Default is `FALSE`.
 #' @param interactive Logical. If `TRUE` (default), generates an interactive map. If `FALSE`, creates a static map.
 #' @param export_path Character. If provided, saves the map to the specified file path. Default is `NULL`.
@@ -316,8 +316,8 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 #' points <- sf::st_sample(polygon, 100) |>
 #'     sf::st_sf() |>
 #'     dplyr::mutate(
-#'         cover = runif(100, 0, 100),
-#'         pa = sample(0:1, 100, replace = TRUE) |>
+#'         cover_pred = runif(100, 0, 100),
+#'         pa_pred = sample(0:1, 100, replace = TRUE) |>
 #'             factor(levels = c(0, 1), labels = c("Absent", "Present")),
 #'         depth_m = runif(100, 0, 15),
 #'         fetch_km = runif(100, 0, 10),
@@ -354,8 +354,8 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
     cols <- c("#56B4E9", "#52854C")
 
     # Determine which columns to use based on post_hoc flag
-    pa_col <- if (post_hoc) "pa_post_hoc" else "pa"
-    cover_col <- if (post_hoc) "cover_post_hoc" else "cover"
+    pa_col <- if (post_hoc) "pa_post_hoc" else "pa_pred"
+    cover_col <- if (post_hoc) "cover_post_hoc" else "cover_pred"
 
     # Check for requested columns, abort if unavailable
     has_depth <- "depth_m" %in% names(study_zone$points)
@@ -384,7 +384,7 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
         if ("cover" %in% layers) {
             map <- map + tmap::tm_shape(study_zone$points) +
                 tmap::tm_dots(
-                    col = "cover",
+                    col = cover_col,
                     group = "Cover",
                     size = .5,
                     fill.scale = tmap::tm_scale("viridis"),
@@ -394,14 +394,15 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
         }
 
         if ("pa" %in% layers) {
-            if (!is.factor(study_zone$points$pa)) {
-                study_zone$points <- study_zone$points |>
-                    dplyr::mutate(pa = factor(pa, levels = c(0, 1), labels = c("Absent", "Present")))
+            if (!is.factor(study_zone$points[[pa_col]])) {
+                study_zone$points[[pa_col]] <- factor(
+                    c("Absent", "Present")[study_zone$points[[pa_col]] + 1]
+                )
             }
 
             map <- map + tmap::tm_shape(study_zone$points) +
                 tmap::tm_dots(
-                    col = "pa",
+                    col = pa_col,
                     group = "Presence",
                     size = 0.5,
                     palette = cols

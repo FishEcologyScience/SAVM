@@ -26,8 +26,9 @@
 #' @return
 #' A data frame containing the input columns along with model predictions.
 #'
-#' The prediction column names match the values specified in `type`, and contain
-#' the raw model outputs (i.e., without post-hoc adjustment).
+#' The prediction column names match the values specified in `type` followed 
+#' by the suffix `_pred`, and contain the raw model outputs (i.e., without 
+#' post-hoc adjustment).
 #'
 #' Post-hoc adjusted predictions (see *Details*) are included in additional 
 #' columns with the same names as the `type` values, but with the suffix 
@@ -202,7 +203,9 @@ sav_model <- function(
             scrub_if_present("limitation_secchi", "cover_post_hoc")
     }
 
-    out
+    out  |>
+        rename_if_present("pa", "pa_pred")  |>
+        rename_if_present("cover", "cover_pred")
 }
 
 
