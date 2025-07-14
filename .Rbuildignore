@@ -10,3 +10,4 @@
 ^pkgdown$
 ^tmp$
 ^notes\.md$
+^\.vscode$

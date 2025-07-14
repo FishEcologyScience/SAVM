@@ -45,13 +45,21 @@ test_that("helpers work", {
 test_that("helpers work", {
     withr::with_options(
         list(savm.verbose = "quiet"),
-        {
+        {   
             expect_error(
-                compute_fetch(le_pt, le_bound, 10, max_dist = 15000),
+                compute_fetch(le_pt, le_bound, n_bearings = 3),
+                "`n_bearings` should be equal or greater than 4."
+            )
+            expect_error(
+                compute_fetch(le_pt, le_bound, max_dist = 0),
+                "`max_dist` must be strictly positive."
+            )
+            expect_error(
+                compute_fetch(le_pt, le_bound, max_dist = 15000, n_bearings = 4),
                 "Projection units must be meters."
             )
             expect_error(
-                compute_fetch(le_pt_out, le_bound_merc, 10, max_dist = 15000),
+                compute_fetch(le_pt_out, le_bound_merc),
                 "`polygon` must include `points`"
             )
         }
@@ -109,8 +117,8 @@ test_that("compute_fetch() with wind_weight", {
                     weight = rep(c(0, 1), each = 8)
                 )
             )
-            expect_equal(round(res2$mean_fetch$fetch_km, 4), 5.4913)
-            expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 4.4147)
+            expect_equal(round(res2$mean_fetch$fetch_km, 4), 2.3682)
+            expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 1.6387)
             expect_equal(round(res2$mean_fetch$fetch_km_all, 4), 2.3682)
             expect_equal(round(res2$mean_fetch$weighted_fetch_km_all, 4), 1.6387)
         }

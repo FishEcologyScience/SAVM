@@ -1,7 +1,7 @@
 Package: SAVM
 Title: Submerged aquatic vegetation model
-Version: 0.0.1.9001
-Date: 2025-07-10
+Version: 0.0.1.9002
+Date: 2025-07-14
 Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
@@ -21,8 +21,8 @@ Authors@R: c(
     )
     )
 Description: Submerged aquatic vegetation model developed by the Fish Ecology Science Lab at DFO.
-URL: https://github.com/inSileco/SAVM
-BugReports: https://github.com/inSileco/SAVM/issues
+URL: https://github.com/FishEcologyScience/SAVM
+BugReports: https://github.com/FishEcologyScience/SAVM/issues
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

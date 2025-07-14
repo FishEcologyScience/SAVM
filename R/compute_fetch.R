@@ -7,11 +7,8 @@
 #' @param max_dist {`numeric`}\cr{}
 #' Maximum fetch distance in kilometers. Fetch beyond this distance is capped.
 #' @param n_bearings {`integer`}\cr{}
-#' Total number of bearing for fetch calculation.
-#' Ignored if `wind_weights` is provided.
-#' @param mean_method {`character`}\cr{} Mean fetch calculation method. Either
-#' `'all'` (default) to use all the bearings or `'four longest'` to use the the
-#' four longest bearings. NOT USED YET.
+#' Total number of bearings for fetch calculation (minimal number required is
+#' 4, default is 167). Ignored if `wind_weights` is provided.
 #' @param wind_weights {`data.frame`}\cr{}
 #' A data frame specifying directional weights for wind exposure.
 #' Must contain two columns: `direction` (numeric, in degrees) and `weight`
@@ -42,10 +39,8 @@
 #' @return A list of two elements:
 #'  * `mean_fetch`: data frame with 5 columns:
 #'      * `id_point`: point identifier
-#'      * `fetch`: mean wind fetch based on the four highest values
-#'      * `weighted_fetch`: mean weighted wind fetch based on the four highest values
-#'      * `fetch_all`: mean wind fetch based on all values
-#'      * `weighted_fetch_all`: mean wind weighted fetch based on all values
+#'      * `fetch`, `fetch_all`: mean wind fetch based on all bearings.
+#'      * `weighted_fetch`, `weighted_fetch_all`: mean weighted wind fetch based on all bearings.
 #'  * `transect_lines`: a `sf` object containing all radial transect with the
 #'    same columns as `points` and the following additional columns:
 #'      * `id_point`: point identifier
@@ -83,7 +78,7 @@
 #'     crs = 32617
 #' )
 #'
-#' # resultat
+#' # results
 #' res$mean_fetch
 #' res2$mean_fetch
 #'
@@ -92,15 +87,18 @@
 #' plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
 compute_fetch <- function(
-    points, polygon, max_dist = 15, n_bearings = 16,
-    mean_method = c("all", "four longest"), wind_weights = NULL, crs = NULL) {
+    points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL) {
     valid_points(points)
     points$id_point <- seq_len(nrow(points))
     valid_polygon(polygon)
-    sav_stop_if_not(max_dist > 0)
+    sav_stop_if_not(max_dist > 0, "`max_dist` must be strictly positive.")
     max_dist <- 1e3 * max_dist
-    sav_stop_if_not(n_bearings >= 4)
-    mean_method <- match.arg(mean_method)
+    sav_stop_if_not(n_bearings >= 4, "`n_bearings` should be equal or greater than 4.")
+    if (n_bearings > 64) {
+        sav_msg_warning(
+            "Large number of bearings detected, computation may take a long time."
+        )
+    }
 
     if (!is.null(crs)) {
         if (!is_proj_unit_meter(crs)) {
@@ -170,38 +168,14 @@ compute_fetch <- function(
         # using -transect so that the longest are ranked 1
         dplyr::mutate(rank = rank(-transect_length, ties.method = "min"))
 
-    # not used yet
-    # mean_fetch <- switch(mean_method,
-    #     "all" = transect_lines |>2
-    #         sf::st_drop_geometry() |>
-    #         dplyr::group_by(id_point) |>
-    #         dplyr::summarise(
-    #             fetch_km = mean(transect_length[rank <= 4]),
-    #             weighted_fetch_km = mean(transect_length[rank <= 4] * weight[rank < 5]),
-    #             fetch_km_all = mean(transect_length),
-    #             weighted_fetch_km_all = mean(transect_length * weight)
-    #         ),
-    #     "four longest" = transect_lines |>
-    #         sf::st_drop_geometry() |>
-    #         dplyr::group_by(id_point) |>
-    #         # dplyr::mutate(rank = rank(transect_length)) |>
-    #         dplyr::summarise(
-    #             fetch_km = mean(transect_length),
-    #             weighted_fetch_km = mean(transect_length * weight[rank < 5]),
-    #             fetch_km_all = mean(transect_length),
-    #             weighted_fetch_km_all = mean(transect_length * weight)
-    #         ),
-    #     stop("Unknown `mean_method` value")
-    # )
-
     list(
         mean_fetch = transect_lines |>
             sf::st_drop_geometry() |>
             dplyr::group_by(id_point) |>
             # dplyr::mutate(rank = rank(transect_length)) |>
             dplyr::summarise(
-                fetch_km = mean(transect_length[rank <= 4]),
-                weighted_fetch_km = mean(transect_length[rank <= 4] * weight[rank < 5]),
+                fetch_km = mean(transect_length),
+                weighted_fetch_km = mean(transect_length * weight),
                 fetch_km_all = mean(transect_length),
                 weighted_fetch_km_all = mean(transect_length * weight)
             ) |>
