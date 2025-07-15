@@ -1,11 +1,17 @@
 #' Read SAV data from different formats
 #'
 #' @param file_path {`character`}\cr{} Path to the input file.
-#' @param spacing {`numeric`}\cr{} Spacing for grid generation (if AOI is used).
+#' @param spacing {`numeric`}\cr{}
+#' Spacing for grid generation. Used if an area of interest (AOI) is provided,
+#' ignored otherwise.
 #' @param layer {`character`}\cr{} Layer name for multi-layer spatial files (default: NULL).
-#' @param crs {`numeric`}\cr{} Coordinate Reference System (CRS) of the output data. Default is 32617.
-#' @param crs_input {`numeric`}\cr{} Coordinate Reference System (CRS) of the input data, used for CSV import. Default is 4326.
-#' @param export {`character`}\cr{} Optional. Folder path to export outputs as .gpkg.
+#' @param crs {`numeric`}\cr{}
+#' Coordinate Reference System (CRS) of the output data. Default is 32617.
+#' @param crs_input {`numeric`}\cr{}
+#' Coordinate Reference System (CRS) of the input data, used for CSV import.
+#' Default is 4326.
+#' @param export {`character`}\cr{}
+#' Optional. Folder path to export outputs as .gpkg.
 #'
 #' @return A list with `points` (sf object) and `polygon` (sf object).
 #'
@@ -52,12 +58,15 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_in
     file_ext <- tools::file_ext(file_path)
 
     if (file_ext == "csv") {
+        sav_msg_info("csv detected")
         points_sf <- read_sav_csv(file_path, crs = crs)
         polygon_sf <- sf::st_sf(geometry = sf::st_union(points_sf) |> sf::st_convex_hull())
     } else if (file_ext %in% c("shp", "geojson", "gpkg", "gbd")) {
         if (file_ext == "gbd") {
+            sav_msg_info("gdb detected")
             sf_obj <- sf::st_read(file_path, layer = layer, quiet = TRUE)
         } else {
+            sav_msg_info("spatial file detected")
             sf_obj <- sf::st_read(file_path, quiet = TRUE)
         }
 
@@ -83,7 +92,12 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_in
         sav_msg_success("Exported outputs to {export}.")
     }
 
-    return(list(points = points_sf, polygon = polygon_sf))
+    return(
+        structure(
+            list(points = points_sf, polygon = polygon_sf),
+            class = "sav_data"
+        )
+    )
 }
 
 

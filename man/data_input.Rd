@@ -34,7 +34,8 @@ of the output data (see \code{\link[sf:st_crs]{sf::st_crs()}}). Default is 32617
 
 \item{crs_input}{{\code{numeric}}\cr{} Coordinate Reference System (CRS) of the input data, used for CSV import. Default is 4326.}
 
-\item{export}{{\code{character}}\cr{} Optional. Folder path to export outputs as .gpkg.}
+\item{export}{{\code{character}}\cr{}
+Optional. Folder path to export outputs as .gpkg.}
 
 \item{...}{Further arguments passed on to \code{\link[utils:read.table]{utils::read.csv()}}.}
 }

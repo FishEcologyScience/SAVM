@@ -80,7 +80,7 @@ erie_lake |>
   plot(col = 1)
 ```
 
-The file can then be exported in various format, for instance in [GeoPackage](https://www.geopackage.org/):
+Using `sf` capacities, the file can then be exported in various format, for instance in [GeoPackage](https://www.geopackage.org/):
 
 ```R
 erie_lake |> sf::st_write(erie_lake, "lake_erie.gpkg")
@@ -91,22 +91,35 @@ we will use the package [`stars`](https://r-spatial.github.io/stars/) that works
 
 
 
-
 ## Reading file 
 
 Now we consider a zone near Buffalo in the Lake Erie. Note that all 
-the data required data are included on in the package SAVM.  
+the data required are included on in the package SAVM. We first load the geopackage of Lake Erie. 
 
-```{r reading}
+```{r reading1}
 # Lake Erie boundaries polygon (reading from SAVM internal files)
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
   sf::st_read() |>
   sf::st_transform(crs = 3857)
+```
 
+We then load the shapefile of the area of interest that is stored as a GeoJSON file. Note that for the area (or points) of interest, we use `read_sav()` that returns an object of class `sav_data`. 
+
+```{r reading2}
 # Lake Erie study zone: read
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
+```
 
+Note that the corresponfing grid can be visualized using the `preview_grid()` function. 
+
+```{r preview_grid}
+preview_grid(study_zone)
+```
+
+We now load the depth data.
+
+```{r reading3}
 # Depth (reading with stars)
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 ```
@@ -118,7 +131,7 @@ study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package
 
 ### Compute fetch 
 
-To compute wind fetch (in kilometers, we called `compute_fetch()`), by default, the maximum distance is set to 15 km (see argument `max_dist`) and the default number of radial transect by quadrant is 9 (see argument `n_quad_seg`).
+To compute wind fetch (in kilometers), we called `compute_fetch()`. By default, the maximum distance is set to 15 km (see argument `max_dist`) and the default number of bearings is 16 (see argument `n_bearings`).
 
 ```{r fetch}
 fetch <- compute_fetch(study_zone$points, le_bound)

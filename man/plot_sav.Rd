@@ -84,9 +84,10 @@ One or two ggplot2 density plots visualizing SAV presence/absence by depth and/o
 A \code{tmap} map object, optionally saved to a file.
 }
 \description{
-This function generates up to four plots representing the distribution of submerged aquatic vegetation (SAV)
-data by depth (m) and fetch (km). It visualizes SAV presence/absence (PA) and percent cover (Cover) when
-the corresponding columns are available in the input data.
+This function generates up to four plots representing the distribution of
+submerged aquatic vegetation (SAV) data by depth (m) and fetch (km). It
+visualizes SAV presence/absence (PA) and percent cover (Cover) when the
+corresponding columns are available in the input data.
 
 This function generates one or two density plots for submerged aquatic vegetation (SAV) presence (green)
 and absence (blue) as a function of depth (m) and/or fetch (km). It includes vertical dotted lines
