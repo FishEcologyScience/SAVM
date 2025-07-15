@@ -75,8 +75,7 @@ test_that("compute_fetch() work", {
             expect_identical(
                 names(res$mean_fetch),
                 c(
-                    "id_point", "fetch_km", "weighted_fetch_km", "fetch_km_all",
-                    "weighted_fetch_km_all"
+                    "id_point", "fetch_km", "weighted_fetch_km"
                 )
             )
             expect_true(inherits(res$transect_lines, "sf"))
@@ -90,8 +89,6 @@ test_that("compute_fetch() work", {
             res2 <- compute_fetch(le_pt_mid, le_bound_merc, max_dist = 15)
             expect_equal(res2$mean_fetch$fetch_km, 15)
             expect_equal(res2$mean_fetch$weighted_fetch_km, 15)
-            expect_equal(res2$mean_fetch$fetch_km_all, 15)
-            expect_equal(res2$mean_fetch$weighted_fetch_km_all, 15)
         }
     )
 })
@@ -108,8 +105,6 @@ test_that("compute_fetch() with wind_weight", {
             )
             expect_equal(res$mean_fetch$fetch_km, 15)
             expect_equal(res$mean_fetch$weighted_fetch_km, 15)
-            expect_equal(res$mean_fetch$fetch_km_all, 15)
-            expect_equal(res$mean_fetch$weighted_fetch_km_all, 15)
             #
             res2 <- compute_fetch(le_pt[1, ], le_bound_merc,
                 wind_weights = data.frame(
@@ -119,8 +114,6 @@ test_that("compute_fetch() with wind_weight", {
             )
             expect_equal(round(res2$mean_fetch$fetch_km, 4), 2.3682)
             expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 1.6387)
-            expect_equal(round(res2$mean_fetch$fetch_km_all, 4), 2.3682)
-            expect_equal(round(res2$mean_fetch$weighted_fetch_km_all, 4), 1.6387)
         }
     )
 })

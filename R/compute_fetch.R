@@ -39,8 +39,8 @@
 #' @return A list of two elements:
 #'  * `mean_fetch`: data frame with 5 columns:
 #'      * `id_point`: point identifier
-#'      * `fetch`, `fetch_all`: mean wind fetch based on all bearings.
-#'      * `weighted_fetch`, `weighted_fetch_all`: mean weighted wind fetch based on all bearings.
+#'      * `fetch_km`: mean wind fetch based on all bearings.
+#'      * `weighted_fetch_km`: mean weighted wind fetch based on all bearings.
 #'  * `transect_lines`: a `sf` object containing all radial transect with the
 #'    same columns as `points` and the following additional columns:
 #'      * `id_point`: point identifier
@@ -175,9 +175,7 @@ compute_fetch <- function(
             # dplyr::mutate(rank = rank(transect_length)) |>
             dplyr::summarise(
                 fetch_km = mean(transect_length),
-                weighted_fetch_km = mean(transect_length * weight),
-                fetch_km_all = mean(transect_length),
-                weighted_fetch_km_all = mean(transect_length * weight)
+                weighted_fetch_km = mean(transect_length * weight)
             ) |>
             dplyr::mutate(
                 dplyr::across(
