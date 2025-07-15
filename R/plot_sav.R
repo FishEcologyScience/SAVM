@@ -1,8 +1,9 @@
 #' Plot SAV Data Distribution
 #'
-#' This function generates up to four plots representing the distribution of submerged aquatic vegetation (SAV)
-#' data by depth (m) and fetch (km). It visualizes SAV presence/absence (PA) and percent cover (Cover) when
-#' the corresponding columns are available in the input data.
+#' This function generates up to four plots representing the distribution of 
+#' submerged aquatic vegetation (SAV) data by depth (m) and fetch (km). It 
+#' visualizes SAV presence/absence (PA) and percent cover (Cover) when the 
+#' corresponding columns are available in the input data.
 #'
 #' @param dat {`data.frame`}\cr{}
 #' A data frame containing some or all of the following columns:
@@ -19,7 +20,9 @@
 #'   - `"depth"` (default) for depth-based plots
 #'   - `"fetch"` (default) for fetch-based plots
 #' @param post_hoc {`logical`}\cr{}
-#' Logical value indicating whether to use post-hoc analyzed columns (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). Default is `TRUE`.
+#' Logical value indicating whether to use post-hoc analyzed columns 
+#' (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). 
+#' Default is `TRUE`.
 #' @param max_depth {`numeric`}\cr{}
 #' Numeric value specifying the maximum depth bin (default: 30 meters).
 #' @param max_fetch {`numeric`}\cr{}
@@ -70,13 +73,17 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
 
     # Check for requested columns, abort if unavailable
     has_depth <- "depth_m" %in% names(dat)
-    if (!has_depth && "depth" %in% predictors) rlang::abort("Requested layer `depth` is unavailable in provided data)")
+    if (!has_depth && "depth" %in% predictors) 
+        rlang::abort("Requested layer `depth` is unavailable in provided data)")
     has_fetch <- "fetch_km" %in% names(dat)
-    if (!has_fetch && "fetch" %in% predictors) rlang::abort("Requested layer `fetch` is unavailable in provided data)")
+    if (!has_fetch && "fetch" %in% predictors) 
+        rlang::abort("Requested layer `fetch` is unavailable in provided data)")
     has_pa <- pa_col %in% names(dat)
-    if (!has_pa && "pa" %in% type) rlang::abort("Requested layer `pa` is unavailable in provided data)")
+    if (!has_pa && "pa" %in% type) 
+        rlang::abort("Requested layer `pa` is unavailable in provided data)")
     has_cover <- cover_col %in% names(dat)
-    if (!has_cover && "cover" %in% type) rlang::abort("Requested layer `cover` is unavailable in provided data)")
+    if (!has_cover && "cover" %in% type) 
+        rlang::abort("Requested layer `cover` is unavailable in provided data)")
 
     # Process data
     dat <- dat |>
