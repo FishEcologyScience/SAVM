@@ -83,7 +83,7 @@ erie_lake |>
 Using `sf` capacities, the file can then be exported in various format, for instance in [GeoPackage](https://www.geopackage.org/):
 
 ```R
-erie_lake |> sf::st_write(erie_lake, "lake_erie.gpkg")
+erie_lake |> sf::st_write("lake_erie.gpkg")
 ```
 
 Note that `sf` focuses on vector files, to read and manipulate raster file
@@ -136,6 +136,15 @@ To compute wind fetch (in kilometers), we called `compute_fetch()`. By default, 
 ```{r fetch}
 fetch <- compute_fetch(study_zone$points, le_bound)
 fetch
+```
+
+`fetch` is a list of two elements, `mean_fetch`, an `sf` object with all
+summarized computations and `transect_lines`, a `sf` object that includes all 
+transect lines. As `sf` objects, both elements can easily be exported, for 
+instance, the following code writes `fetch$mean_fetch` as a shapefile:
+
+```{r fetch_export, eval = FALSE}
+fetch$mean_fetch  |> sf::st_write("fetch.shp")
 ```
 
 

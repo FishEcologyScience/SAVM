@@ -71,14 +71,15 @@ test_that("compute_fetch() work", {
         list(savm.verbose = "quiet"),
         {
             res <- compute_fetch(le_pt, le_bound_merc)
+            expect_s3_class(res$mean_fetch, "sf")
             expect_identical(names(res), c("mean_fetch", "transect_lines"))
             expect_identical(
                 names(res$mean_fetch),
                 c(
-                    "id_point", "fetch_km", "weighted_fetch_km"
+                    "id_point", "fetch_km", "weighted_fetch_km", "geometry"
                 )
             )
-            expect_true(inherits(res$transect_lines, "sf"))
+            expect_s3_class(res$transect_lines, "sf")
             expect_true(
                 all(
                     c("direction", "weight", "transect_length", "rank") %in% 

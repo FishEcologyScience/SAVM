@@ -17,7 +17,8 @@
 #' Coordinate reference system (CRS) passed to [sf::st_crs()], used to
 #' transform `points` and `polygon`.
 #'
-#' @details Wind fetch is the unobstructed distance over which wind travels
+#' @details
+#' Wind fetch is the unobstructed distance over which wind travels
 #' across a body of water before reaching a specific point. It plays a crucial
 #' role in wave generation, as longer fetch distances allow wind to transfer
 #' more energy to the water surface, leading to larger waves.
@@ -32,12 +33,13 @@
 #' element in the returned list and it used to generate the second element:
 #' `mean_fetch` that included wind fetch averages.
 #'
-#' Ensure that max_dist is specified in meters. An error will be thrown if the
+#' Ensure that `max_dist` is specified in meters. An error will be thrown if the
 #' spatial projection of points and polygon is not in a meter-based coordinate
 #' system.
 #'
-#' @return A list of two elements:
-#'  * `mean_fetch`: data frame with 5 columns:
+#' @return
+#' A list of two elements:
+#'  * `mean_fetch`: a `sf` object with 3 features:
 #'      * `id_point`: point identifier
 #'      * `fetch_km`: mean wind fetch based on all bearings.
 #'      * `weighted_fetch_km`: mean weighted wind fetch based on all bearings.
@@ -61,7 +63,6 @@
 #'
 #' @examples
 #' \donttest{
-#'
 #' le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
 #'     sf::st_read()
 #' le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
@@ -169,19 +170,26 @@ compute_fetch <- function(
         dplyr::mutate(rank = rank(-transect_length, ties.method = "min"))
 
     list(
-        mean_fetch = transect_lines |>
-            sf::st_drop_geometry() |>
-            dplyr::group_by(id_point) |>
-            # dplyr::mutate(rank = rank(transect_length)) |>
-            dplyr::summarise(
-                fetch_km = mean(transect_length),
-                weighted_fetch_km = mean(transect_length * weight)
-            ) |>
-            dplyr::mutate(
-                dplyr::across(
-                    !id_point,
-                    ~ as.numeric(units::set_units(.x, "km"))
-                )
+        mean_fetch = points |>
+            dplyr::left_join(
+                transect_lines |>
+                    sf::st_drop_geometry() |>
+                    dplyr::group_by(id_point) |>
+                    # dplyr::mutate(rank = rank(transect_length)) |>
+                    dplyr::summarise(
+                        fetch_km = mean(transect_length),
+                        weighted_fetch_km = mean(transect_length * weight)
+                    ) |>
+                    dplyr::mutate(
+                        dplyr::across(
+                            !c(id_point),
+                            ~ as.numeric(units::set_units(.x, "km"))
+                        )
+                    ),
+                by = "id_point"
+            )  |>
+            dplyr::select(
+                c("id_point", "fetch_km", "weighted_fetch_km")
             ),
         transect_lines = transect_lines
     )

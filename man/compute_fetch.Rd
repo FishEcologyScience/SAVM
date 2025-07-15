@@ -39,11 +39,11 @@ transform \code{points} and \code{polygon}.}
 \value{
 A list of two elements:
 \itemize{
-\item \code{mean_fetch}: data frame with 5 columns:
+\item \code{mean_fetch}: a \code{sf} object with 3 features:
 \itemize{
 \item \code{id_point}: point identifier
-\item \code{fetch}, \code{fetch_all}: mean wind fetch based on all bearings.
-\item \code{weighted_fetch}, \code{weighted_fetch_all}: mean weighted wind fetch based on all bearings.
+\item \code{fetch_km}: mean wind fetch based on all bearings.
+\item \code{weighted_fetch_km}: mean weighted wind fetch based on all bearings.
 }
 \item \code{transect_lines}: a \code{sf} object containing all radial transect with the
 same columns as \code{points} and the following additional columns:
@@ -75,13 +75,12 @@ all clipped transects is computed using \code{\link[sf:geos_measures]{sf::st_len
 element in the returned list and it used to generate the second element:
 \code{mean_fetch} that included wind fetch averages.
 
-Ensure that max_dist is specified in meters. An error will be thrown if the
+Ensure that \code{max_dist} is specified in meters. An error will be thrown if the
 spatial projection of points and polygon is not in a meter-based coordinate
 system.
 }
 \examples{
 \donttest{
-
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
     sf::st_read()
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
