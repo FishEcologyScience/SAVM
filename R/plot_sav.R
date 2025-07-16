@@ -59,6 +59,8 @@
 plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("depth", "fetch"), post_hoc = TRUE, max_depth = 30, max_fetch = 15) {
     plots <- list()
 
+    dat <- as.data.frame(dat)
+
     # Check post-hoc
     if ("pa" %in% type && post_hoc && !"pa_post_hoc" %in% names(dat)) {
         rlang::abort("Requested post-hoc presence/absence predictions, but they are missing from the provided data.")
@@ -211,6 +213,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
 #' @export
 plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 30, post_hoc = TRUE) {
     plots <- list()
+    dat <- as.data.frame(dat)
 
     # Determine which column to use based on post_hoc flag
     pa_col <- if (post_hoc) "pa_post_hoc" else "pa_pred"

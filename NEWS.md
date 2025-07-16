@@ -1,5 +1,6 @@
 # SAVM (devel)
 
+* Model and plot functions have been adjusted to handle `sf` objects (see #11).
 * The element `mean_fetch` returned by `compute_fetch()` is now a `sf` object (see #9).
 * `preview_grid()` allows to preview grid (see #8).
 * Add more guidance on reading shapefiles in the vignette (see #6). 

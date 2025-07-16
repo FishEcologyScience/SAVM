@@ -167,20 +167,18 @@ This return an sf object ad the `le_bathy.tiff` contain the depth values.
 
 ## Model 
 
-With the `depth` and `fetch`, we create an data frame that contains the predictor value for all points.
+With the `depth` and `fetch`, we create a `sf` object that contains predictor values for all points.
 
 ```{r create_df}
-dat <- data.frame(
-  depth_m = depth$le_bathy.tiff,
-  fetch_km = fetch$mean_fetch$fetch_km
-)
+sp_dat <- fetch$mean_fetch
+sp_dat$depth_m <- depth$le_bathy.tiff
 ```
 
-You can generate predictions using `sav_model(dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
+You can generate predictions using `sav_model(sp_dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
 
 ```{r model1}
 # get input
-res <- sav_model(dat)
+res <- sav_model(sp_dat)
 res
 ```
 
@@ -192,9 +190,15 @@ Below we used an example with random Secchi depth values:
 
 ```{r model2}
 res_secchi <- sav_model(
-  cbind(dat, secchi = runif(nrow(dat), 4, 12))
+  cbind(sp_dat, secchi = runif(nrow(sp_dat), 4, 12))
   )
 res_secchi
+```
+
+Note that `res_secchi` is a `sf` object and can therefore be exported as a shapefile: 
+
+```{r final_export, eval = FALSE}
+res_secchi |> sf::st_write("results.shp")
 ```
 
 

@@ -16,7 +16,7 @@ sav_model(
 )
 }
 \arguments{
-\item{dat}{{\code{data.frame}}\cr{} A \code{data.frame} containing some or all of the
+\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or a \code{sf} object containing some or all of the
 following columns:
 \itemize{
 \item \code{depth_m}: Numeric, depth in meters.
@@ -43,7 +43,8 @@ Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 (Vmax), see \emph{Details} below.}
 }
 \value{
-A data frame containing the input columns along with model predictions.
+A data frame (or a sf object) containing the input columns along with model
+predictions.
 
 The prediction column names match the values specified in \code{type} followed
 by the suffix \verb{_pred}, and contain the raw model outputs (i.e., without
