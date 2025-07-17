@@ -1,11 +1,13 @@
 #' Helper functions
 #'
+#' @import randomForest
+#' 
 #' @noRd
 #' 
 globalVariables(c(
     "direction", "fetch", "id_point", "weight","Cover_Bin", "Depth_Bin", 
     "Fetch_Bin", "Mean_Value", "PA_Factor", "depth_m", "fetch_km",
-    "limitation_secchi", "transect_length", "vmax", "pa"
+    "limitation_secchi", "transect_length", "vmax", "pa", "geometry"
 ))
 
 

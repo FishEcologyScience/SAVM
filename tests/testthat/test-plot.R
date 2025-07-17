@@ -4,8 +4,8 @@ withr::with_seed(123, {
   test_data <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
-    cover = runif(100, 0, 100),
+    pa_pred = sample(0:1, 100, replace = TRUE),
+    cover_pred = runif(100, 0, 100),
     pa_post_hoc = sample(0:1, 100, replace = TRUE),
     cover_post_hoc = runif(100, 0, 100)
   )
@@ -83,14 +83,14 @@ test_that("Function errors if post_hoc columns are missing", {
 })
 
 test_that("Function works with only pa and fetch_km", {
-  minimal_data <- test_data[, c("pa", "fetch_km")]
+  minimal_data <- test_data[, c("pa_pred", "fetch_km")]
   pdf(NULL)
   expect_silent(plot_sav_distribution(minimal_data, type = "pa", predictors = "fetch", post_hoc = FALSE))
   dev.off()
 })
 
 test_that("Function works with only cover and depth", {
-  data_subset <- test_data[, c("depth_m", "cover", "cover_post_hoc")]
+  data_subset <- test_data[, c("depth_m", "cover_pred", "cover_post_hoc")]
   pdf(NULL)
   expect_silent(plot_sav_distribution(data_subset, type = "cover", predictors = "depth"))
   dev.off()
@@ -124,7 +124,7 @@ withr::with_seed(123, {
   test_data <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
+    pa_pred = sample(0:1, 100, replace = TRUE),
     pa_post_hoc = sample(0:1, 100, replace = TRUE)
   )
 })
@@ -191,8 +191,8 @@ withr::with_seed(123, {
   points <- sf::st_sample(polygon, 100) |>
     sf::st_sf() |>
     dplyr::mutate(
-      cover = runif(100, 0, 100),
-      pa = sample(0:1, 100, replace = TRUE),
+      cover_pred = runif(100, 0, 100),
+      pa_pred = sample(0:1, 100, replace = TRUE),
       depth_m = runif(100, 0, 15),
       fetch_km = runif(100, 0, 10),
       pa_post_hoc = sample(0:1, 100, replace = TRUE),

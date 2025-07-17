@@ -3,7 +3,7 @@
 #' Apply Random Forest models to predict SAV cover and presence/absence, with
 #' optional post-hoc processing.
 #'
-#' @param dat {`data.frame`}\cr{} A `data.frame` containing some or all of the
+#' @param dat {`data.frame`|`sf`}\cr{} A `data.frame` or a `sf` object containing some or all of the
 #' following columns:
 #'   - `depth_m`: Numeric, depth in meters.
 #'   - `fetch_km`: Numeric, fetch in kilometers.
@@ -12,28 +12,30 @@
 #'      limitations. (post_hoc)
 #'   - `limitation`: Binary (0 = absent, 1 = present), indicating user-supplied
 #'      limitations.
-#'  Additionnal columns will be ignored.
+#'  Additional columns will be ignored.
 #' @param type {`character vector`, either `"cover"` or `"pa"`}\cr{}
 #' Model type(s).
-#' @param depth,fetch {`character`} Column specification for the predictors, 
+#' @param depth,fetch {`character`}\cr{} Column specification for the predictors,
 #' see *Details*.
-#' @param substrate,secchi,limitation Column specification for post_hoc 
+#' @param substrate,secchi,limitation {`character`}\cr{}Column specification for post_hoc
 #' variables, see *Details*.
 #' @param vmax_par {`named list`}\cr{} intercept and slope of the equation from
 #' Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 #' (Vmax), see *Details* below.
 #'
 #' @return
-#' A data frame containing the input columns along with model predictions.
+#' A data frame (or a sf object) containing the input columns along with model 
+#' predictions.
 #'
-#' The prediction column names match the values specified in `type`, and contain
-#' the raw model outputs (i.e., without post-hoc adjustment).
+#' The prediction column names match the values specified in `type` followed 
+#' by the suffix `_pred`, and contain the raw model outputs (i.e., without 
+#' post-hoc adjustment).
 #'
 #' Post-hoc adjusted predictions (see *Details*) are included in additional 
 #' columns with the same names as the `type` values, but with the suffix 
 #' `_post_hoc`.
 #' 
-#' If a column `secchi` is present, then two additionnal columns are 
+#' If a column `secchi` is present, then two additional columns are 
 #' returned: `vmax` and `limitation_secchi`, see details for further 
 #' explanation.
 #' 
@@ -92,7 +94,7 @@
 #' sav_model(data.frame(depth = c(5, 10)))
 #' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 #' 
-#' # using post-hoc tretment 
+#' # using post-hoc treatment 
 #' sav_model(
 #'  data.frame(
 #'   depth = c(5, 10, 5), 
@@ -106,7 +108,19 @@ sav_model <- function(
     dat, type = c("cover", "pa"), depth = NULL,
     fetch = NULL, substrate = NULL, secchi = NULL, limitation = NULL,
     vmax_par = list(intercept = 1.40, slope = 1.33)) {
-    sav_stop_if_not(inherits(dat, "data.frame"))
+    
+
+    # this should rather be handle via S3
+    geom  <-  NULL
+    if (inherits(dat, "sf")) {
+
+        geom  <-  dat  |> 
+            dplyr::select(geometry)
+        dat  <- dat  |> sf::st_drop_geometry()
+    } else {
+        sav_stop_if_not(inherits(dat, "data.frame"))
+    }
+
 
     type <- unique(type)
     if (!all(type %in% c("cover", "pa"))) {
@@ -202,7 +216,15 @@ sav_model <- function(
             scrub_if_present("limitation_secchi", "cover_post_hoc")
     }
 
-    out
+    out  <- out  |>
+        rename_if_present("pa", "pa_pred")  |>
+        rename_if_present("cover", "cover_pred")
+    
+    if (is.null(geom)) {
+        out
+    } else {
+        cbind(geom, out)
+    }
 }
 
 

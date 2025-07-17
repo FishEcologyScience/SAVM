@@ -16,7 +16,7 @@ sav_model(
 )
 }
 \arguments{
-\item{dat}{{\code{data.frame}}\cr{} A \code{data.frame} containing some or all of the
+\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or a \code{sf} object containing some or all of the
 following columns:
 \itemize{
 \item \code{depth_m}: Numeric, depth in meters.
@@ -26,16 +26,16 @@ following columns:
 limitations. (post_hoc)
 \item \code{limitation}: Binary (0 = absent, 1 = present), indicating user-supplied
 limitations.
-Additionnal columns will be ignored.
+Additional columns will be ignored.
 }}
 
 \item{type}{{\verb{character vector}, either \code{"cover"} or \code{"pa"}}\cr{}
 Model type(s).}
 
-\item{depth, fetch}{{\code{character}} Column specification for the predictors,
+\item{depth, fetch}{{\code{character}}\cr{} Column specification for the predictors,
 see \emph{Details}.}
 
-\item{substrate, secchi, limitation}{Column specification for post_hoc
+\item{substrate, secchi, limitation}{{\code{character}}\cr{}Column specification for post_hoc
 variables, see \emph{Details}.}
 
 \item{vmax_par}{{\verb{named list}}\cr{} intercept and slope of the equation from
@@ -43,16 +43,18 @@ Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 (Vmax), see \emph{Details} below.}
 }
 \value{
-A data frame containing the input columns along with model predictions.
+A data frame (or a sf object) containing the input columns along with model
+predictions.
 
-The prediction column names match the values specified in \code{type}, and contain
-the raw model outputs (i.e., without post-hoc adjustment).
+The prediction column names match the values specified in \code{type} followed
+by the suffix \verb{_pred}, and contain the raw model outputs (i.e., without
+post-hoc adjustment).
 
 Post-hoc adjusted predictions (see \emph{Details}) are included in additional
 columns with the same names as the \code{type} values, but with the suffix
 \verb{_post_hoc}.
 
-If a column \code{secchi} is present, then two additionnal columns are
+If a column \code{secchi} is present, then two additional columns are
 returned: \code{vmax} and \code{limitation_secchi}, see details for further
 explanation.
 }
@@ -105,7 +107,7 @@ corresponding prediction is set to 0 in the post-hoc adjusted output.
 sav_model(data.frame(depth = c(5, 10)))
 sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 
-# using post-hoc tretment 
+# using post-hoc treatment 
 sav_model(
  data.frame(
   depth = c(5, 10, 5), 

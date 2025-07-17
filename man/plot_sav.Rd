@@ -38,7 +38,8 @@ plot_sav_tmap(
 \item \code{pa}: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
 }}
 
-\item{type}{Character vector specifying the type of plots to generate. Options:
+\item{type}{{\verb{character vector}}\cr{}
+Character vector specifying the type of plots to generate. Options:
 \itemize{
 \item \code{"pa"} (default) for presence/absence plots
 \item \code{"cover"} (default) for cover percentage plots
@@ -54,7 +55,8 @@ plot_sav_tmap(
 
 \item{max_depth}{Numeric value specifying the maximum depth bin (default: 30 meters).}
 
-\item{max_fetch}{Numeric value specifying the maximum fetch bin (default: 15 km).}
+\item{max_fetch}{{\code{numeric}}\cr{}
+Numeric value specifying the maximum fetch bin (default: 15 km).}
 
 \item{study_zone}{A list containing spatial objects:
 \itemize{
@@ -66,8 +68,8 @@ plot_sav_tmap(
 \itemize{
 \item \code{"pa"} (default) for presence/absence model predictions
 \item \code{"cover"} (default) for cover percentage model predictions
-\item \code{"depth"} (default) for depth predictor vavlues
-\item \code{"fetch"} (default) for fetch predictor vavlues
+\item \code{"depth"} (default) for depth predictor values
+\item \code{"fetch"} (default) for fetch predictor values
 }}
 
 \item{interactive}{Logical. If \code{TRUE} (default), generates an interactive map. If \code{FALSE}, creates a static map.}
@@ -82,9 +84,10 @@ One or two ggplot2 density plots visualizing SAV presence/absence by depth and/o
 A \code{tmap} map object, optionally saved to a file.
 }
 \description{
-This function generates up to four plots representing the distribution of submerged aquatic vegetation (SAV)
-data by depth (m) and fetch (km). It visualizes SAV presence/absence (PA) and percent cover (Cover) when
-the corresponding columns are available in the input data.
+This function generates up to four plots representing the distribution of
+submerged aquatic vegetation (SAV) data by depth (m) and fetch (km). It
+visualizes SAV presence/absence (PA) and percent cover (Cover) when the
+corresponding columns are available in the input data.
 
 This function generates one or two density plots for submerged aquatic vegetation (SAV) presence (green)
 and absence (blue) as a function of depth (m) and/or fetch (km). It includes vertical dotted lines
@@ -98,8 +101,8 @@ visualizing cover, presence/absence, depth, and fetch values.
 dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
-    cover = runif(100, 0, 100),
+    pa_pred = sample(0:1, 100, replace = TRUE),
+    cover_pred = runif(100, 0, 100),
     pa_post_hoc = sample(0:1, 100, replace = TRUE),
     cover_post_hoc = runif(100, 0, 100)
 )
@@ -120,7 +123,7 @@ plot_sav_distribution(dat, post_hoc = TRUE)
 dat <- data.frame(
     depth_m = runif(100, 0, 15),
     fetch_km = runif(100, 0, 15),
-    pa = sample(0:1, 100, replace = TRUE),
+    pa_pred = sample(0:1, 100, replace = TRUE),
     pa_post_hoc = sample(0:1, 100, replace = TRUE)
 )
 
@@ -144,8 +147,8 @@ set.seed(42)
 points <- sf::st_sample(polygon, 100) |>
     sf::st_sf() |>
     dplyr::mutate(
-        cover = runif(100, 0, 100),
-        pa = sample(0:1, 100, replace = TRUE) |>
+        cover_pred = runif(100, 0, 100),
+        pa_pred = sample(0:1, 100, replace = TRUE) |>
             factor(levels = c(0, 1), labels = c("Absent", "Present")),
         depth_m = runif(100, 0, 15),
         fetch_km = runif(100, 0, 10),

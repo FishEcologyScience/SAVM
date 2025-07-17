@@ -20,29 +20,107 @@ library(sf)
 library(stars)
 ```
 
+
+
 # Introduction
 
-This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation (SAV) Model R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
+This vignette provides an overview of the workflow offered by the **Submerged Aquatic Vegetation Model (SAVM) R package**. The package allows users to import spatial and tabular data related to SAV presence and habitat conditions in aquatic ecosystems. The presented in this vignette provide an overview of the functionalities built into the package and presents a workflow from user input to model predictions. 
 
 
 # User workflow
 
-## Reading files
+## R as a GIS 
 
-As an example, we consider a zone near Buffalo in the Lake Erie. Note that all 
-the data required data are included on in the package SAVM.  
+To use SAVM, basic knowledge about using R to work with spatial objects. 
+There are several packages that turn R into a powerful Geospatial Information System (GIS). 
+One of the most popular is [`sf`](https://r-spatial.github.io/sf/), 
+which can read a wide variety of spatial file formats, including ESRI shapefiles. 
+Assuming you have the following shapefile files:
 
-```{r}
-# Lake Erie boundaries polygon
+```
+lake_erie_land
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.cpg
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.dbf
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.prj
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.sbn
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.sbx
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shp
+├── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shp.xml
+└── LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx
+```
+
+then `st_read(lake_erie_land/LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx)` is used to read the shapefile into a `sf` object used to do spatial operations with R. For instance, the shapefile can be plot as follows:
+
+
+```R
+erie_land <- st_read("lake_erie_land/LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx")
+plot(erie_land)
+```
+
+```{r echo = FALSE}
+erie_land <- system.file(
+ "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
+  package = "SAVM", mustWork = TRUE
+) |> 
+  st_read()
+
+erie_land |> 
+  st_geometry() |> # to plot only the geometry
+  plot(col = 1)
+```
+
+The package `SAVM` includes a util function to invert a polygon. 
+
+```{r invert}
+erie_lake  <- erie_land |>
+  invert_polygon()
+  
+erie_lake |>
+  st_geometry() |>
+  plot(col = 1)
+```
+
+Using `sf` capacities, the file can then be exported in various format, for instance in [GeoPackage](https://www.geopackage.org/):
+
+```R
+erie_lake |> sf::st_write("lake_erie.gpkg")
+```
+
+Note that `sf` focuses on vector files, to read and manipulate raster file
+we will use the package [`stars`](https://r-spatial.github.io/stars/) that works seamlessly with `sf`.
+
+
+
+## Reading file 
+
+Now we consider a zone near Buffalo in the Lake Erie. Note that all 
+the data required are included on in the package SAVM. We first load the geopackage of Lake Erie. 
+
+```{r reading1}
+# Lake Erie boundaries polygon (reading from SAVM internal files)
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
   sf::st_read() |>
   sf::st_transform(crs = 3857)
+```
 
+We then load the shapefile of the area of interest that is stored as a GeoJSON file. Note that for the area (or points) of interest, we use `read_sav()` that returns an object of class `sav_data`. 
+
+```{r reading2}
 # Lake Erie study zone: read
 study_zone <- system.file("example", "study_zone.geojson", package = "SAVM") |>
   read_sav(spacing = 2000)
+```
 
-# Depth
+Note that the corresponfing grid can be visualized using the `preview_grid()` function. 
+
+```{r preview_grid}
+preview_grid(study_zone)
+```
+
+We now load the depth data.
+
+```{r reading3}
+# Depth (reading with stars)
 study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package = "SAVM"))
 ```
 
@@ -53,17 +131,26 @@ study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package
 
 ### Compute fetch 
 
-To compute wind fetch (in kilometers, we called `compute_fetch()`), by default, the maximum distance is set to 15 km (see argument `max_dist`) and the default number of radial transect by quadrant is 9 (see argument `n_quad_seg`).
+To compute wind fetch (in kilometers), we called `compute_fetch()`. By default, the maximum distance is set to 15 km (see argument `max_dist`) and the default number of bearings is 16 (see argument `n_bearings`).
 
 ```{r fetch}
 fetch <- compute_fetch(study_zone$points, le_bound)
 fetch
 ```
 
+`fetch` is a list of two elements, `mean_fetch`, an `sf` object with all
+summarized computations and `transect_lines`, a `sf` object that includes all 
+transect lines. As `sf` objects, both elements can easily be exported, for 
+instance, the following code writes `fetch$mean_fetch` as a shapefile:
+
+```{r fetch_export, eval = FALSE}
+fetch$mean_fetch  |> sf::st_write("fetch.shp")
+```
+
 
 ### Extract depth 
 
-To extract depth data from an raster file for our study points, we use `st_extract()` from the package `stars`. Note that the points and the raster must use the same projection.
+To extract depth data from a raster file for our study points, we use `st_extract()` from the package `stars`. Note that the points and the raster must use the same projection.
 
 ```{r extract_depth}
 depth <- st_extract(
@@ -80,34 +167,38 @@ This return an sf object ad the `le_bathy.tiff` contain the depth values.
 
 ## Model 
 
-With the `depth` and `fetch`, we create an data frame that contains the predictor value for all points.
+With the `depth` and `fetch`, we create a `sf` object that contains predictor values for all points.
 
-```{r }
-dat <- data.frame(
-  depth_m = depth$le_bathy.tiff,
-  fetch_km = fetch$mean_fetch$fetch_km
-)
+```{r create_df}
+sp_dat <- fetch$mean_fetch
+sp_dat$depth_m <- depth$le_bathy.tiff
 ```
 
-You can generate predictions using `sav_model(dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
+You can generate predictions using `sav_model(sp_dat)`. By default, the function uses the column names in the input data to identify the relevant variables. If the column names are not recognized, you can manually specify them using the `depth` and `fetch` parameters.
 
-```{r}
+```{r model1}
 # get input
-res <- sav_model(dat)
+res <- sav_model(sp_dat)
 res
 ```
 
-Even without additional columns, the model will return columns containing post hoc results. For SAV cover, if presence-absence predictions are available, the cover_post_hoc column will contain cover values set to 0 where absence is predicted.
+Even without additional columns, the model will return columns containing post hoc results. For SAV cover, if presence-absence predictions are available, the `cover_post_hoc` column will contain `cover_pred` values set to 0 where absence is predicted.
 
 There are three additionnal limitaions that can be used as posthoc treatement. The `secchi` parameter should contain Secchi depth values and is used to compute Vmax following the equation from Chambers and Kalff (1985). If `depth` is also provided, it is compared to Vmax: when the depth exceeds Vmax, both cover and presence-absence are set to 0. The `substrate` and `limitation` parameters are binary variables that can be used to set cover and presence-absence to 0 based on external knowledge or site-specific constraints.
 
 Below we used an example with random Secchi depth values:
 
-```{r}
+```{r model2}
 res_secchi <- sav_model(
-  cbind(dat, secchi = runif(nrow(dat), 4, 12))
+  cbind(sp_dat, secchi = runif(nrow(sp_dat), 4, 12))
   )
 res_secchi
+```
+
+Note that `res_secchi` is a `sf` object and can therefore be exported as a shapefile: 
+
+```{r final_export, eval = FALSE}
+res_secchi |> sf::st_write("results.shp")
 ```
 
 
@@ -116,7 +207,7 @@ res_secchi
 
 The package includes plotting helper functions. `plot_sav_distribution(res)` allows users to visualize the distribution of SAV cover and presence/absence across predictor bins. Alternatively, `plot_sav_density(res)` provides a density-based visualization rather than using binned values.
 
-```{r}
+```{r plot1}
 # Visualize results
 plot_sav_distribution(res_secchi)
 plot_sav_density(res_secchi)
@@ -124,7 +215,7 @@ plot_sav_density(res_secchi)
 
 Note that these functions include an option to force the use of raw predictions without applying the post hoc treatment.
 
-```{r}
+```{r, plot2}
 plot_sav_distribution(res_secchi, post_hoc = FALSE)
 plot_sav_density(res_secchi, post_hoc = FALSE)
 ```

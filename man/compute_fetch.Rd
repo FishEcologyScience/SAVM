@@ -8,7 +8,7 @@ compute_fetch(
   points,
   polygon,
   max_dist = 15,
-  n_quad_seg = 9,
+  n_bearings = 16,
   wind_weights = NULL,
   crs = NULL
 )
@@ -23,9 +23,9 @@ Polygon defining land boundaries used to compute fetch distances.}
 \item{max_dist}{{\code{numeric}}\cr{}
 Maximum fetch distance in kilometers. Fetch beyond this distance is capped.}
 
-\item{n_quad_seg}{{\code{integer}}\cr{}
-Number of segments per quadrant for fetch calculation.
-Ignored if \code{wind_weights} is provided.}
+\item{n_bearings}{{\code{integer}}\cr{}
+Total number of bearings for fetch calculation (minimal number required is
+4, default is 167). Ignored if \code{wind_weights} is provided.}
 
 \item{wind_weights}{{\code{data.frame}}\cr{}
 A data frame specifying directional weights for wind exposure.
@@ -39,13 +39,11 @@ transform \code{points} and \code{polygon}.}
 \value{
 A list of two elements:
 \itemize{
-\item \code{mean_fetch}: data frame with 5 columns:
+\item \code{mean_fetch}: a \code{sf} object with 3 features:
 \itemize{
 \item \code{id_point}: point identifier
-\item \code{fetch}: mean wind fetch based on the four highest values
-\item \code{weighted_fetch}: mean weighted wind fetch based on the four highest values
-\item \code{fetch_all}: mean wind fetch based on all values
-\item \code{weighted_fetch_all}: mean wind weighted fetch based on all values
+\item \code{fetch_km}: mean wind fetch based on all bearings.
+\item \code{weighted_fetch_km}: mean weighted wind fetch based on all bearings.
 }
 \item \code{transect_lines}: a \code{sf} object containing all radial transect with the
 same columns as \code{points} and the following additional columns:
@@ -67,7 +65,7 @@ across a body of water before reaching a specific point. It plays a crucial
 role in wave generation, as longer fetch distances allow wind to transfer
 more energy to the water surface, leading to larger waves.
 
-For all points in \code{points}, 4 × \code{n_quad_seg} radial transects are generated
+For all points in \code{points}, \code{n_bearings} radial transects are generated
 by default. If \code{wind_weights} is specified, the column \code{direction}, which
 contains angles in degrees, is used instead to generate the transects. The
 transects are then clipped with the polygon using \code{\link[sf:geos_binary_ops]{sf::st_intersection()}},
@@ -77,28 +75,29 @@ all clipped transects is computed using \code{\link[sf:geos_measures]{sf::st_len
 element in the returned list and it used to generate the second element:
 \code{mean_fetch} that included wind fetch averages.
 
-Ensure that max_dist is specified in meters. An error will be thrown if the
+Ensure that \code{max_dist} is specified in meters. An error will be thrown if the
 spatial projection of points and polygon is not in a meter-based coordinate
 system.
 }
 \examples{
 \donttest{
-
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
     sf::st_read()
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
     sf::st_read(quiet = TRUE)
 res <- compute_fetch(le_pt, le_bound, crs = 32617)
-# use wind-weight 
+# use wind-weight
 res2 <- compute_fetch(
-     le_pt, le_bound, max_dist = 20, 
-     wind_weights = data.frame(
-              direction = seq(0, 360, by = 360 / 16)[-1],
-              weight = rep(c(0, 1), each = 8)
-     ),
-     crs = 32617)
+    le_pt, le_bound,
+    max_dist = 20,
+    wind_weights = data.frame(
+        direction = seq(0, 360, by = 360 / 16)[-1],
+        weight = rep(c(0, 1), each = 8)
+    ),
+    crs = 32617
+)
 
-# resultat
+# results
 res$mean_fetch
 res2$mean_fetch
 
