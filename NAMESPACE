@@ -2,6 +2,7 @@
 
 S3method(preview_grid,sav_data)
 export(compute_fetch)
+export(identify_outsiders)
 export(invert_polygon)
 export(plot_sav_density)
 export(plot_sav_distribution)

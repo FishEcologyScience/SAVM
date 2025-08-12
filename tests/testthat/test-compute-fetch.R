@@ -12,6 +12,9 @@ le_pt_mid <- system.file("example", "le_middle.geojson", package = "SAVM") |>
 le_pt_out <- system.file("example", "le_land.geojson", package = "SAVM") |>
     sf::st_read(quiet = TRUE)
 
+le_pt_in_out <- system.file("example", "le_in_out.geojson", package = "SAVM") |>
+    sf::st_read(quiet = TRUE)
+
 
 test_that("helpers work", {
     expect_false(is_proj_unit_meter(4326))
@@ -39,13 +42,22 @@ test_that("helpers work", {
         "All directions must be within the range [0, 360].",
         fixed = TRUE
     )
+    #
+    expect_identical(
+        remove_points_outside_polygon(le_pt_in_out, le_bound),
+        le_pt_in_out[1:2, ]
+    )
+    expect_identical(
+        remove_points_outside_polygon(le_pt_out, le_bound) |> nrow(),
+        0L
+    )
 })
 
 
 test_that("helpers work", {
     withr::with_options(
         list(savm.verbose = "quiet"),
-        {   
+        {
             expect_error(
                 compute_fetch(le_pt, le_bound, n_bearings = 3),
                 "`n_bearings` should be equal or greater than 4."
@@ -59,8 +71,12 @@ test_that("helpers work", {
                 "Projection units must be meters."
             )
             expect_error(
-                compute_fetch(le_pt_out, le_bound_merc),
-                "`polygon` must include `points`"
+                compute_fetch(le_pt_in_out, le_bound_merc),
+                "`polygon` must include all points in `points`"
+            )
+            expect_error(
+                 compute_fetch(le_pt_out, le_bound_merc, remove_outsiders = TRUE),
+                 "All points were outside the polygon considered"
             )
         }
     )
@@ -82,14 +98,16 @@ test_that("compute_fetch() work", {
             expect_s3_class(res$transect_lines, "sf")
             expect_true(
                 all(
-                    c("direction", "weight", "transect_length", "rank") %in% 
-                    names(res$transect_lines)
+                    c("direction", "weight", "transect_length", "rank") %in%
+                        names(res$transect_lines)
                 )
             )
             # test with a point in the middle of the lake
             res2 <- compute_fetch(le_pt_mid, le_bound_merc, max_dist = 15)
             expect_equal(res2$mean_fetch$fetch_km, 15)
             expect_equal(res2$mean_fetch$weighted_fetch_km, 15)
+            res3 <- compute_fetch(le_pt_mid, le_bound_merc, max_dist = 15, remove_outsiders = TRUE)
+            expect_identical(res2, res3)
         }
     )
 })

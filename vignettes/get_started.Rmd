@@ -127,6 +127,7 @@ study_depth <- stars::read_stars(system.file("example", "le_bathy.tiff", package
 > ***Note on spatial projections***: *The `SAVM` package works with spatial coordinates in meters and the WGS 84 / UTM zone 17N ([epsg:32617](https://epsg.io/32617)) projection as a default option since it was originally developped for use in the Great Lakes (WGS 84 / UTM zone 18N ([epsg:32618](https://epsg.io/32618)) is also a an option). Other viable options in a North American context are NAD83 / UTM zone 17N ([epsg:26917](https://epsg.io/26917)) and NAD83(CSRS) / UTM zone 17N ([egsg::2958](https://epsg.io/2958)).*
 
 
+
 ## Compute fetch and extract depth
 
 ### Compute fetch 
@@ -146,6 +147,9 @@ instance, the following code writes `fetch$mean_fetch` as a shapefile:
 ```{r fetch_export, eval = FALSE}
 fetch$mean_fetch  |> sf::st_write("fetch.shp")
 ```
+
+
+> ***Note for points outside the polygon***: If any points fall outside the polygon, an error is raised. To remove outsiders, set `remove_outsider = TRUE`. Alternatively, you can identify outsiders using `identify_outsider()`.
 
 
 ### Extract depth 

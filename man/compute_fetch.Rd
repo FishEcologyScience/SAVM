@@ -2,6 +2,7 @@
 % Please edit documentation in R/compute_fetch.R
 \name{compute_fetch}
 \alias{compute_fetch}
+\alias{identify_outsiders}
 \title{Compute wind fetch and wind weighted fetch}
 \usage{
 compute_fetch(
@@ -10,8 +11,11 @@ compute_fetch(
   max_dist = 15,
   n_bearings = 16,
   wind_weights = NULL,
-  crs = NULL
+  crs = NULL,
+  remove_outsiders = FALSE
 )
+
+identify_outsiders(points, polygon)
 }
 \arguments{
 \item{points}{{\code{sf}}\cr{}
@@ -35,6 +39,10 @@ Must contain two columns: \code{direction} (numeric, in degrees) and \code{weigh
 \item{crs}{{\code{object}}\cr{}
 Coordinate reference system (CRS) passed to \code{\link[sf:st_crs]{sf::st_crs()}}, used to
 transform \code{points} and \code{polygon}.}
+
+\item{remove_outsiders}{{\code{logical}}\cr{}
+Remove points outside the polygion. An error will be thrown if all points
+are rejected. Default is \code{FALSE}.}
 }
 \value{
 A list of two elements:
@@ -79,6 +87,12 @@ Ensure that \code{max_dist} is specified in meters. An error will be thrown if t
 spatial projection of points and polygon is not in a meter-based coordinate
 system.
 }
+\section{Functions}{
+\itemize{
+\item \code{identify_outsiders()}: Identify outsiders using a plot where points
+located outside the polygon are highlighted in red.
+
+}}
 \examples{
 \donttest{
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>

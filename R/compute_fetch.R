@@ -16,6 +16,10 @@
 #' @param crs {`object`}\cr{}
 #' Coordinate reference system (CRS) passed to [sf::st_crs()], used to
 #' transform `points` and `polygon`.
+#' @param remove_outsiders {`logical`}\cr{}
+#' Remove points outside the polygion. An error will be thrown if all points
+#' are rejected. Default is `FALSE`.
+#'
 #'
 #' @details
 #' Wind fetch is the unobstructed distance over which wind travels
@@ -88,7 +92,7 @@
 #' plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
 compute_fetch <- function(
-    points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL) {
+    points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL, remove_outsiders = FALSE) {
     valid_points(points)
     points$id_point <- seq_len(nrow(points))
     valid_polygon(polygon)
@@ -130,7 +134,7 @@ compute_fetch <- function(
         }
     }
 
-    valid_polygon_contains_points(points, polygon)
+    valid_polygon_contains_points(points, polygon, remove_outsiders)
 
     if (is.null(wind_weights)) {
         d_direction <- data.frame(
@@ -187,11 +191,29 @@ compute_fetch <- function(
                         )
                     ),
                 by = "id_point"
-            )  |>
+            ) |>
             dplyr::select(
                 c("id_point", "fetch_km", "weighted_fetch_km")
             ),
         transect_lines = transect_lines
+    )
+}
+
+
+#' @describeIn compute_fetch Identify outsiders using a plot where points
+#' located outside the polygon are highlighted in red.
+#' @export
+identify_outsiders <- function(points, polygon) {
+    plot(polygon |> sf::st_geometry(), border = 1)
+    plot(
+        points |> sf::st_geometry(),
+        # there godd be more than one polygon
+        col = suppressMessages(
+            2 - apply(sf::st_within(points, polygon, sparse = FALSE), 1, any)
+        ),
+        pch = 19,
+        cex = 2,
+        add = TRUE
     )
 }
 
@@ -227,17 +249,31 @@ valid_polygon <- function(x) {
     }
 }
 
-valid_polygon_contains_points <- function(points, polygon) {
+valid_polygon_contains_points <- function(points, polygon, remove_outsiders = FALSE) {
+    if (remove_outsiders) {
+        points <- remove_points_outside_polygon(points, polygon)
+        if (!(points |> nrow())) {
+            rlang::abort("All points were outside the polygon considered.")
+        }
+    }
     chk <- suppressMessages({
         sf::st_contains(polygon, points, sparse = FALSE) |>
-            apply(2, any) |>
-            all()
+            apply(2, any)
     })
-    if (chk) {
+    if (all(chk)) {
         TRUE
     } else {
-        rlang::abort("`polygon` must include `points`.")
+        rlang::abort("`polygon` must include all points in `points`.
+        Use `remove_outsiders = TRUE` to remove points outside the polygon.
+        Alternatively use `identify_outsiders()` to vizualize outsiders.
+        ")
     }
+}
+
+remove_points_outside_polygon  <- function(points, polygon) {
+    suppressMessages(
+        points[apply(sf::st_within(points, polygon, sparse = FALSE), 1, any), ]
+    )
 }
 
 valid_direction <- function(direction) {
