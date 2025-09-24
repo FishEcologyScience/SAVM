@@ -13,7 +13,7 @@ Read a spatial polygon file and generate a grid of points"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">SAVM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +126,7 @@ Optional. Folder path to export outputs as .gpkg.</p></dd>
 <span class="r-in"><span><span class="op">)</span>, <span class="va">temp_csv</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu">read_sav</span><span class="op">(</span><span class="va">temp_csv</span>, crs <span class="op">=</span> <span class="fl">32617</span>, crs_input <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Determining file type and processing: /tmp/RtmpGS0bL9/file21672a255e5a.csv</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Determining file type and processing: /tmp/RtmpOPxEFs/file21f523bc2608.csv</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> csv detected</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Retained columns: longitude, latitude, depth_m, fetch_km, secchi, substrate.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Removed columns: None</span>
@@ -157,7 +157,7 @@ Optional. Folder path to export outputs as .gpkg.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_write.html" class="external-link">st_write</a></span><span class="op">(</span><span class="va">temp_poly</span>, <span class="va">temp_file</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="fu">read_sav</span><span class="op">(</span><span class="va">temp_file</span>, spacing <span class="op">=</span> <span class="fl">500</span>, crs <span class="op">=</span> <span class="fl">32617</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Determining file type and processing: /tmp/RtmpGS0bL9/file21675e4a5f55.gpkg</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Determining file type and processing: /tmp/RtmpOPxEFs/file21f539c7f4e0.gpkg</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> spatial file detected</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Transforming spatial data.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Grid of 5470 points successfully generated from AOI.</span>

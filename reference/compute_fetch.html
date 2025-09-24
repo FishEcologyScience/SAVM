@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">SAVM</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,8 +49,11 @@
 <span>  max_dist <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  n_bearings <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>  wind_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  crs <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span>  crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  remove_outsiders <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">identify_outsiders</span><span class="op">(</span><span class="va">points</span>, <span class="va">polygon</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -90,6 +93,12 @@ Must contain two columns: <code>direction</code> (numeric, in degrees) and <code
 Coordinate reference system (CRS) passed to <code><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">sf::st_crs()</a></code>, used to
 transform <code>points</code> and <code>polygon</code>.</p></dd>
 
+
+<dt id="arg-remove-outsiders">remove_outsiders<a class="anchor" aria-label="anchor" href="#arg-remove-outsiders"></a></dt>
+<dd><p><code>logical</code><br>
+Remove points outside the polygion. An error will be thrown if all points
+are rejected. Default is <code>FALSE</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -124,6 +133,12 @@ element in the returned list and it used to generate the second element:
 spatial projection of points and polygon is not in a meter-based coordinate
 system.</p>
     </div>
+    <div class="section level2">
+    <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
+
+<ul><li><p><code>identify_outsiders()</code>: Identify outsiders using a plot where points
+located outside the polygon are highlighted in red.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
 
