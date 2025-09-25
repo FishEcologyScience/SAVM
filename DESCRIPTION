@@ -32,11 +32,18 @@ Depends:
     randomForest (>= 4.7-1.2)
 Imports: 
     cli (>= 3.6.4),
+    config,
+    DT,
     dplyr (>= 1.1.4),
     ggplot2 (>= 3.5.1),
+    golem,
+    leaflet,
     patchwork (>= 1.3.0),
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
+    shiny,
+    shinydashboard,
+    shinyWidgets,
     stats,
     tmap (>= 4.0),
     tools,
