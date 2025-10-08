@@ -48,7 +48,8 @@ mod_data_input_ui <- function(id) {
           fileInput(
             ns("data_file"),
             "Choose File:",
-            accept = c(".csv", ".shp", ".geojson", ".gpkg", ".gdb")
+            accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+            multiple = TRUE
           ),
 
           # Conditional inputs based on data type
@@ -101,11 +102,16 @@ mod_data_input_ui <- function(id) {
             max = 99999
           ),
           br(),
-          actionButton(
-            ns("process_data"),
-            "Process Data",
-            class = "btn-primary btn-block",
-            icon = icon("play")
+          fluidRow(
+            column(2),
+            column(
+              4,
+              actionButton(ns("process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("play"))
+            ),
+            column(
+              4,
+              actionButton(ns("clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("trash"))
+            )
           )
         ),
         shinydashboard::box(
@@ -125,14 +131,14 @@ mod_data_input_ui <- function(id) {
               actionButton(
                 ns("proceed_to_fetch"),
                 "Proceed to Fetch Calculation",
-                class = "btn-success btn-lg",
+                class = "btn-success",
                 icon = icon("arrow-right")
               ),
               br(), br(),
               actionButton(
                 ns("skip_to_model"),
                 "Skip to Model Application",
-                class = "btn-warning",
+                class = "btn-info",
                 icon = icon("forward")
               )
             )
@@ -174,7 +180,8 @@ mod_data_input_ui <- function(id) {
                 column(
                   6,
                   h4("Point Locations"),
-                  plotOutput(ns("point_plot"), height = "400px")
+                  # plotOutput(ns("point_plot"), height = "400px")
+                  leaflet::leafletOutput(ns("point_map"), height = "400px")
                 )
               ),
               hr(),
@@ -192,17 +199,16 @@ mod_data_input_ui <- function(id) {
 #' Data Input Module Server Function
 #'
 #' @param id Internal parameter for {shiny}.
-#' @param app_values Reactive values object from main app
+#' @param app_data Reactive values object from main app
 #'
 #' @noRd
 #'
-mod_data_input_server <- function(id, app_values) {
+mod_data_input_server <- function(id, app_data, app_session) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # Reactive values for module
     values <- reactiveValues(
-      raw_data = NULL,
       processed_data = NULL,
       validation_results = NULL
     )
@@ -211,104 +217,94 @@ mod_data_input_server <- function(id, app_values) {
     observeEvent(input$process_data, {
       req(input$data_file)
 
-      tryCatch(
+      showNotification("Processing data...", type = "message", duration = 2)
+
+      # Run the data processing safely
+      result <- tryCatch(
         {
-          showNotification("Processing data...", type = "message", duration = 2)
-
-          # Determine parameters based on data type
-          file_path <- input$data_file$datapath
-          spacing <- if (input$data_source_type == "spatial_polygon") input$grid_spacing else 500
-          crs_input <- if (input$data_source_type == "csv") input$crs_input else 4326
-
-          # Handle polygon inversion if needed
-          if (input$data_source_type == "spatial_polygon" && input$invert_polygon) {
-            showNotification("Inverting polygon...", type = "message", duration = 2)
-
-            # Read the original polygon
-            original_polygon <- sf::st_read(file_path, quiet = TRUE)
-
-            # Apply inversion
-            inverted_polygon <- invert_polygon(original_polygon, ratio = input$inversion_ratio)
-
-            # Create temporary file for inverted polygon
-            temp_dir <- tempdir()
-            temp_file <- file.path(temp_dir, paste0("inverted_polygon_", Sys.time() |> as.numeric(), ".gpkg"))
-
-            # Save inverted polygon to temporary file
-            sf::st_write(inverted_polygon, temp_file, quiet = TRUE)
-
-            # Use temporary file path
-            file_path <- temp_file
-
-            showNotification("Polygon inverted successfully!", type = "success", duration = 2)
-          }
-
-          # Call SAVM read_sav function
-          result <- read_sav(
-            file_path = file_path,
-            spacing = spacing,
-            crs = input$crs_output,
-            crs_input = crs_input
+          process_input_data(
+            file_path       = input$data_file$datapath,
+            data_type       = input$data_source_type,
+            grid_spacing    = input$grid_spacing,
+            invert          = input$invert_polygon,
+            inversion_ratio = input$inversion_ratio,
+            crs_input       = input$crs_input,
+            crs_output      = input$crs_output
           )
-
-          values$processed_data <- result
-          app_values$sav_data <- result
-          app_values$data_loaded <- TRUE
-
-          showNotification("Data processed successfully!", type = "success", duration = 3)
         },
         error = function(e) {
+          # Notify user with a clear message
           showNotification(
             paste("Error processing data:", e$message),
             type = "error",
             duration = 5
           )
+          # Return NULL so downstream code stops gracefully
+          return(NULL)
         }
       )
+
+      # Stop if the process failed
+      req(!is.null(result))
+      # Store processed data
+      values$processed_data <- result
+      app_data$sav_data <- result
+      app_data$data_loaded <- TRUE
+
+      showNotification("Data processed successfully!", type = "message", duration = 3)
     })
 
-    # Data validation
-    validation_results <- reactive({
-      req(values$processed_data)
 
+    # Compute validation once, stored in reactiveVal
+    values$validation_results <- reactiveVal(NULL)
+
+    observeEvent(values$processed_data, {
+      req(values$processed_data)
       points_data <- values$processed_data$points
 
-      # Check for required columns
       required_cols <- c("longitude", "latitude")
       optional_cols <- c("depth_m", "fetch_km", "secchi", "substrate", "limitation")
 
-      has_required <- all(required_cols %in% names(points_data))
-      available_optional <- intersect(optional_cols, names(points_data))
-      missing_optional <- setdiff(optional_cols, names(points_data))
-
-      # Additional validation
-      n_points <- nrow(points_data)
-      crs_info <- sf::st_crs(points_data)
-
-      list(
-        is_valid = has_required && n_points > 0,
-        n_points = n_points,
-        has_required = has_required,
-        available_optional = available_optional,
-        missing_optional = missing_optional,
-        crs = crs_info$input
+      val <- list(
+        has_required = all(required_cols %in% names(points_data)),
+        available_optional = intersect(optional_cols, names(points_data)),
+        missing_optional = setdiff(optional_cols, names(points_data)),
+        n_points = nrow(points_data),
+        crs = sf::st_crs(points_data)$input
       )
+
+      val$is_valid <- val$has_required && val$n_points > 0
+      values$validation_results(val)
+      app_data$data_valid <- val$is_valid
     })
+
+    # Clear data
+    observeEvent(input$clear_data, {
+      # Reset local reactive values
+      values$processed_data <- NULL
+      values$validation_results(NULL)
+
+      # Reset shared app data if relevant
+      app_data$sav_data <- NULL
+      app_data$data_loaded <- FALSE
+      app_data$data_valid <- FALSE
+
+      # Optional: notify the user
+      showNotification("Data cleared successfully.", type = "message", duration = 2)
+    })
+
+    # Output: Data valid flag
+    output$data_valid <- reactive({
+      vals <- values$validation_results()
+      !is.null(vals) && vals$is_valid
+    })
+    outputOptions(output, "data_valid", suspendWhenHidden = FALSE)
 
     # Output: Data processed flag
     output$data_processed <- reactive({
       !is.null(values$processed_data)
     })
     outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
-
-    # Output: Data valid flag
-    output$data_valid <- reactive({
-      if (is.null(validation_results())) {
-        return(FALSE)
-      }
-      validation_results()$is_valid
-    })
-    outputOptions(output, "data_valid", suspendWhenHidden = FALSE)
 
     # Output: Data summary
     output$data_summary <- renderUI({
@@ -317,19 +313,24 @@ mod_data_input_server <- function(id, app_values) {
       points <- values$processed_data$points
       polygon <- values$processed_data$polygon
 
+      file_names <- input$data_file$name
+      if (length(file_names) > 1) {
+        file_names <- paste(basename(file_names), collapse = ", ")
+      }
+
       tagList(
         p(strong("Points:"), nrow(points), "locations"),
         p(strong("CRS:"), sf::st_crs(points)$input),
         p(strong("Bounds:"), "Polygon defined"),
-        p(strong("File:"), input$data_file$name)
+        p(strong("File(s):"), file_names)
       )
     })
 
     # Output: Column information
     output$column_info <- renderUI({
-      req(validation_results())
+      req(values$validation_results())
 
-      val <- validation_results()
+      val <- values$validation_results()
 
       tagList(
         if (val$has_required) {
@@ -378,20 +379,39 @@ mod_data_input_server <- function(id, app_values) {
       )
     })
 
-    # Output: Grid preview plot
-    output$point_plot <- renderPlot({
-      req(values$processed_data)
+    # # Output: Grid preview plot
+    # output$point_plot <- renderPlot({
+    #   req(values$processed_data)
 
-      preview_grid(values$processed_data)
+    #   preview_grid(values$processed_data)
+    # })
+
+    output$point_map <- leaflet::renderLeaflet({
+      req(values$processed_data)
+      pts <- values$processed_data$points
+      pol <- values$processed_data$polygon |>
+        sf::st_make_valid()
+
+      # Transform if needed
+      if (sf::st_crs(pts)$epsg != 4326) {
+        pts <- sf::st_transform(pts, 4326)
+        pol <- sf::st_transform(pol, 4326)
+      }
+
+      # Base map
+      m <- leaflet::leaflet() |>
+        leaflet::addProviderTiles("CartoDB.Positron") |>
+        leaflet::addPolygons(data = pol, fillColor = "#a1d99b", fillOpacity = 0.3, color = "#31a354", weight = 2) |>
+        leaflet::addCircleMarkers(data = pts, radius = 4, color = "#2c7fb8", fillOpacity = 0.7)
     })
 
     # Output: Validation status
     output$validation_status <- renderUI({
-      if (is.null(validation_results())) {
+      if (is.null(values$validation_results())) {
         return(p("Upload and process data to see validation status"))
       }
 
-      val <- validation_results()
+      val <- values$validation_results()
 
       if (val$is_valid) {
         tagList(
@@ -417,12 +437,128 @@ mod_data_input_server <- function(id, app_values) {
 
     # Navigation: Proceed to fetch calculation
     observeEvent(input$proceed_to_fetch, {
-      shinydashboard::updateTabItems(session = session$parent, "sidebar", "fetch_calc")
+      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
     })
 
     # Navigation: Skip to model application
     observeEvent(input$skip_to_model, {
-      shinydashboard::updateTabItems(session = session$parent, "sidebar", "model_apply")
+      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })
+}
+
+
+# -----------------------------------------------------------------------------------------
+process_input_data <- function(file_path,
+                               data_type = c("csv", "spatial_points", "spatial_polygon"),
+                               grid_spacing = 500,
+                               invert = FALSE,
+                               inversion_ratio = 0.5,
+                               crs_input = 4326,
+                               crs_output = 32617) {
+  data_type <- match.arg(data_type)
+
+  # -------------------------------------------------------------
+  # Handle multi-file shapefile uploads
+  if (length(file_path) > 1) {
+    shp_idx <- grep("\\.shp$", file_path, ignore.case = TRUE)
+
+    if (length(shp_idx) == 1) {
+      # Define a consistent base name
+      base_dir <- dirname(file_path[shp_idx])
+      new_base <- file.path(base_dir, "uploaded_shapefile")
+
+      # Rename all shapefile components to have the same basename
+      for (f in file_path) {
+        ext <- tools::file_ext(f)
+        file.rename(f, file.path(base_dir, paste0("uploaded_shapefile.", ext)))
+      }
+      print(dir(base_dir))
+      # Use the .shp file for reading
+      file_path <- paste0(new_base, ".shp")
+    } else if (length(shp_idx) == 0) {
+      stop(
+        "Multiple files uploaded, but none have a .shp extension.
+      Include the .shp, .dbf, .shx, and .prj files together.",
+        call. = FALSE
+      )
+    } else {
+      stop(
+        "Multiple .shp files detected — please upload only one shapefile at a time.",
+        call. = FALSE
+      )
+    }
+  }
+
+  # -------------------------------------------------------------
+  # Validate file existence
+  if (!file.exists(file_path)) {
+    stop("File not found: ", file_path, call. = FALSE)
+  }
+
+  # -------------------------------------------------------------
+  # check file extension vs. expected type
+  ext <- tolower(tools::file_ext(file_path))
+
+  csv_exts <- c("csv")
+  spatial_exts <- c("shp", "geojson", "gpkg")
+
+  valid <- switch(data_type,
+    csv             = ext %in% csv_exts,
+    spatial_points  = ext %in% spatial_exts,
+    spatial_polygon = ext %in% spatial_exts,
+    FALSE
+  )
+
+  if (!valid) {
+    stop(
+      sprintf(
+        "File type mismatch: you selected '%s' but uploaded a '.%s' file.",
+        data_type, ext
+      ),
+      call. = FALSE
+    )
+  }
+
+  # -------------------------------------------------------------
+  # Handle polygon inversion if requested
+  if (data_type == "spatial_polygon" && invert) {
+    tryCatch(
+      {
+        message("Inverting polygon...")
+        poly <- sf::st_read(file_path, quiet = TRUE)
+        poly_inv <- invert_polygon(poly, ratio = inversion_ratio)
+        message("Polygon inversion complete.")
+        tmp_file <- tempfile(fileext = ".gpkg")
+        sf::st_write(poly_inv, tmp_file, quiet = TRUE)
+        file_path <- tmp_file
+      },
+      error = function(e) {
+        stop("Failed to invert polygon: ", e$message, call. = FALSE)
+      }
+    )
+  }
+
+  # -------------------------------------------------------------
+  # Read and process data (using provided parameters directly)
+  tryCatch(
+    {
+      result <- read_sav(
+        file_path = file_path,
+        spacing   = grid_spacing,
+        crs       = crs_output,
+        crs_input = crs_input
+      )
+    },
+    error = function(e) {
+      stop("Failed to read or process data: ", e$message, call. = FALSE)
+    }
+  )
+
+  # Basic structural validation
+  if (is.null(result$points) || nrow(result$points) == 0) {
+    stop("No point data produced — check input format or CRS parameters.", call. = FALSE)
+  }
+
+  result
 }

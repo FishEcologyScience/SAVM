@@ -6,23 +6,24 @@
 #' @noRd
 app_server <- function(input, output, session) {
   # Reactive values to store application state
-  values <- reactiveValues(
+  app_data <- reactiveValues(
     # Data flow states
     data_loaded = FALSE,
+    data_valid = FALSE,
     fetch_calculated = FALSE,
     model_applied = FALSE,
-    
+
     # Data objects
     sav_data = NULL,
     fetch_results = NULL,
     model_results = NULL
   )
-  
+
   # Navigation: Start button functionality
   observeEvent(input$start_btn, {
     shinydashboard::updateTabItems(session, "sidebar", "data_input")
   })
-  
+
   # Module servers
-  mod_data_input_server("data_input_1", values)
+  mod_data_input_server("data_input_1", app_data, app_session = session)
 }

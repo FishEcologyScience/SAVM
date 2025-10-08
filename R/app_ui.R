@@ -11,6 +11,7 @@ app_ui <- function(request) {
       shinydashboard::dashboardHeader(title = "SAVM"),
       shinydashboard::dashboardSidebar(
         shinydashboard::sidebarMenu(
+          id = "sidebar",
           shinydashboard::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
           br(),
           shinydashboard::menuItem("1. Data Input", tabName = "data_input", icon = icon("upload")),
@@ -47,7 +48,7 @@ app_ui <- function(request) {
                 h5("Getting Started:"),
                 p("Click on '1. Data Input' to begin uploading your data, or use the sidebar navigation to jump between steps."),
                 br(),
-                actionButton("start_btn", "Start Analysis", class = "btn-primary btn-lg")
+                actionButton("start_btn", "Start Analysis", class = "btn-primary")
               )
             )
           ),

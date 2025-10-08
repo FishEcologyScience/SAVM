@@ -140,12 +140,12 @@ read_sav_csv <- function(file_path, crs = 32617, crs_input = 4326, ...) {
     missing_cols <- setdiff(required_cols, names(df))
 
     if (length(missing_cols) > 0) {
-        rlang::abort(
+        rlang::abort(glue::glue(
             "Missing required columns: {paste(missing_cols, collapse = ', ')}.
             Only the following formatting is allowed:
             Required - {paste(required_cols, collapse=', ')},
             Optional - {paste(optional_cols, collapse=', ')}"
-        )
+        ))
     }
 
     # Select relevant columns
@@ -153,11 +153,11 @@ read_sav_csv <- function(file_path, crs = 32617, crs_input = 4326, ...) {
     removed_cols <- setdiff(names(df), retained_cols)
     df <- df |> dplyr::select(dplyr::any_of(c(required_cols, optional_cols)))
 
-    sav_msg_info(
+    sav_msg_info(glue::glue(
         "Retained columns: {paste(retained_cols, collapse=', ')}.
         Removed columns: {ifelse(length(removed_cols) == 0,
         'None',paste(removed_cols, collapse=', '))}"
-    )
+    ))
 
     # Convert to sf object with user-specified CRS
     sf_obj <- sf::st_as_sf(
@@ -239,11 +239,11 @@ read_sav_pts <- function(file_path, crs = 32617) {
     sf_obj <- sf_obj |>
         dplyr::select(dplyr::any_of(c(required_cols, optional_cols)))
 
-    sav_msg_info(
+    sav_msg_info(glue::glue(
         "Retained columns: {paste(retained_cols, collapse=', ')}.
         Removed columns: {ifelse(length(removed_cols) == 0,
         'None',paste(removed_cols, collapse=', '))}"
-    )
+    ))
 
     sav_msg_success("Spatial points file successfully read and processed.")
     return(sf_obj)

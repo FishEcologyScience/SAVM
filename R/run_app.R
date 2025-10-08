@@ -12,6 +12,7 @@ run_app <- function(
     enableBookmarking = NULL,
     uiPattern = "/",
     ...) {
+  options(shiny.maxRequestSize = 15 * 1024^2)
   golem::with_golem_options(
     app = shinyApp(
       ui = app_ui,
