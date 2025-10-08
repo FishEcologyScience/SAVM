@@ -58,17 +58,7 @@ app_ui <- function(request) {
           ),
           shinydashboard::tabItem(
             tabName = "fetch_calc",
-            fluidRow(
-              shinydashboard::box(
-                title = "Step 2: Wind Fetch Calculation",
-                status = "info",
-                solidHeader = TRUE,
-                width = 12,
-                h4("Wind Fetch Calculation (Optional)"),
-                p("Calculate wind fetch distances for your sampling points."),
-                p("This step will be available after data input is completed.")
-              )
-            )
+            mod_fetch_calc_ui("fetch_calc_1")
           ),
           shinydashboard::tabItem(
             tabName = "depth_extr",

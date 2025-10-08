@@ -6,7 +6,6 @@
 #'
 #' @noRd
 #'
-#' @importFrom shiny plotOutput renderPlot
 mod_data_input_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -30,7 +29,7 @@ mod_data_input_ui <- function(id) {
       column(
         4,
         shinydashboard::box(
-          title = "1. Upload Data",
+          title = "Upload Data",
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -106,16 +105,21 @@ mod_data_input_ui <- function(id) {
             column(2),
             column(
               4,
-              actionButton(ns("process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("play"))
+              actionButton(ns("process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("upload"))
             ),
             column(
               4,
-              actionButton(ns("clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("trash"))
+              actionButton(ns("clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("eraser"))
             )
           )
-        ),
+        ) # ,
+      ),
+
+      # Data Preview Section
+      column(
+        8,
         shinydashboard::box(
-          title = "3. Data Validation Status",
+          title = "Status",
           status = "success",
           solidHeader = TRUE,
           width = NULL,
@@ -126,31 +130,26 @@ mod_data_input_ui <- function(id) {
               "output['%s'] == true && output['%s'] == true",
               ns("data_processed"), ns("data_valid")
             ),
-            div(
-              style = "text-align: left;",
-              actionButton(
-                ns("proceed_to_fetch"),
-                "Proceed to Fetch Calculation",
-                class = "btn-success",
-                icon = icon("arrow-right")
-              ),
-              br(), br(),
-              actionButton(
-                ns("skip_to_model"),
-                "Skip to Model Application",
-                class = "btn-info",
-                icon = icon("forward")
-              )
+            # div(
+            # style = "text-align: left;",
+            actionButton(
+              ns("proceed_to_fetch"),
+              "Proceed to Fetch Calculation",
+              class = "btn-success",
+              icon = icon("wind")
+            ),
+            # br(), br(),
+            actionButton(
+              ns("skip_to_model"),
+              "Skip to Model Application",
+              class = "btn-info",
+              icon = icon("brain")
+              # )
             )
           )
-        )
-      ),
-
-      # Data Preview Section
-      column(
-        8,
+        ),
         shinydashboard::box(
-          title = "2. Data Preview",
+          title = "Data Preview",
           status = "info",
           solidHeader = TRUE,
           width = NULL,

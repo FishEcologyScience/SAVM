@@ -26,4 +26,5 @@ app_server <- function(input, output, session) {
 
   # Module servers
   mod_data_input_server("data_input_1", app_data, app_session = session)
+  mod_fetch_calc_server("fetch_calc_1", app_data, app_session = session)
 }
