@@ -19,7 +19,6 @@ app_ui <- function(request) {
           shinydashboard::menuItem("3. Depth extraction", tabName = "depth_extr", icon = icon("water")),
           shinydashboard::menuItem("4. Model Application", tabName = "model_apply", icon = icon("brain")),
           shinydashboard::menuItem("5. Results & Visualization", tabName = "results", icon = icon("chart-line")),
-          shinydashboard::menuItem("6. Export", tabName = "export", icon = icon("download")),
           br(),
           shinydashboard::menuItem("Help", tabName = "help", icon = icon("question-circle"))
         )
@@ -42,7 +41,6 @@ app_ui <- function(request) {
                   tags$li("Optionally extract depth for your points from a bathymetry raster"),
                   tags$li("Apply Random Forest models to predict SAV presence/cover"),
                   tags$li("Visualize and explore your results"),
-                  tags$li("Export results in various formats")
                 ),
                 hr(),
                 h5("Getting Started:"),
@@ -71,20 +69,6 @@ app_ui <- function(request) {
           shinydashboard::tabItem(
             tabName = "results",
             mod_results_viz_ui("results_viz_1")
-          ),
-          shinydashboard::tabItem(
-            tabName = "export",
-            fluidRow(
-              shinydashboard::box(
-                title = "Step 6: Export Results",
-                status = "danger",
-                solidHeader = TRUE,
-                width = 12,
-                h4("Export & Download"),
-                p("Export your results in various formats (CSV, shapefile, etc.)."),
-                p("This step will be available after analysis is completed.")
-              )
-            )
           ),
           shinydashboard::tabItem(
             tabName = "help",
