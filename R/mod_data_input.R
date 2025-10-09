@@ -246,9 +246,9 @@ mod_data_input_server <- function(id, app_data, app_session) {
 
       # Stop if the process failed
       req(!is.null(result))
-      # Store processed data
+      # Store processed data as original data (never modified)
       values$processed_data <- result
-      app_data$sav_data <- result
+      app_data$original_data <- result
       app_data$data_loaded <- TRUE
 
       showNotification("Data processed successfully!", type = "message", duration = 3)
@@ -284,10 +284,13 @@ mod_data_input_server <- function(id, app_data, app_session) {
       values$processed_data <- NULL
       values$validation_results(NULL)
 
-      # Reset shared app data if relevant
-      app_data$sav_data <- NULL
+      # Reset shared app data and clear all calculations
+      app_data$original_data <- NULL
       app_data$data_loaded <- FALSE
       app_data$data_valid <- FALSE
+
+      # Clear all calculation results since original data is gone
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
 
       # Optional: notify the user
       showNotification("Data cleared successfully.", type = "message", duration = 2)
@@ -554,6 +557,10 @@ process_input_data <- function(file_path,
       stop("Failed to read or process data: ", e$message, call. = FALSE)
     }
   )
+
+  # Add id_point column to points data
+  result$points <- result$points |>
+    dplyr::mutate(id_point = dplyr::row_number())
 
   # Basic structural validation
   if (is.null(result$points) || nrow(result$points) == 0) {

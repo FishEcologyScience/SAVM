@@ -214,7 +214,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
           }
 
           values$wind_weights <- wind_data
-          showNotification("Wind weights loaded successfully", type = "success", duration = 3)
+          showNotification("Wind weights loaded successfully", type = "message", duration = 3)
         },
         error = function(e) {
           showNotification(
@@ -250,16 +250,16 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
     # Fetch calculation
     observeEvent(input$calculate_fetch, {
-      req(app_data$sav_data)
+      req(app_data$original_data)
       req(app_data$data_valid)
 
       tryCatch(
         {
           showNotification("Calculating fetch...", type = "message", duration = 2)
 
-          # Extract data
-          points <- app_data$sav_data$points
-          polygon <- app_data$sav_data$polygon
+          # Extract data from original data
+          points <- app_data$original_data$points
+          polygon <- app_data$original_data$polygon
 
           # Prepare wind weights if using custom
           wind_weights <- if (input$use_wind_weights && !is.null(values$wind_weights)) {
@@ -287,22 +287,23 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
           )
           shinycssloaders::hidePageSpinner()
 
-          # Store results
+          # Store results separately (don't modify original data)
           values$fetch_results <- fetch_result
 
-          # Update app data with fetch results
+          # Update app data with fetch results and metadata
           app_data$fetch_results <- fetch_result
           app_data$fetch_calculated <- TRUE
+          app_data$fetch_timestamp <- Sys.time()
 
-          # Update points data with fetch values
-          app_data$sav_data$points <-
-            cbind(
-              fetch_result$mean_fetch,
-              sf::st_coordinates(fetch_result$mean_fetch)
-            ) |>
-            dplyr::rename(longitude = X, latitude = Y)
+          # Store calculation parameters for reference
+          app_data$fetch_params <- list(
+            max_dist = input$max_dist,
+            n_bearings = input$n_bearings,
+            remove_outsiders = input$remove_outsiders,
+            used_wind_weights = !is.null(wind_weights)
+          )
 
-          showNotification("Fetch calculation completed successfully!", type = "success", duration = 3)
+          showNotification("Fetch calculation completed successfully!", type = "message", duration = 3)
         },
         error = function(e) {
           showNotification(
@@ -316,21 +317,9 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
     # Clear results
     observeEvent(input$clear_results, {
+      # Clear fetch-specific results and metadata
       values$fetch_results <- NULL
-      app_data$fetch_results <- NULL
-      app_data$fetch_calculated <- FALSE
-
-      # Remove fetch columns from points data if they exist
-      if (!is.null(app_data$sav_data$points)) {
-        fetch_cols <- c("id_point", "fetch_km", "weighted_fetch_km")
-        existing_cols <- names(app_data$sav_data$points)
-        cols_to_remove <- intersect(fetch_cols[-1], existing_cols) # Keep id_point
-
-        if (length(cols_to_remove) > 0) {
-          app_data$sav_data$points <- app_data$sav_data$points |>
-            dplyr::select(-all_of(cols_to_remove))
-        }
-      }
+      clear_calculation_results(app_data, "fetch")
 
       showNotification("Fetch results cleared", type = "message", duration = 2)
     })
@@ -405,7 +394,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
     # Status message
     output$status_message <- renderUI({
-      if (is.null(app_data$sav_data)) {
+      if (is.null(app_data$original_data)) {
         p(
           icon("exclamation-triangle", style = "color: orange;"),
           "No data available. Please complete the Data Input step first."

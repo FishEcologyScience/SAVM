@@ -147,14 +147,14 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Check if data is available
         output$data_available <- reactive({
-            !is.null(app_data$sav_data) && app_data$data_valid
+            !is.null(app_data$original_data) && app_data$data_valid
         })
         outputOptions(output, "data_available", suspendWhenHidden = FALSE)
 
         # Extract depth values
         observeEvent(input$extract_depth, {
             req(input$depth_raster)
-            req(app_data$sav_data)
+            req(app_data$original_data)
 
             showNotification("Processing depth extraction...", type = "message", duration = 2)
 
@@ -173,7 +173,7 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
             result <- tryCatch(
                 {
                     extract_depth_values(
-                        points_data = app_data$sav_data$points,
+                        points_data = app_data$original_data$points,
                         raster_path = input$depth_raster$datapath
                     )
                 },
@@ -190,10 +190,25 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
             shinycssloaders::hidePageSpinner()
 
             if (!is.null(result)) {
-                # Update the points data with depth values
-                app_data$sav_data$points <- result
+                # Store depth results separately (don't modify original data)
+                values$depth_results <- list(
+                    points_with_depth = result,
+                    raster_path = input$depth_raster$datapath,
+                    extraction_time = Sys.time()
+                )
                 values$extraction_complete <- TRUE
+                
+                # Update app data with depth results and metadata
+                app_data$depth_results <- values$depth_results
                 app_data$depth_extracted <- TRUE
+                app_data$depth_timestamp <- Sys.time()
+                
+                # Store calculation parameters
+                app_data$depth_params <- list(
+                    raster_file = input$depth_raster$name,
+                    n_points_processed = nrow(result),
+                    n_points_with_depth = sum(!is.na(result$depth_m))
+                )
 
                 showNotification("Depth extraction completed successfully!", type = "message", duration = 3)
             }
@@ -201,15 +216,11 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Clear results
         observeEvent(input$clear_results, {
+            # Clear depth-specific results and metadata
+            values$depth_results <- NULL
             values$extraction_complete <- FALSE
-            app_data$depth_extracted <- FALSE
-
-            # Remove depth column from points data if it exists
-            if (!is.null(app_data$sav_data$points) && "depth_m" %in% names(app_data$sav_data$points)) {
-                app_data$sav_data$points <- app_data$sav_data$points |>
-                    dplyr::select(-depth_m)
-            }
-
+            clear_calculation_results(app_data, "depth")
+            
             showNotification("Depth extraction results cleared.", type = "message", duration = 2)
         })
 
@@ -226,10 +237,10 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Output: Depth summary
         output$depth_summary <- renderUI({
-            req(app_data$sav_data)
+            req(values$depth_results)
             req(values$extraction_complete)
 
-            points <- app_data$sav_data$points
+            points <- values$depth_results$points_with_depth
             depth_vals <- points$depth_m
             non_na_depth <- sum(!is.na(depth_vals))
 
@@ -246,11 +257,11 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Output: Depth results table
         output$depth_table <- DT::renderDT({
-            req(app_data$sav_data)
+            req(values$depth_results)
             req(values$extraction_complete)
 
             # Convert sf to regular data frame for preview
-            depth_data <- sf::st_drop_geometry(app_data$sav_data$points) |>
+            depth_data <- sf::st_drop_geometry(values$depth_results$points_with_depth) |>
                 dplyr::mutate(
                     depth_m = round(depth_m, 3)
                 )
@@ -268,7 +279,7 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Output: Extraction status
         output$extraction_status <- renderUI({
-            if (is.null(app_data$sav_data) || !app_data$data_valid) {
+            if (is.null(app_data$original_data) || !app_data$data_valid) {
                 return(p("Please complete data input before extracting depth values."))
             }
 
