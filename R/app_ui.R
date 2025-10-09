@@ -70,17 +70,7 @@ app_ui <- function(request) {
           ),
           shinydashboard::tabItem(
             tabName = "results",
-            fluidRow(
-              shinydashboard::box(
-                title = "Step 5: Results & Visualization",
-                status = "warning",
-                solidHeader = TRUE,
-                width = 12,
-                h4("Results Visualization & Exploration"),
-                p("View and interact with your SAV model predictions."),
-                p("This step will be available after model application is completed.")
-              )
-            )
+            mod_results_viz_ui("results_viz_1")
           ),
           shinydashboard::tabItem(
             tabName = "export",

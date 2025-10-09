@@ -43,4 +43,5 @@ app_server <- function(input, output, session) {
   mod_fetch_calc_server("fetch_calc_1", app_data, app_session = session)
   mod_depth_extract_server("depth_extract_1", app_data, app_session = session)
   mod_model_apply_server("model_apply_1", app_data, app_session = session)
+  mod_results_viz_server("results_viz_1", app_data)
 }
