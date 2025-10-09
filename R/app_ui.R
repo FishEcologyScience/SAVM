@@ -66,17 +66,7 @@ app_ui <- function(request) {
           ),
           shinydashboard::tabItem(
             tabName = "model_apply",
-            fluidRow(
-              shinydashboard::box(
-                title = "Step 4: Model Application",
-                status = "success",
-                solidHeader = TRUE,
-                width = 12,
-                h4("SAV Model Application"),
-                p("Apply Random Forest models to predict SAV presence and cover."),
-                p("This step will be available after data preparation is completed.")
-              )
-            )
+            mod_model_apply_ui("model_apply_1")
           ),
           shinydashboard::tabItem(
             tabName = "results",

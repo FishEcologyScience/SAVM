@@ -141,7 +141,7 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
         # Reactive values for module
         values <- reactiveValues(
-            depth_raster = NULL,
+            depth_results = NULL,
             extraction_complete = FALSE
         )
 
@@ -157,6 +157,17 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
             req(app_data$sav_data)
 
             showNotification("Processing depth extraction...", type = "message", duration = 2)
+
+
+            shinycssloaders::showPageSpinner(
+                background = "#cccccccc",
+                color = "#333333",
+                caption = "Calculating Fetch",
+                image = "www/img/insil.gif",
+                image.width = "200",
+                image.height = "200"
+            )
+
 
             # Run the depth extraction safely
             result <- tryCatch(
@@ -175,6 +186,8 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
                     return(NULL)
                 }
             )
+
+            shinycssloaders::hidePageSpinner()
 
             if (!is.null(result)) {
                 # Update the points data with depth values
