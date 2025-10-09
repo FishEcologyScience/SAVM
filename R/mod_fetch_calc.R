@@ -9,6 +9,20 @@ mod_fetch_calc_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
+      column(
+        12,
+        shinydashboard::box(
+          title = tags$span(icon("wind"), " Fetch Calculation"),
+          collapsible = TRUE,
+          collapsed = TRUE,
+          status = "primary",
+          width = NULL,
+          solidHeader = TRUE,
+          p("In this part of the application, you will calculate the fetch of the points you created in the data input phase")
+        )
+      )
+    ),
+    fluidRow(
       # Configuration Panel
       column(
         4,
@@ -104,8 +118,8 @@ mod_fetch_calc_ui <- function(id) {
               icon = icon("water")
             ),
             actionButton(
-              ns("skip_to_model"),
-              "Skip to Model Application",
+              ns("proceed_to_model"),
+              "Proceed to Model Application",
               class = "btn-info",
               icon = icon("brain")
             )
@@ -414,8 +428,8 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
     })
 
-    # Navigation: Skip to model application
-    observeEvent(input$skip_to_model, {
+    # Navigation: Proceed to model application
+    observeEvent(input$proceed_to_model, {
       shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })

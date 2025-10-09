@@ -45,6 +45,7 @@ Imports:
     shinycssloaders,
     shinydashboard,
     shinyWidgets,
+    stars,
     stats,
     tmap (>= 4.0),
     tools,

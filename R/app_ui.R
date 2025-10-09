@@ -62,17 +62,7 @@ app_ui <- function(request) {
           ),
           shinydashboard::tabItem(
             tabName = "depth_extr",
-            fluidRow(
-              shinydashboard::box(
-                title = "Step 3: Depth extraction",
-                status = "info",
-                solidHeader = TRUE,
-                width = 12,
-                h4("Depth extraction (Optional)"),
-                p("Extract the depth for your sampling points from a bathymetry raster."),
-                p("This step will be available after data input is completed.")
-              )
-            )
+            mod_depth_extract_ui("depth_extract_1")
           ),
           shinydashboard::tabItem(
             tabName = "model_apply",

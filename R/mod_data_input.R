@@ -15,6 +15,7 @@ mod_data_input_ui <- function(id) {
         shinydashboard::box(
           title = tags$span(icon("upload"), " Data Input"),
           collapsible = TRUE,
+          collapsed = TRUE,
           status = "primary",
           width = NULL,
           solidHeader = TRUE,
@@ -140,8 +141,8 @@ mod_data_input_ui <- function(id) {
             ),
             # br(), br(),
             actionButton(
-              ns("skip_to_model"),
-              "Skip to Model Application",
+              ns("proceed_to_model"),
+              "Proceed to Model Application",
               class = "btn-info",
               icon = icon("brain")
               # )
@@ -439,8 +440,8 @@ mod_data_input_server <- function(id, app_data, app_session) {
       shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
     })
 
-    # Navigation: Skip to model application
-    observeEvent(input$skip_to_model, {
+    # Navigation: Proceed to model application
+    observeEvent(input$proceed_to_model, {
       shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })

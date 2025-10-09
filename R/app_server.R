@@ -11,6 +11,7 @@ app_server <- function(input, output, session) {
     data_loaded = FALSE,
     data_valid = FALSE,
     fetch_calculated = FALSE,
+    depth_extracted = FALSE,
     model_applied = FALSE,
 
     # Data objects
@@ -27,4 +28,5 @@ app_server <- function(input, output, session) {
   # Module servers
   mod_data_input_server("data_input_1", app_data, app_session = session)
   mod_fetch_calc_server("fetch_calc_1", app_data, app_session = session)
+  mod_depth_extract_server("depth_extract_1", app_data, app_session = session)
 }
