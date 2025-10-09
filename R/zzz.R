@@ -1,13 +1,14 @@
 #' Helper functions
 #'
 #' @import randomForest
-#' 
+#'
 #' @noRd
-#' 
+#'
 globalVariables(c(
-    "direction", "fetch", "id_point", "weight","Cover_Bin", "Depth_Bin", 
+    "direction", "fetch", "id_point", "weight", "Cover_Bin", "Depth_Bin",
     "Fetch_Bin", "Mean_Value", "PA_Factor", "depth_m", "fetch_km",
-    "limitation_secchi", "transect_length", "vmax", "pa", "geometry"
+    "limitation_secchi", "transect_length", "vmax", "pa", "geometry",
+    "weighted_fetch_km"
 ))
 
 
@@ -68,7 +69,7 @@ sav_msg_danger <- function(..., .envir = parent.frame()) {
 }
 
 
-##---- formal messages
+## ---- formal messages
 sav_inform <- function(...) {
     is_verbose_mode <- getOption("savm.verbose", "verbose") == "verbose"
     if (is_verbose_mode) {
@@ -79,7 +80,7 @@ sav_inform <- function(...) {
 }
 
 sav_warn <- function(...) {
-    is_verbose_mode <- getOption("savm.verbose", "verbose") %in% c("verbose", "warning") 
+    is_verbose_mode <- getOption("savm.verbose", "verbose") %in% c("verbose", "warning")
     if (is_verbose_mode) {
         rlang::local_options(rlib_message_verbosity = "verbose")
         rlang::warn(...)
@@ -94,7 +95,7 @@ sav_debug_msg <- function(...) {
     }
 }
 
-sav_stop_if_not <-  function(cond, ...) {
+sav_stop_if_not <- function(cond, ...) {
     if (cond) {
         return()
     } else {

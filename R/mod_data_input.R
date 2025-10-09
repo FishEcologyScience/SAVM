@@ -372,7 +372,7 @@ mod_data_input_server <- function(id, app_data, app_session) {
       preview_data <- sf::st_drop_geometry(values$processed_data$points)
 
       DT::datatable(
-        head(preview_data, 100),
+        utils::head(preview_data, 100),
         options = list(
           scrollX = TRUE,
           pageLength = 10,
@@ -487,7 +487,7 @@ process_input_data <- function(file_path,
       )
     } else {
       stop(
-        "Multiple .shp files detected — please upload only one shapefile at a time.",
+        "Multiple .shp files detected - please upload only one shapefile at a time.",
         call. = FALSE
       )
     }
@@ -564,7 +564,7 @@ process_input_data <- function(file_path,
 
   # Basic structural validation
   if (is.null(result$points) || nrow(result$points) == 0) {
-    stop("No point data produced — check input format or CRS parameters.", call. = FALSE)
+    stop("No point data produced - check input format or CRS parameters.", call. = FALSE)
   }
 
   result

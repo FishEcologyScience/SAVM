@@ -71,7 +71,7 @@ mod_fetch_calc_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == true", ns("use_wind_weights")),
-            helpText(tags$span(icon("info-circle"), " CSV must contain 'direction' (0-360°) and 'weight' columns.")),
+            helpText(tags$span(icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
             fileInput(
               ns("wind_weights_file"),
               "Upload wind weights CSV:",
@@ -189,7 +189,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
       tryCatch(
         {
-          wind_data <- read.csv(input$wind_weights_file$datapath, stringsAsFactors = FALSE)
+          wind_data <- utils::read.csv(input$wind_weights_file$datapath, stringsAsFactors = FALSE)
 
           # Validate required columns
           if (!all(c("direction", "weight") %in% names(wind_data))) {
@@ -238,7 +238,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       req(values$wind_weights)
 
       DT::datatable(
-        head(values$wind_weights, 20),
+        utils::head(values$wind_weights, 20),
         options = list(
           pageLength = 5,
           dom = "t",
