@@ -57,7 +57,8 @@ mod_fetch_calc_ui <- function(id) {
             fileInput(
               ns("aoi_polygon"),
               "Choose Spatial File:",
-              accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+              accept = c(".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+              multiple = TRUE
             )
           ),
 
@@ -217,7 +218,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
     observe({
       polygon_files <- list.files(
         system.file("extdata", "polygons", package = "SAVM"),
-        pattern = "\\.(gpkg|geojson|shp)$",
+        pattern = "\\.(gpkg|geojson)$",
         full.names = FALSE
       )
       polygon_choices <- setNames(polygon_files, tools::file_path_sans_ext(polygon_files))
@@ -230,50 +231,50 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       )
     })
 
-    # Handle polygon selection from library
-    observeEvent(input$polygon_library, {
-      req(input$polygon_library)
-      req(!input$use_polygon_upload)
+    # # Handle polygon selection from library
+    # observeEvent(input$polygon_library, {
+    #   req(input$polygon_library)
+    #   req(!input$use_polygon_upload)
 
-      tryCatch(
-        {
-          polygon_path <- system.file("extdata", "polygons", input$polygon_library, package = "SAVM")
-          polygon_data <- sf::st_read(polygon_path, quiet = TRUE)
-          values$polygon_data <- polygon_data
-          showNotification("Polygon loaded from library", type = "message", duration = 3)
-        },
-        error = function(e) {
-          showNotification(
-            paste("Error loading polygon from library:", e$message),
-            type = "error",
-            duration = 5
-          )
-          values$polygon_data <- NULL
-        }
-      )
-    })
+    #   tryCatch(
+    #     {
+    #       polygon_path <- system.file("extdata", "polygons", input$polygon_library, package = "SAVM")
+    #       polygon_data <- sf::st_read(polygon_path, quiet = TRUE)
+    #       values$polygon_data <- polygon_data
+    #       showNotification("Polygon loaded from library", type = "message", duration = 3)
+    #     },
+    #     error = function(e) {
+    #       showNotification(
+    #         paste("Error loading polygon from library:", e$message),
+    #         type = "error",
+    #         duration = 5
+    #       )
+    #       values$polygon_data <- NULL
+    #     }
+    #   )
+    # })
 
-    # Handle uploaded polygon file
-    observeEvent(input$aoi_polygon, {
-      req(input$aoi_polygon)
-      req(input$use_polygon_upload)
+    # # Handle uploaded polygon file
+    # observeEvent(input$aoi_polygon, {
+    #   req(input$aoi_polygon)
+    #   req(input$use_polygon_upload)
 
-      tryCatch(
-        {
-          polygon_data <- sf::st_read(input$aoi_polygon$datapath, quiet = TRUE)
-          values$polygon_data <- polygon_data
-          showNotification("Polygon uploaded successfully", type = "message", duration = 3)
-        },
-        error = function(e) {
-          showNotification(
-            paste("Error reading uploaded polygon:", e$message),
-            type = "error",
-            duration = 5
-          )
-          values$polygon_data <- NULL
-        }
-      )
-    })
+    #   tryCatch(
+    #     {
+    #       polygon_data <- sf::st_read(input$aoi_polygon$datapath, quiet = TRUE)
+    #       values$polygon_data <- polygon_data
+    #       showNotification("Polygon uploaded successfully", type = "message", duration = 3)
+    #     },
+    #     error = function(e) {
+    #       showNotification(
+    #         paste("Error reading uploaded polygon:", e$message),
+    #         type = "error",
+    #         duration = 5
+    #       )
+    #       values$polygon_data <- NULL
+    #     }
+    #   )
+    # })
 
     # Wind weights file processing
     observeEvent(input$wind_weights_file, {
@@ -341,17 +342,45 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
     })
 
     # Fetch calculation
-    observeEvent(input$calculate_fetch, {
-      req(app_data$original_data)
-      req(app_data$data_valid)
 
-      tryCatch(
-        {
+observeEvent(input$calculate_fetch, {
+  req(app_data$original_data)
+  req(app_data$data_valid)
+
+  tryCatch({
+    showNotification("Processing polygon...", type = "message", duration = 2)
+
+    # Select polygon source
+    if (isTRUE(input$use_polygon_upload)) {
+      req(input$aoi_polygon)
+
+      # Handle multiple shapefile components
+      file_paths <- input$aoi_polygon$datapath
+      if (length(file_paths) > 1) {
+        polygon_file <- filepath_shp(file_paths)
+      } else {
+        polygon_file <- file_paths
+      }
+
+      polygon <- sf::st_read(polygon_file, quiet = TRUE)
+
+    } else {
+      req(input$polygon_library)
+
+      polygon_file <- system.file(
+        "extdata", "polygons", input$polygon_library,
+        package = "SAVM"
+      )
+      polygon <- sf::st_read(polygon_file, quiet = TRUE)
+    }
+
+    # Store for later use
+    values$polygon_data <- polygon
+
           showNotification("Calculating fetch...", type = "message", duration = 2)
 
           # Extract data from original data
           points <- app_data$original_data$points
-          polygon <- values$polygon_data
 
           # Check if polygon is available
           if (is.null(polygon)) {

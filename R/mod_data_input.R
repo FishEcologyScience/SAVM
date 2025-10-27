@@ -464,33 +464,7 @@ process_input_data <- function(file_path,
   # -------------------------------------------------------------
   # Handle multi-file shapefile uploads
   if (length(file_path) > 1) {
-    shp_idx <- grep("\\.shp$", file_path, ignore.case = TRUE)
-
-    if (length(shp_idx) == 1) {
-      # Define a consistent base name
-      base_dir <- dirname(file_path[shp_idx])
-      new_base <- file.path(base_dir, "uploaded_shapefile")
-
-      # Rename all shapefile components to have the same basename
-      for (f in file_path) {
-        ext <- tools::file_ext(f)
-        file.rename(f, file.path(base_dir, paste0("uploaded_shapefile.", ext)))
-      }
-      print(dir(base_dir))
-      # Use the .shp file for reading
-      file_path <- paste0(new_base, ".shp")
-    } else if (length(shp_idx) == 0) {
-      stop(
-        "Multiple files uploaded, but none have a .shp extension.
-      Include the .shp, .dbf, .shx, and .prj files together.",
-        call. = FALSE
-      )
-    } else {
-      stop(
-        "Multiple .shp files detected - please upload only one shapefile at a time.",
-        call. = FALSE
-      )
-    }
+    file_path <- filepath_shp(file_path)
   }
 
   # -------------------------------------------------------------
@@ -568,4 +542,37 @@ process_input_data <- function(file_path,
   }
 
   result
+}
+
+
+filepath_shp <- function(file_path) {
+      shp_idx <- grep("\\.shp$", file_path, ignore.case = TRUE)
+
+    if (length(shp_idx) == 1) {
+      # Define a consistent base name
+      base_dir <- dirname(file_path[shp_idx])
+      new_base <- file.path(base_dir, "uploaded_shapefile")
+
+      # Rename all shapefile components to have the same basename
+      for (f in file_path) {
+        ext <- tools::file_ext(f)
+        file.rename(f, file.path(base_dir, paste0("uploaded_shapefile.", ext)))
+      }
+      print(dir(base_dir))
+      # Use the .shp file for reading
+      file_path <- paste0(new_base, ".shp")
+    } else if (length(shp_idx) == 0) {
+      stop(
+        "Multiple files uploaded, but none have a .shp extension.
+      Include the .shp, .dbf, .shx, and .prj files together.",
+        call. = FALSE
+      )
+    } else {
+      stop(
+        "Multiple .shp files detected - please upload only one shapefile at a time.",
+        call. = FALSE
+      )
+    }
+
+    return(file_path)
 }
