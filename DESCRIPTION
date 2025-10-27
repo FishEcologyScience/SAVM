@@ -1,7 +1,7 @@
 Package: SAVM
 Title: Submerged aquatic vegetation model
-Version: 0.0.1.9005
-Date: 2025-08-12
+Version: 0.0.1.9006
+Date: 2025-10-27
 Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
@@ -45,6 +45,7 @@ Imports:
     shiny,
     shinycssloaders,
     shinydashboard,
+    shinyWidgets,
     stats,
     tmap (>= 4.0),
     tools,
@@ -58,6 +59,6 @@ Suggests:
     stars,
     vdiffr,
     withr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Config/testthat/edition: 3

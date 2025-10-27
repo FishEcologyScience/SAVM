@@ -17,3 +17,6 @@
 dev_history.R
 ^dev$
 $run_dev.*
+^manifest\.json$
+^app\.R$
+^\.rscignore$
