@@ -246,7 +246,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
             shinycssloaders::showPageSpinner(
                 background = "#cccccccc",
                 color = "#333333",
-                caption = "Calculating Fetch",
+                caption = "Applying model",
                 image = "www/img/insil.gif",
                 image.width = "200",
                 image.height = "200"
@@ -257,7 +257,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
                 {
                     # Assemble data for modeling (combines original + fetch + depth)
                     modeling_data <- assemble_modeling_data(app_data)
-                    
+
                     # Prepare vmax parameters
                     vmax_par <- switch(input$vmax_model,
                         "model_a" = list(intercept = 1.40, slope = 1.33),
@@ -290,12 +290,12 @@ mod_model_apply_server <- function(id, app_data, app_session) {
                 # Store model results separately
                 values$model_results <- result
                 values$model_complete <- TRUE
-                
+
                 # Update app data with model results and metadata
                 app_data$model_results <- result
                 app_data$model_applied <- TRUE
                 app_data$model_timestamp <- Sys.time()
-                
+
                 # Store model parameters for reference
                 app_data$model_params <- list(
                     model_type = input$model_type,
@@ -317,7 +317,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
             values$model_results <- NULL
             values$model_complete <- FALSE
             clear_calculation_results(app_data, "model")
-            
+
             showNotification("Model results cleared.", type = "message", duration = 2)
         })
 

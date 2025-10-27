@@ -33,6 +33,35 @@ mod_fetch_calc_ui <- function(id) {
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
+          # Polygon for fetch calculation
+          h4("Choose Spatial Polygon"),
+          shinyWidgets::prettySwitch(
+            inputId = ns("use_polygon_upload"),
+            label = "Upload from file",
+            value = FALSE,
+            status = "primary",
+            inline = TRUE
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] == false", ns("use_polygon_upload")),
+            selectInput(
+              ns("polygon_library"),
+              "Available polygons:",
+              choices = NULL,
+              selected = NULL
+            )
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] == true", ns("use_polygon_upload")),
+            helpText(tags$span(icon("info-circle"), " Supported formats: GeoPackage (.gpkg), GeoJSON (.geojson), ESRI Shapefile (.shp)")),
+            fileInput(
+              ns("aoi_polygon"),
+              "Choose Spatial File:",
+              accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+            )
+          ),
+
+          # Parameters
           h4("Main parameters"),
           numericInput(
             ns("max_dist"),
@@ -180,8 +209,71 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
     # Reactive values for module
     values <- reactiveValues(
       wind_weights = NULL,
-      fetch_results = NULL
+      fetch_results = NULL,
+      polygon_data = NULL
     )
+
+    # Initialize polygon library choices
+    observe({
+      polygon_files <- list.files(
+        system.file("extdata", "polygons", package = "SAVM"),
+        pattern = "\\.(gpkg|geojson|shp)$",
+        full.names = FALSE
+      )
+      polygon_choices <- setNames(polygon_files, tools::file_path_sans_ext(polygon_files))
+
+      updateSelectInput(
+        session,
+        "polygon_library",
+        choices = polygon_choices,
+        selected = if (length(polygon_choices) > 0) polygon_choices[1] else NULL
+      )
+    })
+
+    # Handle polygon selection from library
+    observeEvent(input$polygon_library, {
+      req(input$polygon_library)
+      req(!input$use_polygon_upload)
+
+      tryCatch(
+        {
+          polygon_path <- system.file("extdata", "polygons", input$polygon_library, package = "SAVM")
+          polygon_data <- sf::st_read(polygon_path, quiet = TRUE)
+          values$polygon_data <- polygon_data
+          showNotification("Polygon loaded from library", type = "message", duration = 3)
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error loading polygon from library:", e$message),
+            type = "error",
+            duration = 5
+          )
+          values$polygon_data <- NULL
+        }
+      )
+    })
+
+    # Handle uploaded polygon file
+    observeEvent(input$aoi_polygon, {
+      req(input$aoi_polygon)
+      req(input$use_polygon_upload)
+
+      tryCatch(
+        {
+          polygon_data <- sf::st_read(input$aoi_polygon$datapath, quiet = TRUE)
+          values$polygon_data <- polygon_data
+          showNotification("Polygon uploaded successfully", type = "message", duration = 3)
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error reading uploaded polygon:", e$message),
+            type = "error",
+            duration = 5
+          )
+          values$polygon_data <- NULL
+        }
+      )
+    })
 
     # Wind weights file processing
     observeEvent(input$wind_weights_file, {
@@ -259,7 +351,13 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
           # Extract data from original data
           points <- app_data$original_data$points
-          polygon <- app_data$original_data$polygon
+          polygon <- values$polygon_data
+
+          # Check if polygon is available
+          if (is.null(polygon)) {
+            showNotification("Please select or upload a polygon first", type = "error", duration = 5)
+            return()
+          }
 
           # Prepare wind weights if using custom
           wind_weights <- if (input$use_wind_weights && !is.null(values$wind_weights)) {
