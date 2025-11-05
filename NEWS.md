@@ -1,5 +1,10 @@
 # SAVM (devel)
 
+* Shiny App that expose the package capacities.
+* `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
+
+# SAVM 0.0.1
+
 * `compute_fetch()` has a new argument `remove_outsider` to remove points falling outside the polygon. Also, `identify_outsiders()` helps visualize outsiders (see #13).
 * Model and plot functions have been adjusted to handle `sf` objects (see #11).
 * The element `mean_fetch` returned by `compute_fetch()` is now a `sf` object (see #9).

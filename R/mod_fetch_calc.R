@@ -221,7 +221,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
         pattern = "\\.(gpkg|geojson)$",
         full.names = FALSE
       )
-      polygon_choices <- setNames(polygon_files, tools::file_path_sans_ext(polygon_files))
+      polygon_choices <- stats::setNames(polygon_files, tools::file_path_sans_ext(polygon_files))
 
       updateSelectInput(
         session,

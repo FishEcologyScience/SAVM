@@ -1,0 +1,257 @@
+---
+title: "SAV Prediction Models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SAV Prediction Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(SAVM)
+```
+
+# Introduction
+
+The SAVM package includes multiple pre-trained models for predicting submerged aquatic vegetation (SAV) presence/absence and percent cover. This vignette provides details about the available models and demonstrates how to load and use them directly with the `sav_load_model()` function.
+
+For most users, the high-level `sav_model()` function (documented in the "Get started with SAVM" vignette) will be sufficient. However, advanced users may want to access the underlying models directly for custom predictions, model inspection, or integration into other workflows.
+
+The current models were last updated on October 10, 2025.
+
+# Available Models
+
+The package includes three types of models, each predicting either presence/absence (pa) or percent cover (cover):
+
+1. **Random Forest (RF)** - Default models with flexible predictor selection
+2. **Generalized Additive Models (GAM)** - Captures non-linear relationships
+3. **Generalized Linear Mixed Models (GLMM)** - Accounts for hierarchical structure
+
+## Model Specifications
+
+### Random Forest Models
+
+Random Forest models are the default choice and are available for three predictor combinations:
+
+- **Depth only**: Uses only depth measurements
+- **Fetch only**: Uses only fetch measurements
+- **Depth + Fetch**: Uses both predictors (recommended when available)
+
+**Cover Model (rf_cover)**
+
+- Type: Regression
+- Trees: 250
+- Variables tried at each split: 1
+- Training size: 435 observations
+- Variance explained: ~41.4% (OOB estimate)
+- Response: Percent cover (0-100)
+
+**Presence/Absence Model (rf_pa)**
+
+- Type: Classification
+- Predictors: Depth (m) and Fetch (km)
+- Response: Binary (0 = absent, 1 = present)
+
+### Generalized Additive Models (GAMs)
+
+GAMs use smooth terms to capture non-linear relationships. These models require both depth and fetch.
+
+**Cover Model (gam_cover)**
+
+- Family: Gaussian with identity link
+- Formula: `Cover ~ s(Depth) + s(Fetch)`
+- Smooths: Thin plate regression splines
+- Training size: 36,193 observations
+- Deviance explained: ~17.5%
+
+**Presence/Absence Model (gam_pa)**
+
+- Family: Binomial with logit link
+- Formula: `Presence ~ s(Depth) + s(Fetch)`
+- Smooths: Thin plate regression splines
+- Output: Probability of presence
+
+### Generalized Linear Mixed Models (GLMMs)
+
+GLMMs incorporate random effects for Project and Year, accounting for hierarchical structure in the data. These models require both depth and fetch.
+
+**Cover Model (glmm_cover)**
+
+- Formula: `Cover ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
+- Fixed effects: Linear and quadratic terms for Depth and Fetch, plus interaction
+- Random effects: Random intercepts for Project (6 levels) and Year (5 levels)
+- Training size: 36,193 observations
+- Residual SD: ~28.4
+
+**Presence/Absence Model (glmm_pa)**
+
+- Family: Binomial with logit link
+- Formula: `Presence ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
+- Random effects: Random intercepts for Project and Year
+
+# Using sav_load_model()
+
+The `sav_load_model()` function provides direct access to the pre-trained models. This is useful for:
+
+- Inspecting model structure and parameters
+- Making custom predictions
+- Comparing different modeling approaches
+- Integrating models into custom workflows
+
+## Function Syntax
+
+```{r eval=FALSE}
+sav_load_model(
+  type = c("cover", "pa"),
+  predictors = c("depth", "fetch", "depth+fetch"),
+  method = "rf"
+)
+```
+
+**Parameters:**
+
+- `type`: Model output type - `"cover"` for percent cover or `"pa"` for presence/absence
+- `predictors`: Variables to use - `"depth"`, `"fetch"`, or `"depth+fetch"`
+- `method`: Modeling approach - `"rf"` (default), `"gam"`, or `"glmm"`
+
+**Note:** GAM and GLMM methods only support `predictors = "depth+fetch"`.
+
+## Examples
+
+### Loading Random Forest Models
+
+```{r}
+# Load presence/absence model using only depth
+model_pa_depth <- sav_load_model("pa", "depth", "rf")
+class(model_pa_depth)
+
+# Load cover model using depth and fetch
+model_cover <- sav_load_model("cover", "depth+fetch", "rf")
+model_cover
+```
+
+### Making Predictions with Random Forest
+
+```{r}
+# Create sample data
+new_data <- data.frame(
+  Depth = c(2.5, 5.0, 8.0),
+  Fetch = c(1.0, 2.5, 5.0)
+)
+
+# Predict presence/absence (returns 0 or 1)
+predict(model_pa_depth, new_data[, "Depth", drop = FALSE])
+
+# Predict cover (returns percent cover)
+predict(model_cover, new_data)
+```
+
+### Loading and Using GAM Models
+
+```{r eval=FALSE}
+# Load GAM for cover prediction
+model_gam_cover <- sav_load_model("cover", "depth+fetch", "gam")
+
+# Make predictions
+predictions_gam <- predict(model_gam_cover, new_data)
+
+# For presence/absence GAM, use type = "response" for probabilities
+model_gam_pa <- sav_load_model("pa", "depth+fetch", "gam")
+prob_presence <- predict(model_gam_pa, new_data, type = "response")
+```
+
+### Loading and Using GLMM Models
+
+```{r eval=FALSE}
+# Load GLMM for cover prediction
+model_glmm_cover <- sav_load_model("cover", "depth+fetch", "glmm")
+
+# GLMMs require Project and Year for predictions
+# For new predictions without these variables, use re.form = NA to ignore random effects
+predictions_glmm <- predict(
+  model_glmm_cover,
+  new_data,
+  re.form = NA
+)
+```
+
+## Model Inspection
+
+You can inspect model objects to understand their structure:
+
+```{r}
+# Random Forest: variable importance
+importance(model_cover)
+
+# Random Forest: number of trees
+model_cover$ntree
+
+# Random Forest: OOB error
+tail(model_cover$mse, 1)  # For regression
+```
+
+```{r eval=FALSE}
+# GAM: summary statistics
+summary(model_gam_cover)
+
+# GAM: plot smooth terms
+plot(model_gam_cover, pages = 1)
+
+# GLMM: fixed effects
+fixef(model_glmm_cover)
+
+# GLMM: random effects
+ranef(model_glmm_cover)
+```
+
+# Choosing a Model
+
+**Use Random Forest (default) when:**
+
+- You need predictions with limited predictor availability (depth only or fetch only)
+- You want robust predictions with minimal assumptions
+- You prefer the default `sav_model()` workflow
+
+**Use GAM when:**
+
+- You want to visualize and interpret non-linear relationships
+- You have both depth and fetch available
+- You need smooth response curves
+
+**Use GLMM when:**
+
+- Your data has hierarchical structure (multiple projects/years)
+- You want to account for random effects
+- You need to make inferences about fixed effects
+
+For most applications, the Random Forest models provide a good balance of accuracy, flexibility, and ease of use.
+
+# Integration with sav_model()
+
+The `sav_model()` function automatically selects the appropriate Random Forest model based on available predictors. Under the hood, it calls `sav_load_model()`:
+
+```{r eval=FALSE}
+# These are equivalent:
+result1 <- sav_model(data.frame(depth_m = 5, fetch_km = 2))
+
+# Manual approach:
+model <- sav_load_model("cover", "depth+fetch", "rf")
+result2 <- predict(model, data.frame(Depth = 5, Fetch = 2))
+```
+
+The advantage of `sav_model()` is that it handles column name matching, post-hoc treatments, and returns a properly formatted data frame. Use `sav_load_model()` when you need direct model access for custom workflows.
+
+
+
+# References
+
+* Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J. D. 2022. Modelling submerged aquatic vegetation presence and percent cover to support the development of a freshwater fish habitat management tool. Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
+
+* Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of Submerged aquatic macrophyte communities in relation to secchi depth. Can. J. Fish. Aquat. Sci. 42: 701–709

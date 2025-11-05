@@ -226,6 +226,32 @@ sav_model <- function(
 }
 
 
+#' Load SAV Model
+#'
+#' Load a pre-trained SAV model for predicting cover or presence/absence.
+#'
+#' @param type {`character`}\cr{} Model type, either `"cover"` or `"pa"` (presence/absence).
+#' @param predictors {`character`}\cr{} Predictors to use: `"depth"`, `"fetch"`, or `"depth+fetch"`.
+#' @param method {`character`}\cr{} Modeling method: `"rf"` (random forest), `"glmm"`, or `"gam"`.
+#'
+#' @return A model object (e.g., randomForest, glmm, or gam object) that can be used for predictions.
+#'
+#' @details
+#' This function loads pre-trained models from the package's internal data directory.
+#' For random forest models, individual predictor models (depth-only, fetch-only) and
+#' combined models (depth+fetch) are available. For GLMM and GAM methods, only the
+#' combined depth+fetch model is available.
+#'
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' # Load a random forest model for presence/absence using depth
+#' model <- sav_load_model("pa", "depth", "rf")
+#'
+#' # Load a cover model using both predictors
+#' model <- sav_load_model("cover", "depth+fetch", "rf")
+#' }
 sav_load_model <- function(
   type = c("cover", "pa"),
   predictors = c("depth", "fetch", "depth+fetch"),

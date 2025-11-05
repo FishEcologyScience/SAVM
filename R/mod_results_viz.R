@@ -438,7 +438,7 @@ mod_results_viz_server <- function(id, app_data) {
 
       # Update table columns
       display_cols <- available_cols[!available_cols %in% c("geometry")]
-      table_choices <- setNames(display_cols, display_cols)
+      table_choices <- stats::setNames(display_cols, display_cols)
 
       updateCheckboxGroupInput(
         session, "table_columns",
@@ -717,7 +717,7 @@ mod_results_viz_server <- function(id, app_data) {
       # Round numeric columns
       table_data <- table_data |>
         dplyr::mutate(
-          dplyr::across(where(is.numeric), ~ round(.x, 3))
+          dplyr::across(dplyr::where(is.numeric), ~ round(.x, 3))
         )
 
       DT::datatable(
