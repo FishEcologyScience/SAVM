@@ -24,10 +24,10 @@ A model object (e.g., randomForest, glmm, or gam object) that can be used for pr
 Load a pre-trained SAV model for predicting cover or presence/absence.
 }
 \details{
-This function loads pre-trained models from the package's internal data directory.
-For random forest models, individual predictor models (depth-only, fetch-only) and
-combined models (depth+fetch) are available. For GLMM and GAM methods, only the
-combined depth+fetch model is available.
+This function loads pre-trained models from the package's internal data
+directory. For random forest models, individual predictor models
+(depth-only, fetch-only) and combined models (depth+fetch) are available.
+For GLMM and GAM methods, only the combined depth+fetch model is available.
 }
 \examples{
 \donttest{

@@ -2,6 +2,7 @@
 
 * Shiny App that expose the package capacities.
 * `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
+* New `glmm` and `gam` models.
 
 # SAVM 0.0.1
 

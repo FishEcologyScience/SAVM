@@ -2,11 +2,12 @@
 % Please edit documentation in R/model.R
 \name{sav_model}
 \alias{sav_model}
-\title{Apply Random Forest models}
+\title{Apply SAV prdiction models}
 \usage{
 sav_model(
   dat,
   type = c("cover", "pa"),
+  method = "rf",
   depth = NULL,
   fetch = NULL,
   substrate = NULL,
@@ -31,6 +32,9 @@ Additional columns will be ignored.
 
 \item{type}{{\verb{character vector}, either \code{"cover"} or \code{"pa"}}\cr{}
 Model type(s).}
+
+\item{method}{{\verb{character vector}, either \code{"rf"}, \code{"gam"} or \code{"glmm"}}\cr{}
+Statistical method.}
 
 \item{depth, fetch}{{\code{character}}\cr{} Column specification for the predictors,
 see \emph{Details}.}
@@ -59,7 +63,7 @@ returned: \code{vmax} and \code{limitation_secchi}, see details for further
 explanation.
 }
 \description{
-Apply Random Forest models to predict SAV cover and presence/absence, with
+Apply SAV prdiction models to predict SAV cover and presence/absence, with
 optional post-hoc processing.
 }
 \details{
@@ -106,10 +110,14 @@ corresponding prediction is set to 0 in the post-hoc adjusted output.
 # basic usage
 sav_model(data.frame(depth = c(5, 10)))
 sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
-
+sav_model(
+ data.frame(depth = c(5, 10), fetch = c(1, 2)), 
+ type = "cover", 
+ method = "glmm"
+)
 # using post-hoc treatment
 sav_model(
-  data.frame(
+  dat = data.frame(
     depth = c(5, 10, 5),
     fetch = c(1, 2, 10),
     secchi = c(1, 10, 10),

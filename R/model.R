@@ -1,6 +1,6 @@
-#' Apply Random Forest models
+#' Apply SAV prdiction models
 #'
-#' Apply Random Forest models to predict SAV cover and presence/absence, with
+#' Apply SAV prdiction models to predict SAV cover and presence/absence, with
 #' optional post-hoc processing.
 #'
 #' @param dat {`data.frame`|`sf`}\cr{} A `data.frame` or a `sf` object containing some or all of the
@@ -15,6 +15,8 @@
 #'  Additional columns will be ignored.
 #' @param type {`character vector`, either `"cover"` or `"pa"`}\cr{}
 #' Model type(s).
+#' @param method {`character vector`, either `"rf"`, `"gam"` or `"glmm"`}\cr{}
+#' Statistical method.
 #' @param depth,fetch {`character`}\cr{} Column specification for the predictors,
 #' see *Details*.
 #' @param substrate,secchi,limitation {`character`}\cr{}Column specification for post_hoc
@@ -93,10 +95,14 @@
 #' # basic usage
 #' sav_model(data.frame(depth = c(5, 10)))
 #' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
-#'
+#' sav_model(
+#'  data.frame(depth = c(5, 10), fetch = c(1, 2)), 
+#'  type = "cover", 
+#'  method = "glmm"
+#' )
 #' # using post-hoc treatment
 #' sav_model(
-#'   data.frame(
+#'   dat = data.frame(
 #'     depth = c(5, 10, 5),
 #'     fetch = c(1, 2, 10),
 #'     secchi = c(1, 10, 10),
@@ -105,11 +111,12 @@
 #' )
 #' }
 sav_model <- function(
-  dat, type = c("cover", "pa"), depth = NULL,
+  dat, type = c("cover", "pa"), method = "rf", depth = NULL,
   fetch = NULL, substrate = NULL, secchi = NULL, limitation = NULL,
   vmax_par = list(intercept = 1.40, slope = 1.33)
 ) {
-  # this should rather be handle via S3
+  method <- match.arg(method, c("rf", "glmm", "gam"))
+
   geom <- NULL
   if (inherits(dat, "sf")) {
     geom <- dat |>
@@ -118,7 +125,6 @@ sav_model <- function(
   } else {
     sav_stop_if_not(inherits(dat, "data.frame"))
   }
-
 
   type <- unique(type)
   if (!all(type %in% c("cover", "pa"))) {
@@ -159,18 +165,38 @@ sav_model <- function(
   out <- dat
   rownames(out) <- NULL
   if ("pa" %in% type) {
-    out$pa <- stats::predict(
-      sav_load_model("pa", predictors),
-      d_predict
-    ) |>
-      as.character() |>
-      as.integer()
+    # NB predict() does some magick behind the scenes to find the right fun
+    pa_mod <- sav_load_model("pa", predictors, method)
+    if (method == "rf") {
+      out$pa <- stats::predict(pa_mod, d_predict) |>
+        as.character() |>
+        as.integer()
+    }
+    if (method == "gam") {
+      # use logit function
+      out$pa <- stats::predict(pa_mod, d_predict) |>
+        inv_logit()
+      # post treatment?
+    }
+    if (method == "glmm") {
+      out$pa <- stats::predict(pa_mod, d_predict, re.form = NA)
+      out$pa[out$pa > 1] <- 1
+      out$pa[out$pa < 0] <- 0
+    }
   }
   if ("cover" %in% type) {
-    out$cover <- stats::predict(
-      sav_load_model("cover", predictors),
-      d_predict
-    )
+    cover_mod <- sav_load_model("cover", predictors, method)
+    if (method == "glmm") {
+      out$cover <- stats::predict(cover_mod, d_predict, re.form = NA)
+      out$cover[out$cover > 100] <- 100
+      out$cover[out$cover < 0] <- 0
+    } else {
+      out$cover <- stats::predict(cover_mod, d_predict)
+      if (method == "gam") {
+        # use logit function
+        out$cover <- inv_logit(out$cover) * 100
+      }
+    }
   }
 
   out <- out |>
@@ -191,8 +217,8 @@ sav_model <- function(
         dplyr::relocate(limitation_secchi, .after = secchi)
     } else {
       sav_warn(
-        "A column with depth data required to perform the post-hoc
-                treatment with secchi depth."
+        "A column with depth data required to perform the post-hoc treatment
+        with secchi depth."
       )
     }
   }
@@ -237,10 +263,10 @@ sav_model <- function(
 #' @return A model object (e.g., randomForest, glmm, or gam object) that can be used for predictions.
 #'
 #' @details
-#' This function loads pre-trained models from the package's internal data directory.
-#' For random forest models, individual predictor models (depth-only, fetch-only) and
-#' combined models (depth+fetch) are available. For GLMM and GAM methods, only the
-#' combined depth+fetch model is available.
+#' This function loads pre-trained models from the package's internal data
+#' directory. For random forest models, individual predictor models
+#' (depth-only, fetch-only) and combined models (depth+fetch) are available.
+#' For GLMM and GAM methods, only the combined depth+fetch model is available.
 #'
 #' @export
 #'
@@ -301,3 +327,5 @@ scrub_if_present <- function(.data, x, y) {
   }
   .data
 }
+
+inv_logit <- function(x) exp(x) / (1 + exp(x))
