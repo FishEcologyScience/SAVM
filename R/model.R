@@ -24,21 +24,21 @@
 #' (Vmax), see *Details* below.
 #'
 #' @return
-#' A data frame (or a sf object) containing the input columns along with model 
+#' A data frame (or a sf object) containing the input columns along with model
 #' predictions.
 #'
-#' The prediction column names match the values specified in `type` followed 
-#' by the suffix `_pred`, and contain the raw model outputs (i.e., without 
+#' The prediction column names match the values specified in `type` followed
+#' by the suffix `_pred`, and contain the raw model outputs (i.e., without
 #' post-hoc adjustment).
 #'
-#' Post-hoc adjusted predictions (see *Details*) are included in additional 
-#' columns with the same names as the `type` values, but with the suffix 
+#' Post-hoc adjusted predictions (see *Details*) are included in additional
+#' columns with the same names as the `type` values, but with the suffix
 #' `_post_hoc`.
-#' 
-#' If a column `secchi` is present, then two additional columns are 
-#' returned: `vmax` and `limitation_secchi`, see details for further 
+#'
+#' If a column `secchi` is present, then two additional columns are
+#' returned: `vmax` and `limitation_secchi`, see details for further
 #' explanation.
-#' 
+#'
 #' @details
 #' There are two sets of models available. The first set consists of models
 #' predicting the presence or absence of SAV, while the second set focuses on
@@ -54,28 +54,28 @@
 #' explicitly provided, the function will attempt to infer them from the column
 #' names. Matching is case-insensitive and will detect 'depth_m', 'depth',
 #' 'fetch_km' and 'fetch'.
-#' 
+#'
 #' If `secchi` is provided, two additional columns are returned:
-#' * `vmax`: Predicted maximum colonization depth calculated using the Chambers 
+#' * `vmax`: Predicted maximum colonization depth calculated using the Chambers
 #' and Kalff equation.
-#' * `limitation_secchi`: Logical column indicating light limitation. `TRUE` if 
+#' * `limitation_secchi`: Logical column indicating light limitation. `TRUE` if
 #' `vmax >= depth_m`,  indicating the site is light-limited; `FALSE` otherwise.
 #'
-#' The regression parameters for the Chambers and Kalff equation can be 
-#' adjusted via the `vmax_par` argument. By default, parameters from Model A 
-#' (Quebec and international lakes) in Croft-White et al. (2022) are used. To 
+#' The regression parameters for the Chambers and Kalff equation can be
+#' adjusted via the `vmax_par` argument. By default, parameters from Model A
+#' (Quebec and international lakes) in Croft-White et al. (2022) are used. To
 #' apply Model B (Quebec lakes only), use:
 #'
 #' `vmax_par = list(intercept = 1.32, slope = 1.14)`
-#' 
-#' The post-hoc treatment adjusts raw predictions by setting them to 0 wherever 
-#' limitations are present. Possible limitation columns include `substrate`, 
-#' `limitation`, and `limitation_secchi` (see descriptions above). These 
-#' columns are treated as binary indicators: any value greater than 0 is 
-#' interpreted as a limiting condition. If a limitation is detected, the 
+#'
+#' The post-hoc treatment adjusts raw predictions by setting them to 0 wherever
+#' limitations are present. Possible limitation columns include `substrate`,
+#' `limitation`, and `limitation_secchi` (see descriptions above). These
+#' columns are treated as binary indicators: any value greater than 0 is
+#' interpreted as a limiting condition. If a limitation is detected, the
 #' corresponding prediction is set to 0 in the post-hoc adjusted output.
-#' 
-#' 
+#'
+#'
 #' @references
 #' * Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
 #' D. 2022. Modelling submerged aquatic vegetation presence and percent cover
@@ -89,181 +89,193 @@
 #'
 #' @examples
 #' \donttest{
-#' 
-#' # basic usage 
+#'
+#' # basic usage
 #' sav_model(data.frame(depth = c(5, 10)))
 #' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
-#' 
-#' # using post-hoc treatment 
+#'
+#' # using post-hoc treatment
 #' sav_model(
-#'  data.frame(
-#'   depth = c(5, 10, 5), 
-#'   fetch = c(1, 2, 10), 
-#'   secchi = c(1, 10, 10), 
-#'   substrate = c(TRUE, TRUE, FALSE)
-#'  )
+#'   data.frame(
+#'     depth = c(5, 10, 5),
+#'     fetch = c(1, 2, 10),
+#'     secchi = c(1, 10, 10),
+#'     substrate = c(TRUE, TRUE, FALSE)
+#'   )
 #' )
 #' }
 sav_model <- function(
-    dat, type = c("cover", "pa"), depth = NULL,
-    fetch = NULL, substrate = NULL, secchi = NULL, limitation = NULL,
-    vmax_par = list(intercept = 1.40, slope = 1.33)) {
-    
-
-    # this should rather be handle via S3
-    geom  <-  NULL
-    if (inherits(dat, "sf")) {
-
-        geom  <-  dat  |> 
-            dplyr::select(geometry)
-        dat  <- dat  |> sf::st_drop_geometry()
-    } else {
-        sav_stop_if_not(inherits(dat, "data.frame"))
-    }
+  dat, type = c("cover", "pa"), depth = NULL,
+  fetch = NULL, substrate = NULL, secchi = NULL, limitation = NULL,
+  vmax_par = list(intercept = 1.40, slope = 1.33)
+) {
+  # this should rather be handle via S3
+  geom <- NULL
+  if (inherits(dat, "sf")) {
+    geom <- dat |>
+      dplyr::select(geometry)
+    dat <- dat |> sf::st_drop_geometry()
+  } else {
+    sav_stop_if_not(inherits(dat, "data.frame"))
+  }
 
 
-    type <- unique(type)
-    if (!all(type %in% c("cover", "pa"))) {
-        rlang::abort("`type` value(s) must be 'cover' or 'pa'.")
-    }
+  type <- unique(type)
+  if (!all(type %in% c("cover", "pa"))) {
+    rlang::abort("`type` value(s) must be 'cover' or 'pa'.")
+  }
 
-    # names for the rf models change back towards the end
-    main_col_names <- c("Fetch", "Depth")
+  # names for the rf models change back towards the end
+  main_col_names <- c("Fetch", "Depth")
 
+  dat <- dat |>
+    rename_if_valid(fetch, main_col_names[1]) |>
+    rename_if_valid(depth, main_col_names[2]) |>
+    rename_if_valid(substrate, "substrate") |>
+    rename_if_valid(secchi, "secchi") |>
+    rename_if_valid(limitation, "limitation")
+
+  if (is.null(depth) && is.null(fetch)) {
+    sav_msg_info("Looking for depth and fetch in column names.")
     dat <- dat |>
-        rename_if_valid(fetch, main_col_names[1]) |>
-        rename_if_valid(depth, main_col_names[2]) |>
-        rename_if_valid(substrate, "substrate") |>
-        rename_if_valid(secchi, "secchi") |>
-        rename_if_valid(limitation, "limitation")
-
-    if (is.null(depth) && is.null(fetch)) {
-        sav_msg_info("Looking for depth and fetch in column names.")
-        dat <- dat |>
-            rename_if_present("^depth(_m)?$", "Depth") |>
-            rename_if_present("^fetch(_km)?$", "Fetch")
-        if (!any(main_col_names %in% names(dat))) {
-            rlang::abort("Either depth or fetch or both must be defined.")
-        } else {
-            v_col <- main_col_names[main_col_names %in% names(dat)]
-            sav_msg_info("Found {v_col} in column names.")
-        }
-    }
-
-    dat <- dat[
-        names(dat) %in% c(main_col_names, "substrate", "secchi", "limitation")
-    ]
-    d_predict <- dat[names(dat) %in% main_col_names]
-    ind <- ("Depth" %in% names(dat)) + ("Fetch" %in% names(dat)) * 2
-    predictors <- c("depth", "fetch", "depth+fetch")[ind]
-    sav_msg_info("Using {type} with {predictors}")
-
-    out <- dat
-    rownames(out) <- NULL
-    if ("pa" %in% type) {
-        out$pa <- stats::predict(
-            sav_load_model("pa", predictors),
-            d_predict
-        ) |>
-            as.character() |>
-            as.integer()
-    }
-    if ("cover" %in% type) {
-        out$cover <- stats::predict(
-            sav_load_model("cover", predictors),
-            d_predict
-        )
-    }
-
-    out <- out |>
-        rename_if_present("^depth$", "depth_m") |>
-        rename_if_present("^fetch$", "fetch_km")
-
-
-    # Post-hoc
-
-    if ("secchi" %in% names(out)) {
-        out$vmax <- (vmax_par$slope * log(out$secchi) + vmax_par$slope)^2
-        out <- out |>
-            dplyr::relocate(vmax, .after = secchi)
-        # create v_max limitation
-        if ("depth_m" %in% names(out)) {
-            out$limitation_secchi <- out$vmax > out$depth
-            out <- out |>
-                dplyr::relocate(limitation_secchi, .after = secchi)
-        } else {
-            sav_warn(
-                "A column with depth data required to perform the post-hoc
-                treatment with secchi depth."
-            )
-        }
-    }
-
-    if ("pa" %in% names(out)) {
-        out$pa_post_hoc <- out$pa
-        out <- out |>
-            scrub_if_present("limitation", "pa_post_hoc") |>
-            scrub_if_present("substrate", "pa_post_hoc") |>
-            scrub_if_present("limitation_secchi", "pa_post_hoc")
-    }
-
-    if ("cover" %in% names(out)) {
-        out$cover_post_hoc <- out$cover
-        out <- out |>
-            scrub_if_present("pa", "cover_post_hoc") |>
-            scrub_if_present("limitation", "cover_post_hoc") |>
-            scrub_if_present("substrate", "cover_post_hoc") |>
-            scrub_if_present("limitation_secchi", "cover_post_hoc")
-    }
-
-    out  <- out  |>
-        rename_if_present("pa", "pa_pred")  |>
-        rename_if_present("cover", "cover_pred")
-    
-    if (is.null(geom)) {
-        out
+      rename_if_present("^depth(_m)?$", "Depth") |>
+      rename_if_present("^fetch(_km)?$", "Fetch")
+    if (!any(main_col_names %in% names(dat))) {
+      rlang::abort("Either depth or fetch or both must be defined.")
     } else {
-        cbind(geom, out)
+      v_col <- main_col_names[main_col_names %in% names(dat)]
+      sav_msg_info("Found {v_col} in column names.")
     }
+  }
+
+  dat <- dat[
+    names(dat) %in% c(main_col_names, "substrate", "secchi", "limitation")
+  ]
+  d_predict <- dat[names(dat) %in% main_col_names]
+  ind <- ("Depth" %in% names(dat)) + ("Fetch" %in% names(dat)) * 2
+  predictors <- c("depth", "fetch", "depth+fetch")[ind]
+  sav_msg_info("Using {type} with {predictors}")
+
+  out <- dat
+  rownames(out) <- NULL
+  if ("pa" %in% type) {
+    out$pa <- stats::predict(
+      sav_load_model("pa", predictors),
+      d_predict
+    ) |>
+      as.character() |>
+      as.integer()
+  }
+  if ("cover" %in% type) {
+    out$cover <- stats::predict(
+      sav_load_model("cover", predictors),
+      d_predict
+    )
+  }
+
+  out <- out |>
+    rename_if_present("^depth$", "depth_m") |>
+    rename_if_present("^fetch$", "fetch_km")
+
+
+  # Post-hoc
+
+  if ("secchi" %in% names(out)) {
+    out$vmax <- (vmax_par$slope * log(out$secchi) + vmax_par$slope)^2
+    out <- out |>
+      dplyr::relocate(vmax, .after = secchi)
+    # create v_max limitation
+    if ("depth_m" %in% names(out)) {
+      out$limitation_secchi <- out$vmax > out$depth
+      out <- out |>
+        dplyr::relocate(limitation_secchi, .after = secchi)
+    } else {
+      sav_warn(
+        "A column with depth data required to perform the post-hoc
+                treatment with secchi depth."
+      )
+    }
+  }
+
+  if ("pa" %in% names(out)) {
+    out$pa_post_hoc <- out$pa
+    out <- out |>
+      scrub_if_present("limitation", "pa_post_hoc") |>
+      scrub_if_present("substrate", "pa_post_hoc") |>
+      scrub_if_present("limitation_secchi", "pa_post_hoc")
+  }
+
+  if ("cover" %in% names(out)) {
+    out$cover_post_hoc <- out$cover
+    out <- out |>
+      scrub_if_present("pa", "cover_post_hoc") |>
+      scrub_if_present("limitation", "cover_post_hoc") |>
+      scrub_if_present("substrate", "cover_post_hoc") |>
+      scrub_if_present("limitation_secchi", "cover_post_hoc")
+  }
+
+  out <- out |>
+    rename_if_present("pa", "pa_pred") |>
+    rename_if_present("cover", "cover_pred")
+
+  if (is.null(geom)) {
+    out
+  } else {
+    cbind(geom, out)
+  }
 }
 
 
-
 sav_load_model <- function(
-    type = c("cover", "pa"),
-    predictors = c("depth", "fetch", "depth+fetch")) {
-    type <- match.arg(type)
-    predictors <- match.arg(predictors)
-    path_model(paste0("sav_rf_", type, "_", predictors, ".rds")) |>
-        readRDS()
+  type = c("cover", "pa"),
+  predictors = c("depth", "fetch", "depth+fetch"),
+  method = "rf"
+) {
+  type <- match.arg(type)
+  predictors <- match.arg(predictors)
+  method <- match.arg(method, c("rf", "glmm", "gam"))
+  if (method == "rf") {
+    path <- path_model(paste0("sav_rf_", type, "_", predictors, ".rds"))
+    return(path |> readRDS())
+  }
+  if (predictors != "depth+fetch") {
+    if (method != "rf") {
+      cli::cli_abort("Both depth and fetch required for {method} method.")
+    } else {
+      path <- path_model(paste0("sav_rf_", type, "_", predictors, ".rds"))
+    }
+  } else {
+    path <- path_model(paste0(method, "_", type, ".rds"))
+  }
+  path |> readRDS()
 }
 
 # valid and rename
 rename_if_valid <- function(.data, x, y) {
-    if (!is.null(x)) {
-        if (!x %in% names(.data)) {
-            rlang::abort(paste0("`", x, "` is not a column of `dat`."))
-        } else {
-            names(.data)[which(names(.data) == x)[1L]] <- y
-        }
+  if (!is.null(x)) {
+    if (!x %in% names(.data)) {
+      rlang::abort(paste0("`", x, "` is not a column of `dat`."))
+    } else {
+      names(.data)[which(names(.data) == x)[1L]] <- y
     }
-    .data
+  }
+  .data
 }
 
 rename_if_present <- function(.data, x, y) {
-    # detect column name irrespectively of the case
-    col_nm <- names(.data) |> tolower()
-    out <- names(.data)[grepl(x, col_nm)][1L] # take 1st if more than 1
-    if (!is.na(out)) {
-        names(.data)[grepl(x, col_nm)][1L] <- y
-    }
-    .data
+  # detect column name irrespectively of the case
+  col_nm <- names(.data) |> tolower()
+  out <- names(.data)[grepl(x, col_nm)][1L] # take 1st if more than 1
+  if (!is.na(out)) {
+    names(.data)[grepl(x, col_nm)][1L] <- y
+  }
+  .data
 }
 
 # with binary only
 scrub_if_present <- function(.data, x, y) {
-    if (x %in% names(.data)) {
-        .data[[y]] <- .data[[y]] * (.data[[x]] > 0) # force binary
-    }
-    .data
+  if (x %in% names(.data)) {
+    .data[[y]] <- .data[[y]] * (.data[[x]] > 0) # force binary
+  }
+  .data
 }
