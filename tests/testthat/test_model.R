@@ -16,41 +16,58 @@ df_ok_1 <- data.frame(depth = c(5, 10))
 df_ok_2 <- data.frame(FETCH_km = c(1, 2))
 df_ok_3 <- cbind(df_ok_1, df_ok_2)
 
-res1 <- structure(list(depth_m = c(5, 10), pa_pred = 1:0, cover_pred = c(
-  85.4316666666667,
-  21.144
-), pa_post_hoc = 1:0, cover_post_hoc = c(
-  85.4316666666667,
-  0
-)), row.names = c(NA, -2L), class = "data.frame")
+res1 <- structure(
+  list(
+    depth_m = c(5, 10),
+    pa_pred = 1:0,
+    cover_pred = c(85.4316666666667, 21.144),
+    pa_post_hoc = 1:0,
+    cover_post_hoc = c(85.4316666666667, 0)
+  ),
+  row.names = c(NA, -2L), class = "data.frame"
+)
 
-res2 <- structure(list(fetch_km = c(1, 2), pa_pred = 0:1, cover_pred = c(
-  78.8616666666666,
-  98.5113333333333
-), pa_post_hoc = 0:1, cover_post_hoc = c(0, 98.5113333333333)), row.names = c(NA, -2L), class = "data.frame")
+res2 <- structure(
+  list(
+    fetch_km = c(1, 2),
+    pa_pred = 0:1,
+    cover_pred = c(78.8616666666666, 98.5113333333333),
+    pa_post_hoc = 0:1,
+    cover_post_hoc = c(0, 98.5113333333333)
+  ),
+  row.names = c(NA, -2L), class = "data.frame"
+)
 
-res3 <- structure(list(depth_m = c(5, 10), fetch_km = c(1, 2), pa_pred = c(
-  0L,
-  0L
-), cover_pred = c(77.1123333333333, 44.6653333333333), pa_post_hoc = c(
-  0L,
-  0L
-), cover_post_hoc = c(0, 0)), row.names = c(NA, -2L), class = "data.frame")
+res3 <- structure(
+  list(
+    depth_m = c(5, 10),
+    fetch_km = c(1, 2),
+    pa_pred = 1:0,
+    cover_pred = c(88.3866124814003, 45.7916938687299),
+    pa_post_hoc = 1:0,
+    cover_post_hoc = c(88.3866124814003, 0)
+  ),
+  row.names = c(NA, -2L), class = "data.frame"
+)
 
 
-res1_pred <- structure(list(depth_m = c(5, 10), cover_pred = c(
-  85.4316666666667,
-  21.144
-), cover_post_hoc = c(85.4316666666667, 21.144)), row.names = c(
-  NA,
-  -2L
-), class = "data.frame")
+res1_pred <- structure(
+  list(
+    depth_m = c(5, 10),
+    cover_pred = c(85.4316666666667, 21.144),
+    cover_post_hoc = c(85.4316666666667, 21.144)
+  ),
+  row.names = c(NA, -2L), class = "data.frame"
+)
 
-
-res1_pa <- structure(list(depth_m = c(5, 10), pa_pred = 1:0, pa_post_hoc = 1:0), row.names = c(
-  NA,
-  -2L
-), class = "data.frame")
+res1_pa <- structure(
+  list(
+    depth_m = c(5, 10),
+    pa_pred = 1:0,
+    pa_post_hoc = 1:0
+  ),
+  row.names = c(NA, -2L), class = "data.frame"
+)
 
 
 test_that("sav_model() works", {
@@ -98,17 +115,21 @@ df_ok_ph_2 <- df_ok_ph_1 <- data.frame(
 df_ok_ph_2[["depth_m"]] <- NULL
 
 res_ph1a <- structure(
-  list(
-    depth_m = c(2, 2, 5),
-    fetch_km = c(1, 1, 1), substrate = c(TRUE, TRUE, FALSE),
-    secchi = c(20, 1, 20), limitation_secchi = c(TRUE, FALSE, TRUE),
-    vmax = c(28.242038767358, 1.7689, 28.242038767358),
-    pa_pred = c(1L, 1L, 0L),
-    cover_pred = c(62.7603333333334, 62.7603333333334, 77.1123333333333),
-    pa_post_hoc = c(1L, 0L, 0L),
-    cover_post_hoc = c(62.7603333333334, 0, 0)
-  ),
-  row.names = c(NA, -3L), class = "data.frame"
+  structure(
+    list(
+      depth_m = c(2, 2, 5),
+      fetch_km = c(1, 1, 1),
+      substrate = c(TRUE, TRUE, FALSE),
+      secchi = c(20, 1, 20),
+      limitation_secchi = c(TRUE, FALSE, TRUE),
+      vmax = c(28.242038767358, 1.7689, 28.242038767358),
+      pa_pred = c(1L, 1L, 1L),
+      cover_pred = c(89.8206592543998, 89.8206592543998, 88.3866124814003), pa_post_hoc = c(1L, 0L, 0L),
+      cover_post_hoc = c(89.8206592543998, 0, 0)
+    ),
+    row.names = c(NA, -3L),
+    class = "data.frame"
+  )
 )
 
 

@@ -260,10 +260,6 @@ sav_load_model <- function(
   type <- match.arg(type)
   predictors <- match.arg(predictors)
   method <- match.arg(method, c("rf", "glmm", "gam"))
-  if (method == "rf") {
-    path <- path_model(paste0("sav_rf_", type, "_", predictors, ".rds"))
-    return(path |> readRDS())
-  }
   if (predictors != "depth+fetch") {
     if (method != "rf") {
       cli::cli_abort("Both depth and fetch required for {method} method.")
