@@ -343,39 +343,39 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
     # Fetch calculation
 
-observeEvent(input$calculate_fetch, {
-  req(app_data$original_data)
-  req(app_data$data_valid)
+    observeEvent(input$calculate_fetch, {
+      req(app_data$original_data)
+      req(app_data$data_valid)
 
-  tryCatch({
-    showNotification("Processing polygon...", type = "message", duration = 2)
+      tryCatch(
+        {
+          showNotification("Processing polygon...", type = "message", duration = 2)
 
-    # Select polygon source
-    if (isTRUE(input$use_polygon_upload)) {
-      req(input$aoi_polygon)
+          # Select polygon source
+          if (isTRUE(input$use_polygon_upload)) {
+            req(input$aoi_polygon)
 
-      # Handle multiple shapefile components
-      file_paths <- input$aoi_polygon$datapath
-      if (length(file_paths) > 1) {
-        polygon_file <- filepath_shp(file_paths)
-      } else {
-        polygon_file <- file_paths
-      }
+            # Handle multiple shapefile components
+            file_paths <- input$aoi_polygon$datapath
+            if (length(file_paths) > 1) {
+              polygon_file <- filepath_shp(file_paths)
+            } else {
+              polygon_file <- file_paths
+            }
 
-      polygon <- sf::st_read(polygon_file, quiet = TRUE)
+            polygon <- sf::st_read(polygon_file, quiet = TRUE)
+          } else {
+            req(input$polygon_library)
 
-    } else {
-      req(input$polygon_library)
+            polygon_file <- system.file(
+              "extdata", "polygons", input$polygon_library,
+              package = "SAVM"
+            )
+            polygon <- sf::st_read(polygon_file, quiet = TRUE)
+          }
 
-      polygon_file <- system.file(
-        "extdata", "polygons", input$polygon_library,
-        package = "SAVM"
-      )
-      polygon <- sf::st_read(polygon_file, quiet = TRUE)
-    }
-
-    # Store for later use
-    values$polygon_data <- polygon
+          # Store for later use
+          values$polygon_data <- polygon
 
           showNotification("Calculating fetch...", type = "message", duration = 2)
 

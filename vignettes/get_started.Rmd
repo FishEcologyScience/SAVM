@@ -59,12 +59,12 @@ plot(erie_land)
 
 ```{r echo = FALSE}
 erie_land <- system.file(
- "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
+  "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
   package = "SAVM", mustWork = TRUE
-) |> 
+) |>
   st_read()
 
-erie_land |> 
+erie_land |>
   st_geometry() |> # to plot only the geometry
   plot(col = 1)
 ```
@@ -72,9 +72,9 @@ erie_land |>
 The package `SAVM` includes a util function to invert a polygon. 
 
 ```{r invert}
-erie_lake  <- erie_land |>
+erie_lake <- erie_land |>
   invert_polygon()
-  
+
 erie_lake |>
   st_geometry() |>
   plot(col = 1)
@@ -145,7 +145,7 @@ transect lines. As `sf` objects, both elements can easily be exported, for
 instance, the following code writes `fetch$mean_fetch` as a shapefile:
 
 ```{r fetch_export, eval = FALSE}
-fetch$mean_fetch  |> sf::st_write("fetch.shp")
+fetch$mean_fetch |> sf::st_write("fetch.shp")
 ```
 
 
@@ -158,7 +158,7 @@ To extract depth data from a raster file for our study points, we use `st_extrac
 
 ```{r extract_depth}
 depth <- st_extract(
-  study_depth, 
+  study_depth,
   study_zone$points |>
     sf::st_transform(crs = sf::st_crs(study_depth))
 )
@@ -195,7 +195,7 @@ Below we used an example with random Secchi depth values:
 ```{r model2}
 res_secchi <- sav_model(
   cbind(sp_dat, secchi = runif(nrow(sp_dat), 4, 12))
-  )
+)
 res_secchi
 ```
 

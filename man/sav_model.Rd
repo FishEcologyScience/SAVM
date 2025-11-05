@@ -103,18 +103,18 @@ corresponding prediction is set to 0 in the post-hoc adjusted output.
 \examples{
 \donttest{
 
-# basic usage 
+# basic usage
 sav_model(data.frame(depth = c(5, 10)))
 sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
 
-# using post-hoc treatment 
+# using post-hoc treatment
 sav_model(
- data.frame(
-  depth = c(5, 10, 5), 
-  fetch = c(1, 2, 10), 
-  secchi = c(1, 10, 10), 
-  substrate = c(TRUE, TRUE, FALSE)
- )
+  data.frame(
+    depth = c(5, 10, 5),
+    fetch = c(1, 2, 10),
+    secchi = c(1, 10, 10),
+    substrate = c(TRUE, TRUE, FALSE)
+  )
 )
 }
 }

@@ -68,19 +68,19 @@
 #' @examples
 #' \donttest{
 #' le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-#'     sf::st_read()
+#'   sf::st_read()
 #' le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
-#'     sf::st_read(quiet = TRUE)
+#'   sf::st_read(quiet = TRUE)
 #' res <- compute_fetch(le_pt, le_bound, crs = 32617)
 #' # use wind-weight
 #' res2 <- compute_fetch(
-#'     le_pt, le_bound,
-#'     max_dist = 20,
-#'     wind_weights = data.frame(
-#'         direction = seq(0, 360, by = 360 / 16)[-1],
-#'         weight = rep(c(0, 1), each = 8)
-#'     ),
-#'     crs = 32617
+#'   le_pt, le_bound,
+#'   max_dist = 20,
+#'   wind_weights = data.frame(
+#'     direction = seq(0, 360, by = 360 / 16)[-1],
+#'     weight = rep(c(0, 1), each = 8)
+#'   ),
+#'   crs = 32617
 #' )
 #'
 #' # results
@@ -92,111 +92,112 @@
 #' plot(res$transect_lines |> sf::st_geometry(), add = TRUE, col = 2, lwd = 0.5)
 #' }
 compute_fetch <- function(
-    points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL, remove_outsiders = FALSE) {
-    valid_points(points)
-    points$id_point <- seq_len(nrow(points))
-    valid_polygon(polygon)
-    sav_stop_if_not(max_dist > 0, "`max_dist` must be strictly positive.")
-    max_dist <- 1e3 * max_dist
-    sav_stop_if_not(n_bearings >= 4, "`n_bearings` should be equal or greater than 4.")
-    if (n_bearings > 64) {
-        sav_msg_warning(
-            "Large number of bearings detected, computation may take a long time."
-        )
-    }
-
-    if (!is.null(crs)) {
-        if (!is_proj_unit_meter(crs)) {
-            rlang::abort("Projection units must be meters.")
-        }
-        points <- sf::st_transform(points, crs = sf::st_crs(crs))
-        polygon <- sf::st_transform(polygon, crs = sf::st_crs(crs))
-    } else {
-        if (is_proj_unit_meter(polygon)) {
-            if (sf::st_crs(points) != sf::st_crs(polygon)) {
-                sav_msg_info(
-                    "`points` and `polygon` have different CRS, transforming
-                     `points` to match `polygon` CRS."
-                )
-                points <- sf::st_transform(points, crs = sf::st_crs(polygon))
-            }
-            # else both are in meter and the same projection so nothing to do
-        } else {
-            if (is_proj_unit_meter(points)) {
-                sav_msg_info(
-                    "`points` and `polygon` have different CRS, transforming
-                     `polygon` to match `points` CRS."
-                )
-                polygon <- sf::st_transform(polygon, crs = sf::st_crs(points))
-            } else {
-                rlang::abort("Projection units must be meters.")
-            }
-        }
-    }
-
-    valid_polygon_contains_points(points, polygon, remove_outsiders)
-
-    if (is.null(wind_weights)) {
-        d_direction <- data.frame(
-            direction = utils::head(seq(0, 360, by = 360 / n_bearings), -1),
-            weight = 1
-        )
-    } else {
-        sav_msg_info("Using `wind_weights`, ignoring `n_bearings`")
-        if (all(c("direction", "weight") %in% names(wind_weights))) {
-            d_direction <- wind_weights[c("direction", "weight")]
-            valid_direction(d_direction$direction)
-        } else {
-            rlang::abort("`wind_weights` must include two columns names `direction` and `weight`")
-        }
-    }
-
-    sav_msg_info("Creating fetch lines")
-    fetch_lines <- create_fetch_lines(points, d_direction, max_dist)
-
-    sav_msg_info("Cropping fetch lines")
-    fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
-    geom_type <- sf::st_geometry_type(fetch_crop)
-    # sf::st_intersection() generates MULTILINESTRING with extra lines if there
-    # are intersections within the fetch lines
-    transect_lines <- rbind(
-        fetch_crop |>
-            dplyr::filter(geom_type == "LINESTRING"),
-        fetch_crop |>
-            dplyr::filter(geom_type == "MULTILINESTRING") |>
-            remove_detached_ends(points)
-    ) |>
-        dplyr::arrange(id_point, direction)
-    transect_lines <- transect_lines |>
-        dplyr::mutate(transect_length = sf::st_length(transect_lines)) |>
-        dplyr::group_by(id_point) |>
-        # using -transect so that the longest are ranked 1
-        dplyr::mutate(rank = rank(-transect_length, ties.method = "min"))
-
-    list(
-        mean_fetch = points |>
-            dplyr::left_join(
-                transect_lines |>
-                    sf::st_drop_geometry() |>
-                    dplyr::group_by(id_point) |>
-                    # dplyr::mutate(rank = rank(transect_length)) |>
-                    dplyr::summarise(
-                        fetch_km = mean(transect_length),
-                        weighted_fetch_km = mean(transect_length * weight)
-                    ) |>
-                    dplyr::mutate(
-                        dplyr::across(
-                            !c(id_point),
-                            ~ as.numeric(units::set_units(.x, "km"))
-                        )
-                    ),
-                by = "id_point"
-            ) |>
-            dplyr::select(
-                c("id_point", "fetch_km", "weighted_fetch_km")
-            ),
-        transect_lines = transect_lines
+  points, polygon, max_dist = 15, n_bearings = 16, wind_weights = NULL, crs = NULL, remove_outsiders = FALSE
+) {
+  valid_points(points)
+  points$id_point <- seq_len(nrow(points))
+  valid_polygon(polygon)
+  sav_stop_if_not(max_dist > 0, "`max_dist` must be strictly positive.")
+  max_dist <- 1e3 * max_dist
+  sav_stop_if_not(n_bearings >= 4, "`n_bearings` should be equal or greater than 4.")
+  if (n_bearings > 64) {
+    sav_msg_warning(
+      "Large number of bearings detected, computation may take a long time."
     )
+  }
+
+  if (!is.null(crs)) {
+    if (!is_proj_unit_meter(crs)) {
+      rlang::abort("Projection units must be meters.")
+    }
+    points <- sf::st_transform(points, crs = sf::st_crs(crs))
+    polygon <- sf::st_transform(polygon, crs = sf::st_crs(crs))
+  } else {
+    if (is_proj_unit_meter(polygon)) {
+      if (sf::st_crs(points) != sf::st_crs(polygon)) {
+        sav_msg_info(
+          "`points` and `polygon` have different CRS, transforming
+                     `points` to match `polygon` CRS."
+        )
+        points <- sf::st_transform(points, crs = sf::st_crs(polygon))
+      }
+      # else both are in meter and the same projection so nothing to do
+    } else {
+      if (is_proj_unit_meter(points)) {
+        sav_msg_info(
+          "`points` and `polygon` have different CRS, transforming
+                     `polygon` to match `points` CRS."
+        )
+        polygon <- sf::st_transform(polygon, crs = sf::st_crs(points))
+      } else {
+        rlang::abort("Projection units must be meters.")
+      }
+    }
+  }
+
+  valid_polygon_contains_points(points, polygon, remove_outsiders)
+
+  if (is.null(wind_weights)) {
+    d_direction <- data.frame(
+      direction = utils::head(seq(0, 360, by = 360 / n_bearings), -1),
+      weight = 1
+    )
+  } else {
+    sav_msg_info("Using `wind_weights`, ignoring `n_bearings`")
+    if (all(c("direction", "weight") %in% names(wind_weights))) {
+      d_direction <- wind_weights[c("direction", "weight")]
+      valid_direction(d_direction$direction)
+    } else {
+      rlang::abort("`wind_weights` must include two columns names `direction` and `weight`")
+    }
+  }
+
+  sav_msg_info("Creating fetch lines")
+  fetch_lines <- create_fetch_lines(points, d_direction, max_dist)
+
+  sav_msg_info("Cropping fetch lines")
+  fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
+  geom_type <- sf::st_geometry_type(fetch_crop)
+  # sf::st_intersection() generates MULTILINESTRING with extra lines if there
+  # are intersections within the fetch lines
+  transect_lines <- rbind(
+    fetch_crop |>
+      dplyr::filter(geom_type == "LINESTRING"),
+    fetch_crop |>
+      dplyr::filter(geom_type == "MULTILINESTRING") |>
+      remove_detached_ends(points)
+  ) |>
+    dplyr::arrange(id_point, direction)
+  transect_lines <- transect_lines |>
+    dplyr::mutate(transect_length = sf::st_length(transect_lines)) |>
+    dplyr::group_by(id_point) |>
+    # using -transect so that the longest are ranked 1
+    dplyr::mutate(rank = rank(-transect_length, ties.method = "min"))
+
+  list(
+    mean_fetch = points |>
+      dplyr::left_join(
+        transect_lines |>
+          sf::st_drop_geometry() |>
+          dplyr::group_by(id_point) |>
+          # dplyr::mutate(rank = rank(transect_length)) |>
+          dplyr::summarise(
+            fetch_km = mean(transect_length),
+            weighted_fetch_km = mean(transect_length * weight)
+          ) |>
+          dplyr::mutate(
+            dplyr::across(
+              !c(id_point),
+              ~ as.numeric(units::set_units(.x, "km"))
+            )
+          ),
+        by = "id_point"
+      ) |>
+      dplyr::select(
+        c("id_point", "fetch_km", "weighted_fetch_km")
+      ),
+    transect_lines = transect_lines
+  )
 }
 
 
@@ -204,136 +205,136 @@ compute_fetch <- function(
 #' located outside the polygon are highlighted in red.
 #' @export
 identify_outsiders <- function(points, polygon) {
-    plot(polygon |> sf::st_geometry(), border = 1)
-    plot(
-        points |> sf::st_geometry(),
-        # there godd be more than one polygon
-        col = suppressMessages(
-            2 - apply(sf::st_within(points, polygon, sparse = FALSE), 1, any)
-        ),
-        pch = 19,
-        cex = 2,
-        add = TRUE
-    )
+  plot(polygon |> sf::st_geometry(), border = 1)
+  plot(
+    points |> sf::st_geometry(),
+    # there godd be more than one polygon
+    col = suppressMessages(
+      2 - apply(sf::st_within(points, polygon, sparse = FALSE), 1, any)
+    ),
+    pch = 19,
+    cex = 2,
+    add = TRUE
+  )
 }
 
 # HELPERS
 
 is_proj_unit_meter <- function(x) {
-    proj <- sf::st_crs(x)
-    !(is.null(proj$units) || proj$units != "m")
+  proj <- sf::st_crs(x)
+  !(is.null(proj$units) || proj$units != "m")
 }
 
 valid_points <- function(x) {
-    if (all(x |> sf::st_geometry_type() == "POINT")) {
-        return(TRUE)
-    } else {
-        paste0(
-            "Geometries in `",
-            rlang::caller_arg(x),
-            "` must be of type `POINT`."
-        ) |>
-            rlang::abort()
-    }
+  if (all(x |> sf::st_geometry_type() == "POINT")) {
+    return(TRUE)
+  } else {
+    paste0(
+      "Geometries in `",
+      rlang::caller_arg(x),
+      "` must be of type `POINT`."
+    ) |>
+      rlang::abort()
+  }
 }
 
 valid_polygon <- function(x) {
-    if (all(x |> sf::st_geometry_type() %in% c("POLYGON", "MULTIPOLYGON"))) {
-        return(TRUE)
-    } else {
-        paste0(
-            "Geometries in `", rlang::caller_arg(x),
-            "` must be of type `POLYGON` or `MULTIPOLYGON`."
-        ) |>
-            rlang::abort()
-    }
+  if (all(x |> sf::st_geometry_type() %in% c("POLYGON", "MULTIPOLYGON"))) {
+    return(TRUE)
+  } else {
+    paste0(
+      "Geometries in `", rlang::caller_arg(x),
+      "` must be of type `POLYGON` or `MULTIPOLYGON`."
+    ) |>
+      rlang::abort()
+  }
 }
 
 valid_polygon_contains_points <- function(points, polygon, remove_outsiders = FALSE) {
-    if (remove_outsiders) {
-        points <- remove_points_outside_polygon(points, polygon)
-        if (!(points |> nrow())) {
-            rlang::abort("All points were outside the polygon considered.")
-        }
+  if (remove_outsiders) {
+    points <- remove_points_outside_polygon(points, polygon)
+    if (!(points |> nrow())) {
+      rlang::abort("All points were outside the polygon considered.")
     }
-    chk <- suppressMessages({
-        sf::st_contains(polygon, points, sparse = FALSE) |>
-            apply(2, any)
-    })
-    if (all(chk)) {
-        TRUE
-    } else {
-        rlang::abort("`polygon` must include all points in `points`.
+  }
+  chk <- suppressMessages({
+    sf::st_contains(polygon, points, sparse = FALSE) |>
+      apply(2, any)
+  })
+  if (all(chk)) {
+    TRUE
+  } else {
+    rlang::abort("`polygon` must include all points in `points`.
         Use `remove_outsiders = TRUE` to remove points outside the polygon.
         Alternatively use `identify_outsiders()` to vizualize outsiders.
         ")
-    }
+  }
 }
 
-remove_points_outside_polygon  <- function(points, polygon) {
-    suppressMessages(
-        points[apply(sf::st_within(points, polygon, sparse = FALSE), 1, any), ]
-    )
+remove_points_outside_polygon <- function(points, polygon) {
+  suppressMessages(
+    points[apply(sf::st_within(points, polygon, sparse = FALSE), 1, any), ]
+  )
 }
 
 valid_direction <- function(direction) {
-    if (!all(direction >= 0 & direction <= 360)) {
-        rlang::abort("All directions must be within the range [0, 360].")
-    } else {
-        interv <- findInterval(
-            direction,
-            seq(0, 360, by = 90),
-            all.inside = TRUE
-        )
-        if (!all(1:4 %in% interv)) {
-            sav_warn("Not all quadrants are covered.")
-        }
+  if (!all(direction >= 0 & direction <= 360)) {
+    rlang::abort("All directions must be within the range [0, 360].")
+  } else {
+    interv <- findInterval(
+      direction,
+      seq(0, 360, by = 90),
+      all.inside = TRUE
+    )
+    if (!all(1:4 %in% interv)) {
+      sav_warn("Not all quadrants are covered.")
     }
-    TRUE
+  }
+  TRUE
 }
 
 # NB: code in windfetch use st_buffer()
 create_fetch_lines <- function(points, d_direction, max_dist) {
-    coords <- sf::st_coordinates(points)
-    directions <- d_direction$direction
-    tmp <- list()
-    for (i in seq_len(nrow(points))) {
-        # computes fetch line coordinates
-        tmp[[i]] <- data.frame(
-            lon = c(
-                rep(coords[i, 1], length(directions)),
-                coords[i, 1] + max_dist * cos(directions / 360 * 2 * pi)
-            ),
-            lat = c(
-                rep(coords[i, 2], length(directions)),
-                coords[i, 2] + max_dist * sin(directions / 360 * 2 * pi)
-            ),
-            id_point = points$id_point[i],
-            direction = rep(directions, 2),
-            weight = rep(d_direction$weight, 2)
-        )
-    }
-    # create lines by casting grouped points
-    sf::st_as_sf(
-        tmp |> do.call(what = rbind),
-        coords = c("lon", "lat"),
-        crs = sf::st_crs(points)
-    ) |>
-        dplyr::group_by(id_point, direction, weight) |>
-        dplyr::summarize() |>
-        sf::st_cast("LINESTRING")
+  coords <- sf::st_coordinates(points)
+  directions <- d_direction$direction
+  tmp <- list()
+  for (i in seq_len(nrow(points))) {
+    # computes fetch line coordinates
+    tmp[[i]] <- data.frame(
+      lon = c(
+        rep(coords[i, 1], length(directions)),
+        coords[i, 1] + max_dist * cos(directions / 360 * 2 * pi)
+      ),
+      lat = c(
+        rep(coords[i, 2], length(directions)),
+        coords[i, 2] + max_dist * sin(directions / 360 * 2 * pi)
+      ),
+      id_point = points$id_point[i],
+      direction = rep(directions, 2),
+      weight = rep(d_direction$weight, 2)
+    )
+  }
+  # create lines by casting grouped points
+  sf::st_as_sf(
+    tmp |> do.call(what = rbind),
+    coords = c("lon", "lat"),
+    crs = sf::st_crs(points)
+  ) |>
+    dplyr::group_by(id_point, direction, weight) |>
+    dplyr::summarize() |>
+    sf::st_cast("LINESTRING")
 }
 
 remove_detached_ends <- function(x, points) {
-    suppressWarnings(tmp <- x |> sf::st_cast("LINESTRING"))
-    out <- list()
-    for (i in unique(tmp$id_point)) {
-        out[[i]] <- tmp |> dplyr::filter(id_point == i)
-        out[[i]] <- out[[i]][sf::st_intersects(
-            out[[i]],
-            points |> dplyr::filter(id_point == i),
-            sparse = FALSE
-        )[, 1L], ]
-    }
-    do.call(rbind, out)
+  suppressWarnings(tmp <- x |> sf::st_cast("LINESTRING"))
+  out <- list()
+  for (i in unique(tmp$id_point)) {
+    out[[i]] <- tmp |> dplyr::filter(id_point == i)
+    out[[i]] <- out[[i]][sf::st_intersects(
+      out[[i]],
+      points |> dplyr::filter(id_point == i),
+      sparse = FALSE
+    )[, 1L], ]
+  }
+  do.call(rbind, out)
 }

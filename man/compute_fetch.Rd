@@ -96,19 +96,19 @@ located outside the polygon are highlighted in red.
 \examples{
 \donttest{
 le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-    sf::st_read()
+  sf::st_read()
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
-    sf::st_read(quiet = TRUE)
+  sf::st_read(quiet = TRUE)
 res <- compute_fetch(le_pt, le_bound, crs = 32617)
 # use wind-weight
 res2 <- compute_fetch(
-    le_pt, le_bound,
-    max_dist = 20,
-    wind_weights = data.frame(
-        direction = seq(0, 360, by = 360 / 16)[-1],
-        weight = rep(c(0, 1), each = 8)
-    ),
-    crs = 32617
+  le_pt, le_bound,
+  max_dist = 20,
+  wind_weights = data.frame(
+    direction = seq(0, 360, by = 360 / 16)[-1],
+    weight = rep(c(0, 1), each = 8)
+  ),
+  crs = 32617
 )
 
 # results

@@ -25,17 +25,17 @@ between the polygon and the concave hull (see \code{\link[sf:geos_unary]{sf::st_
 \examples{
 \donttest{
 erie_land <- system.file(
- "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
+  "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
   package = "SAVM", mustWork = TRUE
 ) |> sf::st_read()
 
 erie_land |>
-   sf::st_geometry() |>
-   plot(col = 1)
+  sf::st_geometry() |>
+  plot(col = 1)
 
 erie_land |>
-   sf::st_geometry() |>
-   invert_polygon() |>
-   plot(col = 1)
+  sf::st_geometry() |>
+  invert_polygon() |>
+  plot(col = 1)
 }
 }

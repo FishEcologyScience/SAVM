@@ -117,7 +117,6 @@ test_that("Plot respects max_depth parameter", {
 })
 
 
-
 # --------- plot_sav_density
 # Sample dataset for testing
 withr::with_seed(123, {
@@ -176,7 +175,6 @@ test_that("plots have known output", {
   vdiffr::expect_doppelganger("plot_sav_density", plots)
   dev.off()
 })
-
 
 
 # --------- plot_sav_tmap

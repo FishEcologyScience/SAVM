@@ -62,12 +62,12 @@ Read a spatial polygon file and generate a grid of points
 library(sf)
 temp_csv <- tempfile(fileext = ".csv")
 write.csv(data.frame(
-    longitude = c(-82.5, -83.0, -84.8),
-    latitude = c(42.5, 42.8, 42.6),
-    depth_m = c(5, 10, 7),
-    fetch_km = c(2.5, 3.0, 2.8),
-    secchi = c(1.2, 2.3, 1.8),
-    substrate = c(TRUE, FALSE, TRUE)
+  longitude = c(-82.5, -83.0, -84.8),
+  latitude = c(42.5, 42.8, 42.6),
+  depth_m = c(5, 10, 7),
+  fetch_km = c(2.5, 3.0, 2.8),
+  secchi = c(1.2, 2.3, 1.8),
+  substrate = c(TRUE, FALSE, TRUE)
 ), temp_csv, row.names = FALSE)
 
 tmp <- read_sav(temp_csv, crs = 32617, crs_input = 4326)
@@ -77,11 +77,11 @@ plot(st_geometry(tmp$points), add = TRUE)
 
 # Example usage with spatial polygon file (AOI)
 temp_poly <- st_sf(
-    geometry = st_sfc(st_polygon(list(
-        rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
-        )
-    )), crs = 4326)
+  geometry = st_sfc(st_polygon(list(
+    rbind(
+      c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+    )
+  )), crs = 4326)
 )
 temp_file <- tempfile(fileext = ".gpkg")
 st_write(temp_poly, temp_file, quiet = TRUE)
@@ -94,13 +94,13 @@ plot(st_geometry(tmp$points), add = TRUE)
 # Example CSV file creation
 temp_csv <- tempfile(fileext = ".csv")
 write.csv(data.frame(
-    longitude = c(-82.5, -83.0, -83.2),
-    latitude = c(42.5, 42.8, 42.6),
-    depth_m = c(5, 10, 7),
-    fetch_km = c(2.5, 3.0, 2.8),
-    secchi = c(1.2, 2.3, 1.8),
-    substrate = c(TRUE, FALSE, TRUE),
-    limitation = c(FALSE, FALSE, TRUE)
+  longitude = c(-82.5, -83.0, -83.2),
+  latitude = c(42.5, 42.8, 42.6),
+  depth_m = c(5, 10, 7),
+  fetch_km = c(2.5, 3.0, 2.8),
+  secchi = c(1.2, 2.3, 1.8),
+  substrate = c(TRUE, FALSE, TRUE),
+  limitation = c(FALSE, FALSE, TRUE)
 ), temp_csv, row.names = FALSE)
 
 # Read the CSV and convert to sf
@@ -108,14 +108,14 @@ read_sav_csv(temp_csv, crs = 32614, crs_input = 4326)
 # Example spatial points file creation (requires sf package)
 library(sf)
 temp_sf <- st_sf(
-    longitude = c(-82.5, -83.0),
-    latitude = c(42.5, 42.8),
-    depth_m = c(5, 10),
-    geometry = st_sfc(
-        st_point(c(-82.5, 42.5)),
-        st_point(c(-83.0, 42.8))
-    ),
-    crs = 4326
+  longitude = c(-82.5, -83.0),
+  latitude = c(42.5, 42.8),
+  depth_m = c(5, 10),
+  geometry = st_sfc(
+    st_point(c(-82.5, 42.5)),
+    st_point(c(-83.0, 42.8))
+  ),
+  crs = 4326
 )
 
 temp_file <- tempfile(fileext = ".gpkg")
@@ -127,11 +127,11 @@ read_sav_pts(temp_file)
 # Example spatial polygon file creation (requires sf package)
 library(sf)
 temp_poly <- st_sf(
-    geometry = st_sfc(st_polygon(list(
-        rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
-        )
-    )), crs = 4326)
+  geometry = st_sfc(st_polygon(list(
+    rbind(
+      c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+    )
+  )), crs = 4326)
 )
 temp_file <- tempfile(fileext = ".gpkg")
 st_write(temp_poly, temp_file, quiet = TRUE)

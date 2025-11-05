@@ -16,17 +16,17 @@ app_server <- function(input, output, session) {
 
     # Original data (never modified)
     original_data = NULL,
-    
+
     # Individual calculation results (stored separately)
     fetch_results = NULL,
     depth_results = NULL,
     model_results = NULL,
-    
+
     # Calculation metadata
     fetch_params = NULL,
     depth_params = NULL,
     model_params = NULL,
-    
+
     # Calculation timestamps
     fetch_timestamp = NULL,
     depth_timestamp = NULL,

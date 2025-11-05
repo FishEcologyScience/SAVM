@@ -99,12 +99,12 @@ visualizing cover, presence/absence, depth, and fetch values.
 \examples{
 # Example dataset
 dat <- data.frame(
-    depth_m = runif(100, 0, 15),
-    fetch_km = runif(100, 0, 15),
-    pa_pred = sample(0:1, 100, replace = TRUE),
-    cover_pred = runif(100, 0, 100),
-    pa_post_hoc = sample(0:1, 100, replace = TRUE),
-    cover_post_hoc = runif(100, 0, 100)
+  depth_m = runif(100, 0, 15),
+  fetch_km = runif(100, 0, 15),
+  pa_pred = sample(0:1, 100, replace = TRUE),
+  cover_pred = runif(100, 0, 100),
+  pa_post_hoc = sample(0:1, 100, replace = TRUE),
+  cover_post_hoc = runif(100, 0, 100)
 )
 
 # Generate all available plots
@@ -121,10 +121,10 @@ plot_sav_distribution(dat, post_hoc = TRUE)
 
 # Example dataset
 dat <- data.frame(
-    depth_m = runif(100, 0, 15),
-    fetch_km = runif(100, 0, 15),
-    pa_pred = sample(0:1, 100, replace = TRUE),
-    pa_post_hoc = sample(0:1, 100, replace = TRUE)
+  depth_m = runif(100, 0, 15),
+  fetch_km = runif(100, 0, 15),
+  pa_pred = sample(0:1, 100, replace = TRUE),
+  pa_post_hoc = sample(0:1, 100, replace = TRUE)
 )
 
 # Generate all available plots
@@ -139,23 +139,23 @@ plot_sav_density(dat, predictors = "fetch")
 # Generate plots using post-hoc analyzed data
 plot_sav_density(dat, post_hoc = TRUE)
 polygon <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-    sf::st_read() |>
-    sf::st_simplify(dTolerance = 1000)
+  sf::st_read() |>
+  sf::st_simplify(dTolerance = 1000)
 
 # Create sample points with attributes
 set.seed(42)
 points <- sf::st_sample(polygon, 100) |>
-    sf::st_sf() |>
-    dplyr::mutate(
-        cover_pred = runif(100, 0, 100),
-        pa_pred = sample(0:1, 100, replace = TRUE) |>
-            factor(levels = c(0, 1), labels = c("Absent", "Present")),
-        depth_m = runif(100, 0, 15),
-        fetch_km = runif(100, 0, 10),
-        cover_post_hoc = runif(100, 0, 100),
-        pa_post_hoc = sample(0:1, 100, replace = TRUE) |>
-            factor(levels = c(0, 1), labels = c("Absent", "Present")),
-    )
+  sf::st_sf() |>
+  dplyr::mutate(
+    cover_pred = runif(100, 0, 100),
+    pa_pred = sample(0:1, 100, replace = TRUE) |>
+      factor(levels = c(0, 1), labels = c("Absent", "Present")),
+    depth_m = runif(100, 0, 15),
+    fetch_km = runif(100, 0, 10),
+    cover_post_hoc = runif(100, 0, 100),
+    pa_post_hoc = sample(0:1, 100, replace = TRUE) |>
+      factor(levels = c(0, 1), labels = c("Absent", "Present")),
+  )
 
 # Combine into study_zone list
 study_zone <- list(polygon = polygon, points = points)
