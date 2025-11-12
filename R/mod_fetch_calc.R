@@ -9,27 +9,13 @@ mod_fetch_calc_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(
-        12,
-        bs4Dash::box(
-          title = tags$span(icon("wind"), " Fetch Calculation"),
-          collapsible = TRUE,
-          collapsed = TRUE,
-          status = "primary",
-          width = NULL,
-          solidHeader = TRUE,
-          p("In this part of the application, you will calculate the fetch of the points you created in the data input phase")
-        )
-      )
-    ),
-    fluidRow(
       # Configuration Panel
       column(
         4,
         # -----------------
         # Parameters
         bs4Dash::box(
-          title = "Fetch Parameters",
+          title = tags$span(icon("wind"), " Fetch Calculation"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -121,30 +107,6 @@ mod_fetch_calc_ui <- function(id) {
       # Results Panel
       column(
         8,
-        # Status Panel
-        bs4Dash::box(
-          title = "Status",
-          status = "success",
-          solidHeader = TRUE,
-          width = NULL,
-          htmlOutput(ns("status_message")),
-          br(),
-          conditionalPanel(
-            condition = sprintf("output['%s'] == true", ns("fetch_calculated")),
-            actionButton(
-              ns("proceed_to_depth"),
-              "Proceed to Depth Extraction",
-              class = "btn-success",
-              icon = icon("water")
-            ),
-            actionButton(
-              ns("proceed_to_model"),
-              "Proceed to Model Application",
-              class = "btn-info",
-              icon = icon("brain")
-            )
-          )
-        ),
         bs4Dash::box(
           title = "Fetch Results",
           status = "info",
@@ -505,36 +467,6 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
         ),
         class = "cell-border stripe"
       )
-    })
-
-    # Status message
-    output$status_message <- renderUI({
-      if (is.null(app_data$original_data)) {
-        p(
-          icon("exclamation-triangle", style = "color: orange;"),
-          "No data available. Please complete the Data Input step first."
-        )
-      } else if (is.null(values$fetch_results)) {
-        p(
-          icon("info-circle", style = "color: blue;"),
-          "Configure parameters and calculate fetch to proceed."
-        )
-      } else {
-        p(
-          icon("check-circle", style = "color: green;"),
-          "Fetch calculation completed successfully. You can proceed to the next step."
-        )
-      }
-    })
-
-    # Navigation: Proceed to depth extraction
-    observeEvent(input$proceed_to_depth, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
-    })
-
-    # Navigation: Proceed to model application
-    observeEvent(input$proceed_to_model, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })
 }

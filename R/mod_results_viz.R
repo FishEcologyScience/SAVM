@@ -12,27 +12,11 @@ mod_results_viz_ui <- function(id) {
     fluidRow(
       column(
         12,
-        bs4Dash::box(
-          title = tags$span(icon("chart-line"), " Results & Visualization"),
-          collapsible = TRUE,
-          collapsed = TRUE,
-          status = "primary",
-          width = NULL,
-          solidHeader = TRUE,
-          p("Explore and visualize your SAV model predictions and data analysis results."),
-          p("This section provides comprehensive visualization tools including distribution plots, density analysis, spatial mapping, and data exploration capabilities."),
-          p("Navigate through the tabs below to access different visualization types based on your available data and model results.")
-        )
-      )
-    ),
-    fluidRow(
-      column(
-        12,
         conditionalPanel(
           condition = sprintf("output['%s'] == false", ns("results_available")),
           bs4Dash::box(
-            title = "No Results Available",
-            status = "warning",
+            title = tags$span(icon("chart-line"), " Results & Visualization"),
+            status = "primary",
             solidHeader = TRUE,
             width = NULL,
             div(
@@ -55,6 +39,7 @@ mod_results_viz_ui <- function(id) {
           bs4Dash::tabBox(
             id = ns("viz_tabs"),
             width = NULL,
+            title = tags$span(icon("chart-line"), " Results & Visualization"),
 
             # Summary Tab
             tabPanel(

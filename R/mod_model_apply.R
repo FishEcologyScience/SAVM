@@ -10,27 +10,11 @@ mod_model_apply_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(
-        12,
-        bs4Dash::box(
-          title = tags$span(icon("brain"), " Model Application"),
-          collapsible = TRUE,
-          collapsed = TRUE,
-          status = "primary",
-          width = NULL,
-          solidHeader = TRUE,
-          p("In this section, you can apply Random Forest models to predict SAV presence and cover based on your data."),
-          p("The models use depth and/or fetch as predictors, with optional post-hoc processing using substrate, secchi depth, and user-defined limitations."),
-          p("Select your model type and parameters below to generate predictions for your sampling points.")
-        )
-      )
-    ),
-    fluidRow(
       # Parameters Section
       column(
         4,
         bs4Dash::box(
-          title = "Model Parameters",
+          title = tags$span(icon("brain"), " Model Application"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -145,23 +129,6 @@ mod_model_apply_ui <- function(id) {
       # Results Section
       column(
         8,
-        bs4Dash::box(
-          title = "Status",
-          status = "success",
-          solidHeader = TRUE,
-          width = NULL,
-          htmlOutput(ns("model_status")),
-          br(),
-          conditionalPanel(
-            condition = sprintf("output['%s'] == true", ns("model_complete")),
-            actionButton(
-              ns("proceed_to_results"),
-              "Proceed to Results & Visualization",
-              class = "btn-success",
-              icon = icon("chart-line")
-            )
-          )
-        ),
         bs4Dash::box(
           title = "Model Results",
           status = "info",
@@ -447,34 +414,6 @@ mod_model_apply_server <- function(id, app_data, app_session) {
       }
 
       map
-    })
-
-    # Output: Model status
-    output$model_status <- renderUI({
-      if (is.null(app_data$original_data) || !app_data$data_valid) {
-        return(p("Please complete data input before applying models."))
-      }
-
-      if (values$model_complete) {
-        return(
-          tagList(
-            div(
-              style = "color: green;",
-              icon("check-circle", "fa-2x"),
-              h4("Models Applied!", style = "display: inline; margin-left: 10px;")
-            ),
-            p("SAV models have been successfully applied to your data.")
-          )
-        )
-      }
-
-      # Default state
-      p("Configure model parameters and click 'Apply Models' to begin.")
-    })
-
-    # Navigation: Proceed to results and visualization
-    observeEvent(input$proceed_to_results, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "results")
     })
   })
 }

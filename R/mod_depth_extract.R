@@ -10,27 +10,11 @@ mod_depth_extract_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(
-        12,
-        bs4Dash::box(
-          title = tags$span(icon("water"), " Depth Extraction"),
-          collapsible = TRUE,
-          collapsed = TRUE,
-          status = "primary",
-          width = NULL,
-          solidHeader = TRUE,
-          p("In this section, you can extract depth values for your sampling points from a bathymetry raster file."),
-          p("Upload a raster file (e.g., .tif, .nc, .grd) containing depth/bathymetry data. The depth values will be extracted at each point location and added as a new column called 'depth_m'."),
-          p("Note: Make sure your raster and point data are in the same coordinate reference system for accurate extraction.")
-        )
-      )
-    ),
-    fluidRow(
       # File Upload Section
       column(
         4,
         bs4Dash::box(
-          title = "Depth Configuration",
+          title = tags$span(icon("water"), " Depth Extraction"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -105,32 +89,6 @@ mod_depth_extract_ui <- function(id) {
       # Results Section
       column(
         8,
-        bs4Dash::box(
-          title = "Status",
-          status = "success",
-          solidHeader = TRUE,
-          width = NULL,
-          htmlOutput(ns("extraction_status")),
-          br(),
-          conditionalPanel(
-            condition = sprintf("output['%s'] == true && output['%s'] == true", ns("extraction_complete"), ns("model_ready")),
-            actionButton(
-              ns("proceed_to_model"),
-              "Proceed to Model Application",
-              class = "btn-success",
-              icon = icon("brain")
-            )
-          ),
-          conditionalPanel(
-            condition = sprintf("output['%s'] == true && output['%s'] == false", ns("extraction_complete"), ns("model_ready")),
-            actionButton(
-              ns("proceed_to_fetch"),
-              "Proceed to Fetch Calculation",
-              class = "btn-primary",
-              icon = icon("wind")
-            )
-          )
-        ),
         bs4Dash::box(
           title = "Depth Results",
           status = "info",
@@ -286,35 +244,11 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
       showNotification("Depth extraction results cleared.", type = "message", duration = 2)
     })
 
-    # Navigation: Proceed to model application
-    observeEvent(input$proceed_to_model, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
-    })
-
     # Output: Extraction complete flag
     output$extraction_complete <- reactive({
       values$extraction_complete
     })
     outputOptions(output, "extraction_complete", suspendWhenHidden = FALSE)
-
-    # Output: Model ready flag (requires both fetch_km and depth_m from input OR modules)
-    output$model_ready <- reactive({
-      req(values$extraction_complete)
-      
-      # Check if original data has both columns
-      if (!is.null(app_data$original_data)) {
-        original_cols <- names(app_data$original_data$points)
-        has_both_in_original <- all(c("fetch_km", "depth_m") %in% original_cols)
-        
-        # Model ready if both in original data OR both modules completed
-        both_modules_run <- isTRUE(app_data$fetch_calculated) && isTRUE(app_data$depth_extracted)
-        
-        return(has_both_in_original || both_modules_run)
-      }
-      
-      return(FALSE)
-    })
-    outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
 
     # Output: Depth summary
     output$depth_summary <- renderUI({
@@ -357,39 +291,6 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
         ),
         class = "cell-border stripe"
       )
-    })
-
-    # Output: Extraction status
-    output$extraction_status <- renderUI({
-      if (is.null(app_data$original_data) || !app_data$data_valid) {
-        return(p("Please complete data input before extracting depth values."))
-      }
-
-      if (values$extraction_complete) {
-        return(
-          tagList(
-            div(
-              style = "color: green;",
-              icon("check-circle", "fa-2x"),
-              h4("Extraction Complete!", style = "display: inline; margin-left: 10px;")
-            ),
-            p("Depth values have been successfully extracted and added to your data.")
-          )
-        )
-      }
-
-      # Default state
-      p("Upload a bathymetry raster file and click 'Extract Depth Values' to begin.")
-    })
-
-    # Navigation: Proceed to model application
-    observeEvent(input$proceed_to_model, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
-    })
-
-    # Navigation: Proceed to fetch calculation
-    observeEvent(input$proceed_to_fetch, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
     })
   })
 }

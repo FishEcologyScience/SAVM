@@ -10,27 +10,11 @@ mod_data_input_ui <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(
-        12,
-        bs4Dash::box(
-          title = tags$span(icon("upload"), " Data Input"),
-          collapsible = TRUE,
-          collapsed = TRUE,
-          status = "primary",
-          width = NULL,
-          solidHeader = TRUE,
-          p("In this part of the application, you will upload your data to apply the SAVM modelling framework."),
-          p("You can provide your data as sampling point data in tabular (.csv) or spatial (e.g. .gpkg, .geojson, .shp) format that can be directly used for modelling. This dataset must contain the coordinates of your sampling points and optionally include fetch, depth, substrate, secchi and limitation."),
-          p("Alternatively, you can provide your data as a spatial polygon representing your area of interest, from which we will create a regular point grid using a user-specified spacing parameter.")
-        )
-      )
-    ),
-    fluidRow(
       # File Upload Section
       column(
         4,
         bs4Dash::box(
-          title = "Upload Data",
+          title = tags$span(icon("upload"), " Data Input"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -114,58 +98,6 @@ mod_data_input_ui <- function(id) {
       # Data Preview Section
       column(
         8,
-        bs4Dash::box(
-          title = "Status",
-          status = "success",
-          solidHeader = TRUE,
-          width = NULL,
-          htmlOutput(ns("validation_status")),
-          br(),
-          conditionalPanel(
-            condition = sprintf(
-              "output['%s'] == true && output['%s'] == true",
-              ns("data_processed"), ns("data_valid")
-            ),
-            fluidRow(
-              column(
-                4,
-                conditionalPanel(
-                  condition = sprintf("output['%s'] == true", ns("fetch_ready")),
-                  actionButton(
-                    ns("proceed_to_fetch"),
-                    "Proceed to Fetch Calculation",
-                    class = "btn-success btn-block",
-                    icon = icon("wind")
-                  )
-                )
-              ),
-              column(
-                4,
-                conditionalPanel(
-                  condition = sprintf("output['%s'] == true", ns("depth_ready")),
-                  actionButton(
-                    ns("proceed_to_depth"),
-                    "Proceed to Depth Extraction",
-                    class = "btn-warning btn-block",
-                    icon = icon("water")
-                  )
-                )
-              ),
-              column(
-                4,
-                conditionalPanel(
-                  condition = sprintf("output['%s'] == true", ns("model_ready")),
-                  actionButton(
-                    ns("proceed_to_model"),
-                    "Proceed to Model Application",
-                    class = "btn-info btn-block",
-                    icon = icon("brain")
-                  )
-                )
-              )
-            )
-          )
-        ),
         bs4Dash::box(
           title = "Data Preview",
           status = "info",
@@ -324,43 +256,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
     })
     outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
 
-    # Output: Fetch ready flag (always available when data is valid)
-    output$fetch_ready <- reactive({
-      vals <- values$validation_results()
-      if (is.null(vals) || !vals$is_valid) {
-        return(FALSE)
-      }
-      return(TRUE)  # Always show if data is valid
-    })
-    outputOptions(output, "fetch_ready", suspendWhenHidden = FALSE)
-
-    # Output: Depth ready flag (always available when data is valid)
-    output$depth_ready <- reactive({
-      vals <- values$validation_results()
-      if (is.null(vals) || !vals$is_valid) {
-        return(FALSE)
-      }
-      return(TRUE)  # Always show if data is valid
-    })
-    outputOptions(output, "depth_ready", suspendWhenHidden = FALSE)
-
-    # Output: Model ready flag (requires fetch_km and depth_m from input OR modules)
-    output$model_ready <- reactive({
-      vals <- values$validation_results()
-      if (is.null(vals) || !vals$is_valid) {
-        return(FALSE)
-      }
-      
-      # Show model button if EITHER:
-      # 1. Both columns already in input data, OR
-      # 2. Both modules have been run
-      has_both_in_input <- all(c("fetch_km", "depth_m") %in% vals$available_optional)
-      both_modules_run <- isTRUE(app_data$fetch_calculated) && isTRUE(app_data$depth_extracted)
-      
-      return(has_both_in_input || both_modules_run)
-    })
-    outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
-
     # Output: Data summary
     output$data_summary <- renderUI({
       req(values$processed_data)
@@ -434,13 +329,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
       )
     })
 
-    # # Output: Grid preview plot
-    # output$point_plot <- renderPlot({
-    #   req(values$processed_data)
-
-    #   preview_grid(values$processed_data)
-    # })
-
     output$point_map <- leaflet::renderLeaflet({
       req(values$processed_data)
       pts <- values$processed_data$points
@@ -458,36 +346,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
         leaflet::addProviderTiles("CartoDB.Positron") |>
         leaflet::addPolygons(data = pol, fillColor = "#a1d99b", fillOpacity = 0.3, color = "#31a354", weight = 2) |>
         leaflet::addCircleMarkers(data = pts, radius = 4, color = "#2c7fb8", fillOpacity = 0.7)
-    })
-
-    # Output: Validation status
-    output$validation_status <- renderUI({
-      if (is.null(values$validation_results())) {
-        return(p("Upload and process data to see validation status"))
-      }
-
-      val <- values$validation_results()
-
-      if (val$is_valid) {
-        tagList(
-          div(
-            style = "color: green;",
-            icon("check-circle", "fa-2x"),
-            h4("Data Valid!", style = "display: inline; margin-left: 10px;")
-          ),
-          p("Your data meets all requirements and is ready for analysis."),
-          p(strong("Summary:"), val$n_points, "points loaded successfully")
-        )
-      } else {
-        tagList(
-          div(
-            style = "color: red;",
-            icon("exclamation-triangle", "fa-2x"),
-            h4("Data Invalid", style = "display: inline; margin-left: 10px;")
-          ),
-          p("Please check the data requirements and upload a valid file.")
-        )
-      }
     })
 
 
@@ -511,21 +369,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
         file.copy(template_path, file)
       }
     )
-
-    # Navigation: Proceed to fetch calculation
-    observeEvent(input$proceed_to_fetch, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
-    })
-
-    # Navigation: Proceed to depth extraction
-    observeEvent(input$proceed_to_depth, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
-    })
-
-    # Navigation: Proceed to model application
-    observeEvent(input$proceed_to_model, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
-    })
   })
 }
 
