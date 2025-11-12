@@ -11,7 +11,7 @@ mod_fetch_calc_ui <- function(id) {
     fluidRow(
       column(
         12,
-        shinydashboard::box(
+        bs4Dash::box(
           title = tags$span(icon("wind"), " Fetch Calculation"),
           collapsible = TRUE,
           collapsed = TRUE,
@@ -28,7 +28,7 @@ mod_fetch_calc_ui <- function(id) {
         4,
         # -----------------
         # Parameters
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Fetch Parameters",
           status = "primary",
           solidHeader = TRUE,
@@ -122,7 +122,7 @@ mod_fetch_calc_ui <- function(id) {
       column(
         8,
         # Status Panel
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Status",
           status = "success",
           solidHeader = TRUE,
@@ -145,7 +145,7 @@ mod_fetch_calc_ui <- function(id) {
             )
           )
         ),
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Fetch Results",
           status = "info",
           solidHeader = TRUE,
@@ -529,12 +529,12 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
 
     # Navigation: Proceed to depth extraction
     observeEvent(input$proceed_to_depth, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
     })
 
     # Navigation: Proceed to model application
     observeEvent(input$proceed_to_model, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })
 }

@@ -12,7 +12,7 @@ mod_results_viz_ui <- function(id) {
     fluidRow(
       column(
         12,
-        shinydashboard::box(
+        bs4Dash::box(
           title = tags$span(icon("chart-line"), " Results & Visualization"),
           collapsible = TRUE,
           collapsed = TRUE,
@@ -30,7 +30,7 @@ mod_results_viz_ui <- function(id) {
         12,
         conditionalPanel(
           condition = sprintf("output['%s'] == false", ns("results_available")),
-          shinydashboard::box(
+          bs4Dash::box(
             title = "No Results Available",
             status = "warning",
             solidHeader = TRUE,
@@ -52,7 +52,7 @@ mod_results_viz_ui <- function(id) {
         ),
         conditionalPanel(
           condition = sprintf("output['%s'] == true", ns("results_available")),
-          shinydashboard::tabBox(
+          bs4Dash::tabBox(
             id = ns("viz_tabs"),
             width = NULL,
 
@@ -63,7 +63,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   6,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Data Overview",
                     status = "primary",
                     solidHeader = TRUE,
@@ -73,7 +73,7 @@ mod_results_viz_ui <- function(id) {
                 ),
                 column(
                   6,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Model Results Summary",
                     status = "success",
                     solidHeader = TRUE,
@@ -85,7 +85,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   12,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Available Predictors & Results",
                     status = "info",
                     solidHeader = TRUE,
@@ -103,7 +103,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   3,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Plot Parameters",
                     status = "primary",
                     solidHeader = TRUE,
@@ -165,7 +165,7 @@ mod_results_viz_ui <- function(id) {
                 ),
                 column(
                   9,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Distribution Plots",
                     status = "info",
                     solidHeader = TRUE,
@@ -195,7 +195,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   3,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Density Parameters",
                     status = "primary",
                     solidHeader = TRUE,
@@ -240,7 +240,7 @@ mod_results_viz_ui <- function(id) {
                 ),
                 column(
                   9,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Density Analysis",
                     status = "info",
                     solidHeader = TRUE,
@@ -270,7 +270,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   12,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Interactive Spatial Map",
                     status = "info",
                     solidHeader = TRUE,
@@ -309,7 +309,7 @@ mod_results_viz_ui <- function(id) {
               fluidRow(
                 column(
                   3,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Table Options",
                     status = "primary",
                     solidHeader = TRUE,
@@ -343,7 +343,7 @@ mod_results_viz_ui <- function(id) {
                 ),
                 column(
                   9,
-                  shinydashboard::box(
+                  bs4Dash::box(
                     title = "Interactive Data Table",
                     status = "info",
                     solidHeader = TRUE,

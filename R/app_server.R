@@ -35,7 +35,7 @@ app_server <- function(input, output, session) {
 
   # Navigation: Start button functionality
   observeEvent(input$start_btn, {
-    shinydashboard::updateTabItems(session, "sidebar", "data_input")
+    bs4Dash::updateTabItems(session, "sidebar", "data_input")
   })
 
   # Module servers

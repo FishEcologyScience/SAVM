@@ -12,7 +12,7 @@ mod_model_apply_ui <- function(id) {
     fluidRow(
       column(
         12,
-        shinydashboard::box(
+        bs4Dash::box(
           title = tags$span(icon("brain"), " Model Application"),
           collapsible = TRUE,
           collapsed = TRUE,
@@ -29,7 +29,7 @@ mod_model_apply_ui <- function(id) {
       # Parameters Section
       column(
         4,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Model Parameters",
           status = "primary",
           solidHeader = TRUE,
@@ -145,7 +145,7 @@ mod_model_apply_ui <- function(id) {
       # Results Section
       column(
         8,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Status",
           status = "success",
           solidHeader = TRUE,
@@ -162,7 +162,7 @@ mod_model_apply_ui <- function(id) {
             )
           )
         ),
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Model Results",
           status = "info",
           solidHeader = TRUE,
@@ -474,7 +474,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
 
     # Navigation: Proceed to results and visualization
     observeEvent(input$proceed_to_results, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "results")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "results")
     })
   })
 }

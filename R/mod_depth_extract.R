@@ -12,7 +12,7 @@ mod_depth_extract_ui <- function(id) {
     fluidRow(
       column(
         12,
-        shinydashboard::box(
+        bs4Dash::box(
           title = tags$span(icon("water"), " Depth Extraction"),
           collapsible = TRUE,
           collapsed = TRUE,
@@ -29,7 +29,7 @@ mod_depth_extract_ui <- function(id) {
       # File Upload Section
       column(
         4,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Upload Depth Raster",
           status = "primary",
           solidHeader = TRUE,
@@ -81,7 +81,7 @@ mod_depth_extract_ui <- function(id) {
       # Results Section
       column(
         8,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Status",
           status = "success",
           solidHeader = TRUE,
@@ -98,7 +98,7 @@ mod_depth_extract_ui <- function(id) {
             )
           )
         ),
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Depth Results",
           status = "info",
           solidHeader = TRUE,
@@ -226,7 +226,7 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
     # Navigation: Proceed to model application
     observeEvent(input$proceed_to_model, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
 
     # Output: Extraction complete flag
@@ -302,7 +302,7 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
     # Navigation: Proceed to model application
     observeEvent(input$proceed_to_model, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })
 }

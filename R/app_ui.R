@@ -7,28 +7,28 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    shinydashboard::dashboardPage(
-      shinydashboard::dashboardHeader(title = "SAVM"),
-      shinydashboard::dashboardSidebar(
-        shinydashboard::sidebarMenu(
+    bs4Dash::dashboardPage(
+      bs4Dash::dashboardHeader(title = "SAVM"),
+      bs4Dash::dashboardSidebar(
+        bs4Dash::sidebarMenu(
           id = "sidebar",
-          shinydashboard::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
+          bs4Dash::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
           br(),
-          shinydashboard::menuItem("1. Data Input", tabName = "data_input", icon = icon("upload")),
-          shinydashboard::menuItem("2. Fetch Calculation", tabName = "fetch_calc", icon = icon("wind")),
-          shinydashboard::menuItem("3. Depth extraction", tabName = "depth_extr", icon = icon("water")),
-          shinydashboard::menuItem("4. Model Application", tabName = "model_apply", icon = icon("brain")),
-          shinydashboard::menuItem("5. Results & Visualization", tabName = "results", icon = icon("chart-line")),
+          bs4Dash::menuItem("1. Data Input", tabName = "data_input", icon = icon("upload")),
+          bs4Dash::menuItem("2. Fetch Calculation", tabName = "fetch_calc", icon = icon("wind")),
+          bs4Dash::menuItem("3. Depth extraction", tabName = "depth_extr", icon = icon("water")),
+          bs4Dash::menuItem("4. Model Application", tabName = "model_apply", icon = icon("brain")),
+          bs4Dash::menuItem("5. Results & Visualization", tabName = "results", icon = icon("chart-line")),
           br(),
-          shinydashboard::menuItem("Help", tabName = "help", icon = icon("question-circle"))
+          bs4Dash::menuItem("Help", tabName = "help", icon = icon("question-circle"))
         )
       ),
-      shinydashboard::dashboardBody(
-        shinydashboard::tabItems(
-          shinydashboard::tabItem(
+      bs4Dash::dashboardBody(
+        bs4Dash::tabItems(
+          bs4Dash::tabItem(
             tabName = "welcome",
             fluidRow(
-              shinydashboard::box(
+              bs4Dash::box(
                 title = tags$span(icon("home"), " Welcome to the SAVM Shiny Application"),
                 status = "primary",
                 solidHeader = TRUE,
@@ -50,30 +50,30 @@ app_ui <- function(request) {
               )
             )
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "data_input",
             mod_data_input_ui("data_input_1")
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "fetch_calc",
             mod_fetch_calc_ui("fetch_calc_1")
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "depth_extr",
             mod_depth_extract_ui("depth_extract_1")
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "model_apply",
             mod_model_apply_ui("model_apply_1")
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "results",
             mod_results_viz_ui("results_viz_1")
           ),
-          shinydashboard::tabItem(
+          bs4Dash::tabItem(
             tabName = "help",
             fluidRow(
-              shinydashboard::box(
+              bs4Dash::box(
                 title = "Help & Documentation",
                 status = "info",
                 solidHeader = TRUE,

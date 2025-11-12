@@ -12,7 +12,7 @@ mod_data_input_ui <- function(id) {
     fluidRow(
       column(
         12,
-        shinydashboard::box(
+        bs4Dash::box(
           title = tags$span(icon("upload"), " Data Input"),
           collapsible = TRUE,
           collapsed = TRUE,
@@ -29,15 +29,26 @@ mod_data_input_ui <- function(id) {
       # File Upload Section
       column(
         4,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Upload Data",
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
-          h4("Select Data Source"),
+          h4(strong("Select Data Source")),
+          h6(strong("Data Type:")),
+          conditionalPanel(
+            condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
+            data_format_text("csv"),
+            template_download_button(ns("download_csv_template"), "Data Template"),
+          ),
+          conditionalPanel(
+            condition = sprintf("input['%s'] == 'spatial_points'", ns("data_source_type")),
+            data_format_text("spatial_points"),
+            template_download_button(ns("download_spatial_template"), "Data Template"),
+          ),
           selectInput(
             ns("data_source_type"),
-            "Data Type:",
+            NULL,
             choices = list(
               "Point Data (CSV)" = "csv",
               "Point Data (Spatial)" = "spatial_points",
@@ -45,17 +56,19 @@ mod_data_input_ui <- function(id) {
             ),
             selected = "csv"
           ),
+          br(),
+          h6(strong("Choose file:")),
+          shp_help_text(),
           fileInput(
             ns("data_file"),
-            "Choose File:",
+            NULL,
             accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
             multiple = TRUE
           ),
-
+          hr(),
           # Conditional inputs based on data type
           conditionalPanel(
             condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
-            h5("CSV Configuration"),
             numericInput(
               ns("crs_input"),
               "Input CRS (EPSG):",
@@ -66,7 +79,6 @@ mod_data_input_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == 'spatial_polygon'", ns("data_source_type")),
-            h5("Grid Generation"),
             numericInput(
               ns("grid_spacing"),
               "Grid Spacing (meters):",
@@ -74,24 +86,6 @@ mod_data_input_ui <- function(id) {
               min = 10,
               max = 10000,
               step = 50
-            ),
-            br(),
-            checkboxInput(
-              ns("invert_polygon"),
-              "Invert polygon (land surrounding water of interest)",
-              value = FALSE
-            ),
-            conditionalPanel(
-              condition = sprintf("input['%s'] == true", ns("invert_polygon")),
-              numericInput(
-                ns("inversion_ratio"),
-                "Inversion ratio:",
-                value = 0.5,
-                min = 0.01,
-                max = 1.0,
-                step = 0.01
-              ),
-              helpText(tags$span(icon("question-circle"), " Ratio for concave hull generation. Lower values create tighter hulls around land features."))
             )
           ),
           numericInput(
@@ -101,6 +95,7 @@ mod_data_input_ui <- function(id) {
             min = 1,
             max = 99999
           ),
+          crs_help_text(),
           br(),
           fluidRow(
             column(2),
@@ -119,7 +114,7 @@ mod_data_input_ui <- function(id) {
       # Data Preview Section
       column(
         8,
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Status",
           status = "success",
           solidHeader = TRUE,
@@ -140,16 +135,18 @@ mod_data_input_ui <- function(id) {
               icon = icon("wind")
             ),
             # br(), br(),
-            actionButton(
-              ns("proceed_to_model"),
-              "Proceed to Model Application",
-              class = "btn-info",
-              icon = icon("brain")
-              # )
+            conditionalPanel(
+              condition = sprintf("output['%s'] == true", ns("model_ready")),
+              actionButton(
+                ns("proceed_to_model"),
+                "Proceed to Model Application",
+                class = "btn-info",
+                icon = icon("brain")
+              )
             )
           )
         ),
-        shinydashboard::box(
+        bs4Dash::box(
           title = "Data Preview",
           status = "info",
           solidHeader = TRUE,
@@ -226,8 +223,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
             file_path       = input$data_file$datapath,
             data_type       = input$data_source_type,
             grid_spacing    = input$grid_spacing,
-            invert          = input$invert_polygon,
-            inversion_ratio = input$inversion_ratio,
             crs_input       = input$crs_input,
             crs_output      = input$crs_output
           )
@@ -308,6 +303,16 @@ mod_data_input_server <- function(id, app_data, app_session) {
       !is.null(values$processed_data)
     })
     outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
+
+    # Output: Model ready flag (requires fetch_km and depth_m)
+    output$model_ready <- reactive({
+      vals <- values$validation_results()
+      if (is.null(vals) || !vals$is_valid) {
+        return(FALSE)
+      }
+      all(c("fetch_km", "depth_m") %in% vals$available_optional)
+    })
+    outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
 
     # Output: Data summary
     output$data_summary <- renderUI({
@@ -440,12 +445,33 @@ mod_data_input_server <- function(id, app_data, app_session) {
 
     # Navigation: Proceed to fetch calculation
     observeEvent(input$proceed_to_fetch, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
     })
+
+    # Download handlers for CSV and spatial template
+    output$download_csv_template <- downloadHandler(
+      filename = function() {
+        "sav_data_template.csv"
+      },
+      content = function(file) {
+        template_path <- system.file("extdata", "templates", "file_input_template.csv", package = "SAVM")
+        file.copy(template_path, file)
+      }
+    )
+
+    output$download_spatial_template <- downloadHandler(
+      filename = function() {
+        "sav_data_template.csv"
+      },
+      content = function(file) {
+        template_path <- system.file("extdata", "templates", "file_input_template.csv", package = "SAVM")
+        file.copy(template_path, file)
+      }
+    )
 
     # Navigation: Proceed to model application
     observeEvent(input$proceed_to_model, {
-      shinydashboard::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
   })
 }
@@ -455,8 +481,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
 process_input_data <- function(file_path,
                                data_type = c("csv", "spatial_points", "spatial_polygon"),
                                grid_spacing = 500,
-                               invert = FALSE,
-                               inversion_ratio = 0.5,
                                crs_input = 4326,
                                crs_output = 32617) {
   data_type <- match.arg(data_type)
@@ -497,24 +521,6 @@ process_input_data <- function(file_path,
     )
   }
 
-  # -------------------------------------------------------------
-  # Handle polygon inversion if requested
-  if (data_type == "spatial_polygon" && invert) {
-    tryCatch(
-      {
-        message("Inverting polygon...")
-        poly <- sf::st_read(file_path, quiet = TRUE)
-        poly_inv <- invert_polygon(poly, ratio = inversion_ratio)
-        message("Polygon inversion complete.")
-        tmp_file <- tempfile(fileext = ".gpkg")
-        sf::st_write(poly_inv, tmp_file, quiet = TRUE)
-        file_path <- tmp_file
-      },
-      error = function(e) {
-        stop("Failed to invert polygon: ", e$message, call. = FALSE)
-      }
-    )
-  }
 
   # -------------------------------------------------------------
   # Read and process data (using provided parameters directly)
@@ -575,4 +581,98 @@ filepath_shp <- function(file_path) {
   }
 
   return(file_path)
+}
+
+
+#' CRS Help Text Helper Function
+#'
+#' @description Helper function to generate CRS help text
+#'
+#' @noRd
+#'
+crs_help_text <- function() {
+  helpText(
+    tags$span(
+      style = "color: #6c757d;",
+      icon("info-circle"),
+      " Coordinate Reference System. ",
+      "Common codes: ", tags$strong("4326"), " (WGS84), ",
+      tags$strong("4269"), " (NAD83), ",
+      tags$strong("32617"), " (UTM Zone 17N - Great Lakes). ",
+      tags$a("Learn more", href = "https://en.wikipedia.org/wiki/Spatial_reference_system", target = "_blank"),
+      " or ",
+      tags$a("lookup EPSG codes", href = "https://epsg.io", target = "_blank"), "."
+    )
+  )
+}
+
+
+#' Shapefile Help Text Helper Function
+#'
+#' @description Helper function to generate SHP help text
+#'
+#' @noRd
+#'
+shp_help_text <- function() {
+  helpText(
+    tags$span(
+      style = "color: #6c757d;",
+      icon("info-circle"),
+      " For shapefiles, select all files with the same name ",
+      em("(shp, dbf, shx, prj)"),
+      " and any additional files ", em("(cpg, sbn, sbx, xml).")
+    )
+  )
+}
+
+#' Data format Help Text Helper Function
+#'
+#' @description Helper function to generate data format help text
+#'
+#' @noRd
+#'
+data_format_text <- function(type) {
+  if (type == "csv") {
+    txt <- helpText(
+      tags$span(
+        style = "color: #6c757d;",
+        icon("info-circle"),
+        " Required: ", em("latitude"), " and ", em("longitude"), ". ",
+        "Optional: ", em("fetch_km"), " (0-50 km), ",
+        em("depth_m"), " (0-30 m), ", em("secchi"), " (0-10 m), ",
+        em("substrate"), " (logical), ", em("limitation"), " (logical)."
+      )
+    )
+  }
+
+  if (type == "spatial_points") {
+    txt <- helpText(
+      tags$span(
+        style = "color: #6c757d;",
+        icon("info-circle"),
+        "Optional: ", em("fetch_km"), " (0-50 km), ",
+        em("depth_m"), " (0-30 m), ", em("secchi"), " (0-10 m), ",
+        em("substrate"), " (logical), ", em("limitation"), " (logical)."
+      )
+    )
+  }
+  txt
+}
+
+#' Template Download Button Helper Function
+#'
+#' @description Helper function to generate template download button
+#'
+#' @noRd
+#'
+template_download_button <- function(id, label) {
+  tags$div(
+    style = "margin-top: 10px; margin-bottom: 10px;",
+    downloadButton(
+      id,
+      label = paste("Download", label),
+      class = "btn-outline-primary btn-sm",
+      icon = icon("download")
+    )
+  )
 }
