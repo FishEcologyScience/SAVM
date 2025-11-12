@@ -34,7 +34,7 @@ mod_data_input_ui <- function(id) {
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
-          h4(strong("Select Data Source")),
+          h5(strong("Select Data Source")),
           h6(strong("Data Type:")),
           conditionalPanel(
             condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
@@ -126,22 +126,42 @@ mod_data_input_ui <- function(id) {
               "output['%s'] == true && output['%s'] == true",
               ns("data_processed"), ns("data_valid")
             ),
-            # div(
-            # style = "text-align: left;",
-            actionButton(
-              ns("proceed_to_fetch"),
-              "Proceed to Fetch Calculation",
-              class = "btn-success",
-              icon = icon("wind")
-            ),
-            # br(), br(),
-            conditionalPanel(
-              condition = sprintf("output['%s'] == true", ns("model_ready")),
-              actionButton(
-                ns("proceed_to_model"),
-                "Proceed to Model Application",
-                class = "btn-info",
-                icon = icon("brain")
+            fluidRow(
+              column(
+                4,
+                conditionalPanel(
+                  condition = sprintf("output['%s'] == true", ns("fetch_ready")),
+                  actionButton(
+                    ns("proceed_to_fetch"),
+                    "Proceed to Fetch Calculation",
+                    class = "btn-success btn-block",
+                    icon = icon("wind")
+                  )
+                )
+              ),
+              column(
+                4,
+                conditionalPanel(
+                  condition = sprintf("output['%s'] == true", ns("depth_ready")),
+                  actionButton(
+                    ns("proceed_to_depth"),
+                    "Proceed to Depth Extraction",
+                    class = "btn-warning btn-block",
+                    icon = icon("water")
+                  )
+                )
+              ),
+              column(
+                4,
+                conditionalPanel(
+                  condition = sprintf("output['%s'] == true", ns("model_ready")),
+                  actionButton(
+                    ns("proceed_to_model"),
+                    "Proceed to Model Application",
+                    class = "btn-info btn-block",
+                    icon = icon("brain")
+                  )
+                )
               )
             )
           )
@@ -304,6 +324,26 @@ mod_data_input_server <- function(id, app_data, app_session) {
     })
     outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
 
+    # Output: Fetch ready flag (missing fetch_km)
+    output$fetch_ready <- reactive({
+      vals <- values$validation_results()
+      if (is.null(vals) || !vals$is_valid) {
+        return(FALSE)
+      }
+      return(!("fetch_km" %in% vals$available_optional))
+    })
+    outputOptions(output, "fetch_ready", suspendWhenHidden = FALSE)
+
+    # Output: Depth ready flag (missing depth_m)
+    output$depth_ready <- reactive({
+      vals <- values$validation_results()
+      if (is.null(vals) || !vals$is_valid) {
+        return(FALSE)
+      }
+      return(!("depth_m" %in% vals$available_optional))
+    })
+    outputOptions(output, "depth_ready", suspendWhenHidden = FALSE)
+
     # Output: Model ready flag (requires fetch_km and depth_m)
     output$model_ready <- reactive({
       vals <- values$validation_results()
@@ -443,10 +483,6 @@ mod_data_input_server <- function(id, app_data, app_session) {
       }
     })
 
-    # Navigation: Proceed to fetch calculation
-    observeEvent(input$proceed_to_fetch, {
-      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
-    })
 
     # Download handlers for CSV and spatial template
     output$download_csv_template <- downloadHandler(
@@ -468,6 +504,16 @@ mod_data_input_server <- function(id, app_data, app_session) {
         file.copy(template_path, file)
       }
     )
+
+    # Navigation: Proceed to fetch calculation
+    observeEvent(input$proceed_to_fetch, {
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
+    })
+
+    # Navigation: Proceed to depth extraction
+    observeEvent(input$proceed_to_depth, {
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "depth_extr")
+    })
 
     # Navigation: Proceed to model application
     observeEvent(input$proceed_to_model, {

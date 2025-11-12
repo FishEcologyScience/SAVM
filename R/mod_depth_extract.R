@@ -30,7 +30,7 @@ mod_depth_extract_ui <- function(id) {
       column(
         4,
         bs4Dash::box(
-          title = "Upload Depth Raster",
+          title = "Depth Configuration",
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
@@ -45,12 +45,36 @@ mod_depth_extract_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("output['%s'] == true", ns("data_available")),
-            h4("Upload Bathymetry Raster"),
-            helpText(tags$span(icon("info-circle"), " Supported formats: GeoTIFF (.tif), NetCDF (.nc), ESRI Grid (.grd), ASCII (.asc).")),
-            fileInput(
-              ns("depth_raster"),
-              "Choose Raster File:",
-              accept = c(".tif", ".tiff", ".nc", ".grd", ".asc")
+            h5(strong("Choose Depth Source")),
+            shinyWidgets::prettySwitch(
+              inputId = ns("use_constant_depth"),
+              label = "Use constant depth",
+              value = FALSE,
+              status = "primary",
+              inline = TRUE
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == false", ns("use_constant_depth")),
+              h5("Upload Bathymetry Raster"),
+              helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Supported formats: GeoTIFF (.tif), NetCDF (.nc), ESRI Grid (.grd), ASCII (.asc).")),
+              fileInput(
+                ns("depth_raster"),
+                "Choose Raster File:",
+                accept = c(".tif", ".tiff", ".nc", ".grd", ".asc")
+              )
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == true", ns("use_constant_depth")),
+              h5("Constant Depth Value"),
+              helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " This depth will be assigned to all points. Useful when no DEM is available.")),
+              numericInput(
+                ns("constant_depth_value"),
+                "Depth (meters):",
+                value = 5.0,
+                min = 0.1,
+                max = 100,
+                step = 0.1
+              )
             ),
             br(),
             fluidRow(
@@ -89,12 +113,21 @@ mod_depth_extract_ui <- function(id) {
           htmlOutput(ns("extraction_status")),
           br(),
           conditionalPanel(
-            condition = sprintf("output['%s'] == true", ns("extraction_complete")),
+            condition = sprintf("output['%s'] == true && output['%s'] == true", ns("extraction_complete"), ns("model_ready")),
             actionButton(
               ns("proceed_to_model"),
               "Proceed to Model Application",
               class = "btn-success",
               icon = icon("brain")
+            )
+          ),
+          conditionalPanel(
+            condition = sprintf("output['%s'] == true && output['%s'] == false", ns("extraction_complete"), ns("model_ready")),
+            actionButton(
+              ns("proceed_to_fetch"),
+              "Proceed to Fetch Calculation",
+              class = "btn-primary",
+              icon = icon("wind")
             )
           )
         ),
@@ -153,29 +186,42 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
     # Extract depth values
     observeEvent(input$extract_depth, {
-      req(input$depth_raster)
       req(app_data$original_data)
 
-      showNotification("Processing depth extraction...", type = "message", duration = 2)
+      # Check requirements based on mode
+      if (input$use_constant_depth) {
+        req(input$constant_depth_value)
+      } else {
+        req(input$depth_raster)
+      }
 
+      showNotification("Processing depth extraction...", type = "message", duration = 2)
 
       shinycssloaders::showPageSpinner(
         background = "#cccccccc",
         color = "#333333",
-        caption = "Calculating Fetch",
+        caption = "Extracting Depth",
         image = "www/img/insil.gif",
         image.width = "200",
         image.height = "200"
       )
 
-
       # Run the depth extraction safely
       result <- tryCatch(
         {
-          extract_depth_values(
-            points_data = app_data$original_data$points,
-            raster_path = input$depth_raster$datapath
-          )
+          if (input$use_constant_depth) {
+            # Use constant depth for all points
+            assign_constant_depth(
+              points_data = app_data$original_data$points,
+              depth_value = input$constant_depth_value
+            )
+          } else {
+            # Extract from raster
+            extract_depth_values(
+              points_data = app_data$original_data$points,
+              raster_path = input$depth_raster$datapath
+            )
+          }
         },
         error = function(e) {
           showNotification(
@@ -191,24 +237,40 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
 
       if (!is.null(result)) {
         # Store depth results separately (don't modify original data)
-        values$depth_results <- list(
-          points_with_depth = result,
-          raster_path = input$depth_raster$datapath,
-          extraction_time = Sys.time()
-        )
+        if (input$use_constant_depth) {
+          values$depth_results <- list(
+            points_with_depth = result,
+            method = "constant",
+            constant_value = input$constant_depth_value,
+            extraction_time = Sys.time()
+          )
+          app_data$depth_params <- list(
+            method = "constant",
+            constant_value = input$constant_depth_value,
+            n_points_processed = nrow(result),
+            n_points_with_depth = sum(!is.na(result$depth_m))
+          )
+        } else {
+          values$depth_results <- list(
+            points_with_depth = result,
+            method = "raster",
+            raster_path = input$depth_raster$datapath,
+            extraction_time = Sys.time()
+          )
+          app_data$depth_params <- list(
+            method = "raster",
+            raster_file = input$depth_raster$name,
+            n_points_processed = nrow(result),
+            n_points_with_depth = sum(!is.na(result$depth_m))
+          )
+        }
+
         values$extraction_complete <- TRUE
 
         # Update app data with depth results and metadata
         app_data$depth_results <- values$depth_results
         app_data$depth_extracted <- TRUE
         app_data$depth_timestamp <- Sys.time()
-
-        # Store calculation parameters
-        app_data$depth_params <- list(
-          raster_file = input$depth_raster$name,
-          n_points_processed = nrow(result),
-          n_points_with_depth = sum(!is.na(result$depth_m))
-        )
 
         showNotification("Depth extraction completed successfully!", type = "message", duration = 3)
       }
@@ -234,6 +296,19 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
       values$extraction_complete
     })
     outputOptions(output, "extraction_complete", suspendWhenHidden = FALSE)
+
+    # Output: Model ready flag (check for both fetch_km and depth_m)
+    output$model_ready <- reactive({
+      req(values$depth_results)
+      req(values$extraction_complete)
+
+      data_cols <- names(values$depth_results$points_with_depth)
+      has_fetch <- "fetch_km" %in% data_cols
+      has_depth <- "depth_m" %in% data_cols
+
+      return(has_fetch && has_depth)
+    })
+    outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
 
     # Output: Depth summary
     output$depth_summary <- renderUI({
@@ -264,7 +339,8 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
       depth_data <- sf::st_drop_geometry(values$depth_results$points_with_depth) |>
         dplyr::mutate(
           depth_m = round(depth_m, 3)
-        )
+        ) |>
+        dplyr::select(id_point, depth_m)
 
       DT::datatable(
         depth_data,
@@ -304,6 +380,11 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
     observeEvent(input$proceed_to_model, {
       bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "model_apply")
     })
+
+    # Navigation: Proceed to fetch calculation
+    observeEvent(input$proceed_to_fetch, {
+      bs4Dash::updateTabItems(session = app_session, inputId = "sidebar", "fetch_calc")
+    })
   })
 }
 
@@ -331,6 +412,14 @@ extract_depth_values <- function(points_data, raster_path) {
   } else {
     stop("Could not extract depth values from raster", call. = FALSE)
   }
+
+  return(points_data)
+}
+
+# Helper function for assigning constant depth
+assign_constant_depth <- function(points_data, depth_value) {
+  # Add constant depth value to all points
+  points_data$depth_m <- depth_value
 
   return(points_data)
 }
