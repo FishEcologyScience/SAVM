@@ -45,7 +45,7 @@ mod_model_apply_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("output['%s'] == true", ns("data_available")),
-            h4("Model Configuration"),
+            h5(strong("Model Configuration")),
 
             # Model Type Selection (future enhancement)
             selectInput(
@@ -85,8 +85,8 @@ mod_model_apply_ui <- function(id) {
               ),
               selected = c("pa", "cover")
             ),
-            h4("Post-hoc Parameters"),
-            helpText(tags$span(icon("info-circle"), " Chambers and Kalff (1985) equation parameters for maximum colonization depth.")),
+            h5(strong("Post-hoc Parameters")),
+            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Chambers and Kalff (1985) equation parameters for maximum colonization depth.")),
             selectInput(
               ns("vmax_model"),
               "Vmax Model:",

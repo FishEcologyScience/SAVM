@@ -324,33 +324,40 @@ mod_data_input_server <- function(id, app_data, app_session) {
     })
     outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
 
-    # Output: Fetch ready flag (missing fetch_km)
+    # Output: Fetch ready flag (always available when data is valid)
     output$fetch_ready <- reactive({
       vals <- values$validation_results()
       if (is.null(vals) || !vals$is_valid) {
         return(FALSE)
       }
-      return(!("fetch_km" %in% vals$available_optional))
+      return(TRUE)  # Always show if data is valid
     })
     outputOptions(output, "fetch_ready", suspendWhenHidden = FALSE)
 
-    # Output: Depth ready flag (missing depth_m)
+    # Output: Depth ready flag (always available when data is valid)
     output$depth_ready <- reactive({
       vals <- values$validation_results()
       if (is.null(vals) || !vals$is_valid) {
         return(FALSE)
       }
-      return(!("depth_m" %in% vals$available_optional))
+      return(TRUE)  # Always show if data is valid
     })
     outputOptions(output, "depth_ready", suspendWhenHidden = FALSE)
 
-    # Output: Model ready flag (requires fetch_km and depth_m)
+    # Output: Model ready flag (requires fetch_km and depth_m from input OR modules)
     output$model_ready <- reactive({
       vals <- values$validation_results()
       if (is.null(vals) || !vals$is_valid) {
         return(FALSE)
       }
-      all(c("fetch_km", "depth_m") %in% vals$available_optional)
+      
+      # Show model button if EITHER:
+      # 1. Both columns already in input data, OR
+      # 2. Both modules have been run
+      has_both_in_input <- all(c("fetch_km", "depth_m") %in% vals$available_optional)
+      both_modules_run <- isTRUE(app_data$fetch_calculated) && isTRUE(app_data$depth_extracted)
+      
+      return(has_both_in_input || both_modules_run)
     })
     outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
 

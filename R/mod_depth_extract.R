@@ -297,16 +297,22 @@ mod_depth_extract_server <- function(id, app_data, app_session) {
     })
     outputOptions(output, "extraction_complete", suspendWhenHidden = FALSE)
 
-    # Output: Model ready flag (check for both fetch_km and depth_m)
+    # Output: Model ready flag (requires both fetch_km and depth_m from input OR modules)
     output$model_ready <- reactive({
-      req(values$depth_results)
       req(values$extraction_complete)
-
-      data_cols <- names(values$depth_results$points_with_depth)
-      has_fetch <- "fetch_km" %in% data_cols
-      has_depth <- "depth_m" %in% data_cols
-
-      return(has_fetch && has_depth)
+      
+      # Check if original data has both columns
+      if (!is.null(app_data$original_data)) {
+        original_cols <- names(app_data$original_data$points)
+        has_both_in_original <- all(c("fetch_km", "depth_m") %in% original_cols)
+        
+        # Model ready if both in original data OR both modules completed
+        both_modules_run <- isTRUE(app_data$fetch_calculated) && isTRUE(app_data$depth_extracted)
+        
+        return(has_both_in_original || both_modules_run)
+      }
+      
+      return(FALSE)
     })
     outputOptions(output, "model_ready", suspendWhenHidden = FALSE)
 
