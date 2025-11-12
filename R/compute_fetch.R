@@ -151,6 +151,10 @@ compute_fetch <- function(
       rlang::abort("`wind_weights` must include two columns names `direction` and `weight`")
     }
   }
+  d_direction <- d_direction |>
+    dplyr::mutate(
+      cardinal_direction = angle_to_cardinal_direction(direction)
+    )
 
   sav_msg_info("Creating fetch lines")
   fetch_lines <- create_fetch_lines(points, d_direction, max_dist)
@@ -287,7 +291,7 @@ valid_direction <- function(direction) {
       all.inside = TRUE
     )
     if (!all(1:4 %in% interv)) {
-      sav_warn("Not all quadrants are covered.")
+      sav_warn("Not all 4 quadrants are covered.")
     }
   }
   TRUE
@@ -297,20 +301,18 @@ valid_direction <- function(direction) {
 create_fetch_lines <- function(points, d_direction, max_dist) {
   coords <- sf::st_coordinates(points)
   directions <- d_direction$direction
+  dir_angles <- (-directions + 90) / 360 * 2 * pi
+  x_dir <- max_dist * cos(dir_angles)
+  y_dir <- max_dist * sin(dir_angles)
   tmp <- list()
   for (i in seq_len(nrow(points))) {
     # computes fetch line coordinates
     tmp[[i]] <- data.frame(
-      lon = c(
-        rep(coords[i, 1], length(directions)),
-        coords[i, 1] + max_dist * cos(directions / 360 * 2 * pi)
-      ),
-      lat = c(
-        rep(coords[i, 2], length(directions)),
-        coords[i, 2] + max_dist * sin(directions / 360 * 2 * pi)
-      ),
+      lon = c(rep(coords[i, 1], length(directions)), coords[i, 1] + x_dir),
+      lat = c(rep(coords[i, 2], length(directions)), coords[i, 2] + y_dir),
       id_point = points$id_point[i],
       direction = rep(directions, 2),
+      cardinal_direction = rep(d_direction$cardinal_direction, 2),
       weight = rep(d_direction$weight, 2)
     )
   }
@@ -320,7 +322,7 @@ create_fetch_lines <- function(points, d_direction, max_dist) {
     coords = c("lon", "lat"),
     crs = sf::st_crs(points)
   ) |>
-    dplyr::group_by(id_point, direction, weight) |>
+    dplyr::group_by(id_point, direction, cardinal_direction, weight) |>
     dplyr::summarize() |>
     sf::st_cast("LINESTRING")
 }
@@ -337,4 +339,15 @@ remove_detached_ends <- function(x, points) {
     )[, 1L], ]
   }
   do.call(rbind, out)
+}
+
+
+angle_to_cardinal_direction <- function(x) {
+  interv <- findInterval(x, seq(0, 360, by = 11.25), all.inside = TRUE)
+  card <- rep(c(
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW",
+    "W", "WNW", "NW", "NNW"
+  ), each = 2)
+  card <- c(card[-1], card[1])
+  card[interv]
 }

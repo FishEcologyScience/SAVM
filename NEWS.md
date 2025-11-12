@@ -1,6 +1,7 @@
 # SAVM (devel)
 
 * Shiny App that expose the package capacities.
+* Bearings are oriented properly and the element `transect_lines` of the object returned by `compute_fetch()` gains a column `cardinal_direction` (see #15).
 * `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
 * New `glmm` and `gam` models.
 
