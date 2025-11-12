@@ -149,7 +149,7 @@ fetch$mean_fetch |> sf::st_write("fetch.shp")
 ```
 
 
-> ***Note for points outside the polygon***: If any points fall outside the polygon, an error is raised. To remove outsiders, set `remove_outsider = TRUE`. Alternatively, you can identify outsiders using `identify_outsider()`.
+> ***Note for points outside the polygon***: points falling outside the polygon are identified as outsiders, see column `outsider` of `mean_fetch` (e.g. `fetch$mean_fetch$ousider`). To visualize them, use `visualize_outsiders()`.
 
 
 ### Extract depth 

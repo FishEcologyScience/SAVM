@@ -82,16 +82,6 @@ mod_fetch_calc_ui <- function(id) {
           ),
 
           # -----------------
-          # Outsiders
-          h4("Remove outsiders"),
-          helpText(tags$span(icon("question-circle"), " Points outside the polygon boundary will be removed from calculation if enabled.")),
-          checkboxInput(
-            ns("remove_outsiders"),
-            "Remove points outside polygon",
-            value = FALSE
-          ),
-
-          # -----------------
           # Wind weights
           h4("Wind weights (optional)"),
           checkboxInput(
@@ -409,8 +399,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
             polygon = polygon,
             max_dist = input$max_dist,
             n_bearings = input$n_bearings,
-            wind_weights = wind_weights,
-            remove_outsiders = input$remove_outsiders
+            wind_weights = wind_weights
           )
           shinycssloaders::hidePageSpinner()
 
@@ -426,7 +415,6 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
           app_data$fetch_params <- list(
             max_dist = input$max_dist,
             n_bearings = input$n_bearings,
-            remove_outsiders = input$remove_outsiders,
             used_wind_weights = !is.null(wind_weights)
           )
 

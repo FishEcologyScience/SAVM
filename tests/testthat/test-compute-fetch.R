@@ -29,8 +29,9 @@ test_that("helpers work", {
     "Geometries in `le_pt` must be of type `POLYGON` or `MULTIPOLYGON`."
   )
   #
-  expect_true(valid_polygon_contains_points(le_pt, le_bound))
-  expect_error(valid_polygon_contains_points(le_pt_out, le_bound))
+  expect_true(all(!identify_outsiders(le_pt, le_bound)))
+  expect_snapshot(res <- identify_outsiders(le_pt_out, le_bound))
+  expect_true(res)
   #
   expect_true(valid_direction(seq(0, 350, 10)))
   expect_warning(
@@ -44,15 +45,6 @@ test_that("helpers work", {
   )
   #
   expect_identical(
-    remove_points_outside_polygon(le_pt_in_out, le_bound),
-    le_pt_in_out[1:2, ]
-  )
-  expect_identical(
-    remove_points_outside_polygon(le_pt_out, le_bound) |> nrow(),
-    0L
-  )
-  #
-  expect_identical(
     angle_to_cardinal_direction(
       c(0, 90, 180, 270, 360, 355, 11.24, 11.25, 180, 90)
     ),
@@ -61,7 +53,7 @@ test_that("helpers work", {
 })
 
 
-test_that("helpers work", {
+test_that("compute_fetch() throws meaningful errors", {
   withr::with_options(
     list(savm.verbose = "quiet"),
     {
@@ -77,16 +69,18 @@ test_that("helpers work", {
         compute_fetch(le_pt, le_bound, max_dist = 15000, n_bearings = 4),
         "Projection units must be meters."
       )
-      expect_error(
-        compute_fetch(le_pt_in_out, le_bound_merc),
-        "`polygon` must include all points in `points`"
-      )
-      expect_error(
-        compute_fetch(le_pt_out, le_bound_merc, remove_outsiders = TRUE),
-        "All points were outside the polygon considered"
-      )
     }
   )
+})
+
+test_that("compute_fetch() generates NA for outsiders", {
+    expect_snapshot(res1  <- compute_fetch(le_pt_in_out, le_bound_merc))
+    expect_identical(res1$mean_fetch$outsider, c(FALSE, FALSE, TRUE, TRUE))
+    expect_identical(round(res1$mean_fetch$fetch_km), c(15, 15, NA, NA))
+    expect_identical(round(res1$mean_fetch$weighted_fetch_km), c(15, 15, NA, NA))
+    expect_identical(unique(res1$transect_lines$id_point), 1:2)
+    expect_snapshot(res2 <- compute_fetch(le_pt_out, le_bound_merc))
+    expect_null(res2$transect_lines)
 })
 
 test_that("compute_fetch() work", {
@@ -98,7 +92,7 @@ test_that("compute_fetch() work", {
       expect_identical(names(res), c("mean_fetch", "transect_lines"))
       expect_identical(
         names(res$mean_fetch),
-        c("id_point", "fetch_km", "weighted_fetch_km", "geometry")
+        c("id_point", "outsider", "fetch_km", "weighted_fetch_km", "geometry")
       )
       expect_s3_class(res$transect_lines, "sf")
       expect_true(
@@ -116,10 +110,7 @@ test_that("compute_fetch() work", {
       res2 <- compute_fetch(le_pt_mid, le_bound_merc, max_dist = 15)
       expect_equal(res2$mean_fetch$fetch_km, 15)
       expect_equal(res2$mean_fetch$weighted_fetch_km, 15)
-      res3 <- compute_fetch(
-        le_pt_mid, le_bound_merc,
-        max_dist = 15, remove_outsiders = TRUE
-      )
+      res3 <- compute_fetch(le_pt_mid, le_bound_merc, max_dist = 15)
       expect_identical(res2, res3)
     }
   )

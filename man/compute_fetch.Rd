@@ -2,7 +2,7 @@
 % Please edit documentation in R/compute_fetch.R
 \name{compute_fetch}
 \alias{compute_fetch}
-\alias{identify_outsiders}
+\alias{visualize_outsiders}
 \title{Compute wind fetch and wind weighted fetch}
 \usage{
 compute_fetch(
@@ -12,10 +12,10 @@ compute_fetch(
   n_bearings = 16,
   wind_weights = NULL,
   crs = NULL,
-  remove_outsiders = FALSE
+  land_polygon = FALSE
 )
 
-identify_outsiders(points, polygon)
+visualize_outsiders(points, polygon, land_polygon)
 }
 \arguments{
 \item{points}{{\code{sf}}\cr{}
@@ -29,7 +29,7 @@ Maximum fetch distance in kilometers. Fetch beyond this distance is capped.}
 
 \item{n_bearings}{{\code{integer}}\cr{}
 Total number of bearings for fetch calculation (minimal number required is
-4, default is 167). Ignored if \code{wind_weights} is provided.}
+4, default is 16). Ignored if \code{wind_weights} is provided.}
 
 \item{wind_weights}{{\code{data.frame}}\cr{}
 A data frame specifying directional weights for wind exposure.
@@ -40,27 +40,31 @@ Must contain two columns: \code{direction} (numeric, in degrees) and \code{weigh
 Coordinate reference system (CRS) passed to \code{\link[sf:st_crs]{sf::st_crs()}}, used to
 transform \code{points} and \code{polygon}.}
 
-\item{remove_outsiders}{{\code{logical}}\cr{}
-Remove points outside the polygion. An error will be thrown if all points
-are rejected. Default is \code{FALSE}.}
+\item{land_polygon}{{\code{logical}}\cr{}
+Indicates whether the polygon represents land (TRUE) or water (FALSE).
+When TRUE, points inside the polygon are considered outsiders (inland points).
+When FALSE, points outside the polygon are considered outsiders. Default is \code{FALSE}.}
 }
 \value{
 A list of two elements:
 \itemize{
-\item \code{mean_fetch}: a \code{sf} object with 3 features:
+\item \code{mean_fetch}: a \code{sf} object with 4 columns:
 \itemize{
 \item \code{id_point}: point identifier
-\item \code{fetch_km}: mean wind fetch based on all bearings.
-\item \code{weighted_fetch_km}: mean weighted wind fetch based on all bearings.
+\item \code{outsider}: logical indicating if the point is an outsider
+\item \code{fetch_km}: mean wind fetch based on all bearings (NA for outsiders)
+\item \code{weighted_fetch_km}: mean weighted wind fetch based on all bearings (NA for outsiders)
 }
-\item \code{transect_lines}: a \code{sf} object containing all radial transect with the
-same columns as \code{points} and the following additional columns:
+\item \code{transect_lines}: a \code{sf} object containing all radial transects with the
+same columns as \code{points} and the following additional columns (NULL if
+all points are outsiders):
 \itemize{
 \item \code{id_point}: point identifier
-\item \code{direction}: direction (in degree)
+\item \code{direction}: direction (in degrees)
+\item \code{cardinal_direction}: cardinal direction (e.g., N, NE, E, etc.)
 \item \code{weight}: wind weight
-\item \code{transect_length}: transect length in meter computed using \code{\link[sf:geos_measures]{sf::st_length()}}.
-\item \code{rank}: transect ranks (the lower the rank the higher the length).
+\item \code{transect_length}: transect length in meters computed using \code{\link[sf:geos_measures]{sf::st_length()}}
+\item \code{rank}: transect ranks (the lower the rank, the longer the transect)
 }
 }
 }
@@ -80,17 +84,24 @@ transects are then clipped with the polygon using \code{\link[sf:geos_binary_ops
 and any lines that are not connected to the points are removed. The length of
 all clipped transects is computed using \code{\link[sf:geos_measures]{sf::st_length()}} and ranked using
 \code{rank()}. The resulting spatial object is stored as the \code{transect_lines}
-element in the returned list and it used to generate the second element:
-\code{mean_fetch} that included wind fetch averages.
+element in the returned list and is used to generate the second element:
+\code{mean_fetch} that includes wind fetch averages.
 
-Ensure that \code{max_dist} is specified in meters. An error will be thrown if the
-spatial projection of points and polygon is not in a meter-based coordinate
-system.
+Ensure that \code{max_dist} is specified in kilometers. An error will be thrown
+if the spatial projection of points and polygon is not in a meter-based
+coordinate system.
+
+Points identified as outsiders (either outside the polygon when
+\code{land_polygon = FALSE}, or inside the polygon when \code{land_polygon = TRUE})
+will have their \code{fetch_km} and \code{weighted_fetch_km} values set to \code{NA} in the
+\code{mean_fetch} output. No transect lines are created for outsider points. Use
+\code{visualize_outsiders()} to visualize which points are considered outsiders
+before running the fetch computation.
 }
 \section{Functions}{
 \itemize{
-\item \code{identify_outsiders()}: Identify outsiders using a plot where points
-located outside the polygon are highlighted in red.
+\item \code{visualize_outsiders()}: Visualize outsider points in a plot where
+outsiders are highlighted in red.
 
 }}
 \examples{

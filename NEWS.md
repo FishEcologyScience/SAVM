@@ -2,6 +2,9 @@
 
 * Shiny App that expose the package capacities.
 * Bearings are oriented properly and the element `transect_lines` of the object returned by `compute_fetch()` gains a column `cardinal_direction` (see #15).
+* Argument `remove_outsiders` has been removed from `compute_fetch()`, instead
+a column `outsider` which identifies outsiders has been added.  
+* `identify_outsiders()` has been renamed `visualize_outsiders()`.
 * `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
 * New `glmm` and `gam` models.
 
