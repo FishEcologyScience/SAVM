@@ -128,13 +128,12 @@ mod_data_input_ui <- function(id) {
               max = 99999
             ),
             crs_help_text(),
+            hr(),
+            h6(strong("Draw or edit features:")),
+            p(class = "text-muted", "Use the map tools to add points or polygons. Switch tools using the buttons on the map toolbar."),
+            mapedit::editModUI(ns("manual_editor"), height = 360),
             br(),
-            div(
-              style = "text-align: center; padding: 20px; color: #7f8c8d;",
-              icon("map", "fa-2x"),
-              h4("Interactive map editing coming soon"),
-              p("You'll be able to add points or draw an AOI directly on the map.")
-            ),
+            uiOutput(ns("manual_draw_summary")),
             br(),
             fluidRow(
               column(2),
@@ -218,6 +217,165 @@ mod_data_input_server <- function(id, app_data, app_session) {
       validation_results = NULL
     )
 
+    manual_map <- callModule(
+      mapedit::editMod,
+      "manual_editor",
+      leafmap = leaflet::leaflet() |>
+        leaflet::addProviderTiles("CartoDB.Positron") |>
+        leaflet::addScaleBar(position = "bottomleft"),
+      editor = "leafpm",
+      editorOptions = list(
+        position = "topleft",
+        drawMarker = TRUE,
+        drawRectangle = FALSE,
+        drawPolyline = FALSE,
+        drawCircle = FALSE,
+        drawCircleMarker = FALSE,
+        drawPolygon = TRUE,
+        editMode = TRUE,
+        removalMode = TRUE
+      )
+    )
+
+    manual_features <- reactive({
+      req(manual_map)
+      feats <- manual_map()
+      if (is.null(feats) || is.null(feats$finished)) {
+        return(NULL)
+      }
+      finished <- feats$finished
+      if (is.null(finished) || nrow(finished) == 0) {
+        return(NULL)
+      }
+      finished
+    })
+
+    output$manual_draw_summary <- renderUI({
+      feats <- manual_features()
+      if (is.null(feats)) {
+        return(tags$p(class = "text-muted", "No features drawn yet."))
+      }
+
+      geom_types <- paste(unique(as.character(sf::st_geometry_type(feats))), collapse = ", ")
+      tagList(
+        p(strong("Features drawn:"), nrow(feats)),
+        p(strong("Geometry types:"), geom_types)
+      )
+    })
+
+    reset_data_state <- function() {
+      values$processed_data <- NULL
+      values$validation_results(NULL)
+
+      app_data$original_data <- NULL
+      app_data$data_loaded <- FALSE
+      app_data$data_valid <- FALSE
+
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
+    }
+
+    clear_manual_map <- function() {
+      leaflet::leafletProxy(ns("manual_editor-map")) |>
+        leaflet::clearShapes()
+    }
+
+    prepare_manual_points <- function(features, target_epsg) {
+      target_epsg <- as.integer(target_epsg)
+      pts <- features |>
+        sf::st_make_valid() |>
+        sf::st_zm(drop = TRUE) |>
+        sf::st_cast("POINT") |>
+        sf::st_transform(target_epsg)
+
+      coords <- sf::st_coordinates(pts)
+      pts <- pts |>
+        dplyr::mutate(
+          longitude = coords[, 1],
+          latitude = coords[, 2],
+          id_point = dplyr::row_number()
+        )
+
+      polygon_geom <- sf::st_union(pts) |> sf::st_convex_hull()
+      polygon <- sf::st_sf(geometry = polygon_geom, crs = sf::st_crs(pts))
+
+      structure(
+        list(points = pts, polygon = polygon),
+        class = "sav_data"
+      )
+    }
+
+    prepare_manual_polygon <- function(features, spacing, target_epsg) {
+      target_epsg <- as.integer(target_epsg)
+      poly_geom <- features |>
+        sf::st_make_valid() |>
+        sf::st_zm(drop = TRUE) |>
+        sf::st_union()
+      poly <- sf::st_sf(geometry = poly_geom, crs = sf::st_crs(features)) |>
+        sf::st_transform(target_epsg)
+
+      grid <- sf::st_make_grid(poly, cellsize = spacing, what = "centers")
+      grid <- grid[poly]
+
+      if (length(grid) == 0) {
+        stop("No grid points were created inside the polygon. Try using a smaller grid spacing or draw a larger polygon.", call. = FALSE)
+      }
+
+      pts <- sf::st_sf(geometry = grid, crs = sf::st_crs(poly))
+      coords <- sf::st_coordinates(pts)
+      pts <- pts |>
+        dplyr::mutate(
+          longitude = coords[, 1],
+          latitude = coords[, 2],
+          id_point = dplyr::row_number()
+        )
+
+      structure(
+        list(points = pts, polygon = poly),
+        class = "sav_data"
+      )
+    }
+
+    observeEvent(input$manual_process_data, {
+      drawn <- manual_features()
+
+      if (is.null(drawn)) {
+        showNotification("Draw at least one feature on the map before processing.", type = "error", duration = 4)
+        return()
+      }
+
+      result <- tryCatch(
+        {
+          if (input$manual_data_type == "points") {
+            if (!all(sf::st_geometry_type(drawn) %in% c("POINT", "MULTIPOINT"))) {
+              stop("Please draw point features when 'Point Data' is selected.", call. = FALSE)
+            }
+            prepare_manual_points(drawn, input$manual_crs_output)
+          } else {
+            if (!all(sf::st_geometry_type(drawn) %in% c("POLYGON", "MULTIPOLYGON"))) {
+              stop("Please draw polygon features when 'Area of Interest' is selected.", call. = FALSE)
+            }
+            prepare_manual_polygon(drawn, input$manual_grid_spacing, input$manual_crs_output)
+          }
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error processing manual data:", e$message),
+            type = "error",
+            duration = 6
+          )
+          return(NULL)
+        }
+      )
+
+      req(result)
+
+      values$processed_data <- result
+      app_data$original_data <- result
+      app_data$data_loaded <- TRUE
+
+      showNotification("Manual data processed successfully!", type = "message", duration = 3)
+    })
+
     # File processing logic
     observeEvent(input$process_data, {
       req(input$data_file)
@@ -283,20 +441,15 @@ mod_data_input_server <- function(id, app_data, app_session) {
 
     # Clear data
     observeEvent(input$clear_data, {
-      # Reset local reactive values
-      values$processed_data <- NULL
-      values$validation_results(NULL)
-
-      # Reset shared app data and clear all calculations
-      app_data$original_data <- NULL
-      app_data$data_loaded <- FALSE
-      app_data$data_valid <- FALSE
-
-      # Clear all calculation results since original data is gone
-      clear_calculation_results(app_data, c("fetch", "depth", "model"))
-
-      # Optional: notify the user
+      reset_data_state()
+      clear_manual_map()
       showNotification("Data cleared successfully.", type = "message", duration = 2)
+    })
+
+    observeEvent(input$manual_clear_data, {
+      reset_data_state()
+      clear_manual_map()
+      showNotification("Manual data cleared successfully.", type = "message", duration = 2)
     })
 
     # Output: Data valid flag

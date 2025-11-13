@@ -39,6 +39,7 @@ Imports:
     glue,
     golem,
     leaflet,
+    mapedit,
     lme4,
     lmerTest,
     mgcv,
