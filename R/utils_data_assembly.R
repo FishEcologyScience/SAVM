@@ -51,6 +51,12 @@ merge_fetch_data <- function(points_data, fetch_results) {
     points_data$id_point <- seq_len(nrow(points_data))
   }
 
+  # Check input data for presence of fetch
+  if ("fetch_km" %in% colnames(points_data)) {
+    points_data <- points_data |>
+      dplyr::rename(fetch_km_ori = fetch_km)
+  }
+
   # Merge fetch data
   result <- points_data |>
     dplyr::left_join(fetch_data, by = "id_point")
@@ -80,6 +86,12 @@ merge_depth_data <- function(points_data, depth_results) {
   # Create id_point if it doesn't exist
   if (!"id_point" %in% names(points_data)) {
     points_data$id_point <- seq_len(nrow(points_data))
+  }
+
+  # Check input data for presence of depth
+  if ("depth_m" %in% colnames(points_data)) {
+    points_data <- points_data |>
+      dplyr::rename(depth_m_ori = depth_m)
   }
 
   # Merge depth data
