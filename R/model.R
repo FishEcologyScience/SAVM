@@ -1,6 +1,6 @@
-#' Apply SAV prdiction models
+#' Apply SAV prediction models
 #'
-#' Apply SAV prdiction models to predict SAV cover and presence/absence, with
+#' Apply SAV prediction models to predict SAV cover and presence/absence, with
 #' optional post-hoc processing.
 #'
 #' @param dat {`data.frame`|`sf`}\cr{} A `data.frame` or a `sf` object containing some or all of the
@@ -13,10 +13,14 @@
 #'   - `limitation`: Binary (0 = absent, 1 = present), indicating user-supplied
 #'      limitations.
 #'  Additional columns will be ignored.
-#' @param type {`character vector`, either `"cover"` or `"pa"`}\cr{}
-#' Model type(s).
-#' @param method {`character vector`, either `"rf"`, `"gam"` or `"glmm"`}\cr{}
-#' Statistical method.
+#' @param method_pa {`character`}\cr{} Statistical method for presence/absence
+#' model. One of `"rf"` (random forest), `"gam"` (Generalized Additive Model),
+#' or `"lmm"` (Linear Mixed Model). Default is `"rf"`.
+#' @param method_cover {`character`}\cr{} Statistical method for cover model.
+#' One of `"rf"` (random forest), `"gam"` (Generalized Additive Model), or
+#' `"lmm"` (Linear Mixed Model). Default is the same as `method_pa`.
+#' @param pa_threshold {`numeric`}\cr{} Probability threshold for converting
+#' presence/absence predictions to binary values. Default is 0.5.
 #' @param depth,fetch {`character`}\cr{} Column specification for the predictors,
 #' see *Details*.
 #' @param substrate,secchi,limitation {`character`}\cr{}Column specification for post_hoc
@@ -29,33 +33,31 @@
 #' A data frame (or a sf object) containing the input columns along with model
 #' predictions.
 #'
-#' The prediction column names match the values specified in `type` followed
-#' by the suffix `_pred`, and contain the raw model outputs (i.e., without
-#' post-hoc adjustment).
-#'
-#' Post-hoc adjusted predictions (see *Details*) are included in additional
-#' columns with the same names as the `type` values, but with the suffix
-#' `_post_hoc`.
+#' The following prediction columns are returned:
+#' * `pa_pred`: Raw presence/absence probability predictions (0-1).
+#' * `pa`: Binary presence/absence classification based on `pa_threshold`.
+#' * `cover_pred`: Raw cover predictions (percent).
+#' * `cover`: Cover predictions adjusted by presence/absence classification.
+#' * `pa_post_hoc`: Presence/absence after post-hoc treatment (accounting for limitations).
+#' * `cover_post_hoc`: Cover after post-hoc treatment (accounting for limitations).
 #'
 #' If a column `secchi` is present, then two additional columns are
 #' returned: `vmax` and `limitation_secchi`, see details for further
 #' explanation.
 #'
 #' @details
-#' There are two sets of models available. The first set consists of models
-#' predicting the presence or absence of SAV, while the second set focuses on
-#' SAV cover. Each set includes three random forest models: one using depth as
-#' a predictor, another using fetch, and a third combining both variables. For
-#' further details, see Croft-White (2022).
+#' The function applies two types of models: one for predicting presence/absence
+#' of SAV and another for predicting SAV cover. Three statistical methods are
+#' available: Random Forest (`"rf"`), Generalized Additive Models (`"gam"`), and
+#' Linear Mixed Models (`"lmm"`). You can specify different methods for
+#' presence/absence and cover predictions using the `method_pa` and `method_cover`
+#' parameters. For further details about the models, see Croft-White et al. (2022).
 #'
-#' The selected model for generating predictions is determined by the type
-#' argument, which specifies the output as either cover or presence-absence,
-#' depending on the available predictors. The required input variables—depth,
-#' fetch, substrate, secchi, limitation—must correspond to column names in
-#' `dat`; otherwise, an error is thrown. If neither 'depth' nor 'fetch' is
-#' explicitly provided, the function will attempt to infer them from the column
-#' names. Matching is case-insensitive and will detect 'depth_m', 'depth',
-#' 'fetch_km' and 'fetch'.
+#' The required input variables—depth, fetch, substrate, secchi, limitation—must
+#' correspond to column names in `dat`; otherwise, an error is thrown. If neither
+#' 'depth' nor 'fetch' is explicitly provided, the function will attempt to infer
+#' them from the column names. Matching is case-insensitive and will detect
+#' 'depth_m', 'depth', 'fetch_km' and 'fetch'.
 #'
 #' If `secchi` is provided, two additional columns are returned:
 #' * `vmax`: Predicted maximum colonization depth calculated using the Chambers
@@ -91,14 +93,11 @@
 #'
 #' @examples
 #' \donttest{
-#'
 #' # basic usage
-#' sav_model(data.frame(depth = c(5, 10)))
-#' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
+#' sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)))
 #' sav_model(
-#'  data.frame(depth = c(5, 10), fetch = c(1, 2)), 
-#'  type = "cover", 
-#'  method = "glmm"
+#'   data.frame(depth = c(5, 10), fetch = c(1, 2)),
+#'   method_pa = "lmm"
 #' )
 #' # using post-hoc treatment
 #' sav_model(
@@ -111,24 +110,21 @@
 #' )
 #' }
 sav_model <- function(
-  dat, type = c("cover", "pa"), method = "rf", depth = NULL,
-  fetch = NULL, substrate = NULL, secchi = NULL, limitation = NULL,
-  vmax_par = list(intercept = 1.40, slope = 1.33)
+  dat, method_pa = "rf", method_cover = method_pa, pa_threshold = 0.5,
+  depth = NULL, fetch = NULL, substrate = NULL, secchi = NULL,
+  limitation = NULL, vmax_par = list(intercept = 1.40, slope = 1.33)
 ) {
-  method <- match.arg(method, c("rf", "glmm", "gam"))
+  method_pa <- match.arg(method_pa, c("rf", "lmm", "gam"))
+  method_cover <- match.arg(method_cover, c("rf", "lmm", "gam"))
 
   geom <- NULL
   if (inherits(dat, "sf")) {
     geom <- dat |>
       dplyr::select(geometry)
-    dat <- dat |> sf::st_drop_geometry()
+    dat <- dat |>
+      sf::st_drop_geometry()
   } else {
     sav_stop_if_not(inherits(dat, "data.frame"))
-  }
-
-  type <- unique(type)
-  if (!all(type %in% c("cover", "pa"))) {
-    rlang::abort("`type` value(s) must be 'cover' or 'pa'.")
   }
 
   # names for the rf models change back towards the end
@@ -146,11 +142,10 @@ sav_model <- function(
     dat <- dat |>
       rename_if_present("^depth(_m)?$", "Depth") |>
       rename_if_present("^fetch(_km)?$", "Fetch")
-    if (!any(main_col_names %in% names(dat))) {
-      rlang::abort("Either depth or fetch or both must be defined.")
+    if (!all(main_col_names %in% names(dat))) {
+      rlang::abort("Both depth and fetch must be defined.")
     } else {
       v_col <- main_col_names[main_col_names %in% names(dat)]
-      sav_msg_info("Found {v_col} in column names.")
     }
   }
 
@@ -159,45 +154,43 @@ sav_model <- function(
   ]
   d_predict <- dat[names(dat) %in% main_col_names]
   ind <- ("Depth" %in% names(dat)) + ("Fetch" %in% names(dat)) * 2
-  predictors <- c("depth", "fetch", "depth+fetch")[ind]
-  sav_msg_info("Using {type} with {predictors}")
 
   out <- dat
   rownames(out) <- NULL
-  if ("pa" %in% type) {
-    # NB predict() does some magick behind the scenes to find the right fun
-    pa_mod <- sav_load_model("pa", predictors, method)
-    if (method == "rf") {
-      out$pa <- stats::predict(pa_mod, d_predict) |>
-        as.character() |>
-        as.integer()
-    }
-    if (method == "gam") {
-      # use logit function
-      out$pa <- stats::predict(pa_mod, d_predict) |>
-        inv_logit()
-      # post treatment?
-    }
-    if (method == "glmm") {
-      out$pa <- stats::predict(pa_mod, d_predict, re.form = NA)
-      out$pa[out$pa > 1] <- 1
-      out$pa[out$pa < 0] <- 0
-    }
+  # PA
+  ## NB predict() does some magic behind the scenes to find the actual function
+  pa_mod <- sav_load_model("pa", method_pa)
+  if (method_pa == "rf") {
+    tmp <- stats::predict(pa_mod, d_predict, type = "prob")
+    out$pa_pred <- tmp[, colnames(tmp) == "1"]
   }
-  if ("cover" %in% type) {
-    cover_mod <- sav_load_model("cover", predictors, method)
-    if (method == "glmm") {
-      out$cover <- stats::predict(cover_mod, d_predict, re.form = NA)
-      out$cover[out$cover > 100] <- 100
-      out$cover[out$cover < 0] <- 0
-    } else {
-      out$cover <- stats::predict(cover_mod, d_predict)
-      if (method == "gam") {
-        # use logit function
-        out$cover <- inv_logit(out$cover) * 100
-      }
-    }
+  if (method_pa == "gam") {
+    # use logit function
+    out$pa_pred <- mgcv::predict.gam(pa_mod, d_predict) |>
+      inv_logit()
   }
+  if (method_pa == "lmm") {
+    out$pa_pred <- stats::predict(pa_mod, d_predict, re.form = NA)
+    out$pa_pred[out$pa_pred > 1] <- 1
+    out$pa_pred[out$pa_pred < 0] <- 0
+  }
+  out$pa <- (out$pa_pred > pa_threshold) * 1
+
+  # COVER
+  cover_mod <- sav_load_model("cover", method_cover)
+  if (method_cover == "rf") {
+    out$cover_pred <- stats::predict(cover_mod, d_predict)
+  }
+  if (method_cover == "lmm") {
+    out$cover_pred <- stats::predict(cover_mod, d_predict, re.form = NA)
+    out$cover_pred[out$cover > 100] <- 100
+    out$cover_pred[out$cover < 0] <- 0
+  }
+  if (method_cover == "gam") {
+    out$cover_pred <- mgcv::predict.gam(cover_mod, d_predict)
+    out$cover_pred <- inv_logit(out$cover_pred) * 100
+  }
+  out$cover <- out$cover_pred * out$pa
 
   out <- out |>
     rename_if_present("^depth$", "depth_m") |>
@@ -205,7 +198,6 @@ sav_model <- function(
 
 
   # Post-hoc
-
   if ("secchi" %in% names(out)) {
     out$vmax <- (vmax_par$slope * log(out$secchi) + vmax_par$slope)^2
     out <- out |>
@@ -223,26 +215,23 @@ sav_model <- function(
     }
   }
 
-  if ("pa" %in% names(out)) {
-    out$pa_post_hoc <- out$pa
-    out <- out |>
-      scrub_if_present("limitation", "pa_post_hoc") |>
-      scrub_if_present("substrate", "pa_post_hoc") |>
-      scrub_if_present("limitation_secchi", "pa_post_hoc")
-  }
-
-  if ("cover" %in% names(out)) {
-    out$cover_post_hoc <- out$cover
-    out <- out |>
-      scrub_if_present("pa", "cover_post_hoc") |>
-      scrub_if_present("limitation", "cover_post_hoc") |>
-      scrub_if_present("substrate", "cover_post_hoc") |>
-      scrub_if_present("limitation_secchi", "cover_post_hoc")
+  pht_col <- intersect(c("secchi", "limitation", "substrate"), names(out))
+  out$pa_post_hoc <- out$pa
+  out$cover_post_hoc <- out$cover
+  if (length(pht_col)) {
+    sav_msg_info("Using {pht_col} for post-hoc treatment.")
+  } else {
+    sav_msg_warning("No column available for post-hoc treatment.")
   }
 
   out <- out |>
-    rename_if_present("pa", "pa_pred") |>
-    rename_if_present("cover", "cover_pred")
+    scrub_if_present("limitation", "pa_post_hoc") |>
+    scrub_if_present("substrate", "pa_post_hoc") |>
+    scrub_if_present("limitation_secchi", "pa_post_hoc") |>
+    scrub_if_present("limitation", "cover_post_hoc") |>
+    scrub_if_present("substrate", "cover_post_hoc") |>
+    scrub_if_present("limitation_secchi", "cover_post_hoc")
+
 
   if (is.null(geom)) {
     out
@@ -257,44 +246,37 @@ sav_model <- function(
 #' Load a pre-trained SAV model for predicting cover or presence/absence.
 #'
 #' @param type {`character`}\cr{} Model type, either `"cover"` or `"pa"` (presence/absence).
-#' @param predictors {`character`}\cr{} Predictors to use: `"depth"`, `"fetch"`, or `"depth+fetch"`.
-#' @param method {`character`}\cr{} Modeling method: `"rf"` (random forest), `"glmm"`, or `"gam"`.
+#' @param method {`character`}\cr{} Modeling method: `"rf"` (random forest), `"lmm"`, or `"gam"`.
 #'
 #' @return A model object (e.g., randomForest, glmm, or gam object) that can be used for predictions.
 #'
 #' @details
 #' This function loads pre-trained models from the package's internal data
-#' directory. For random forest models, individual predictor models
-#' (depth-only, fetch-only) and combined models (depth+fetch) are available.
-#' For GLMM and GAM methods, only the combined depth+fetch model is available.
+#' directory. Models are available for both presence/absence (`"pa"`) and cover
+#' prediction (`"cover"`), using three different statistical methods: Random
+#' Forest (`"rf"`), Linear Mixed Models (`"lmm"`), and Generalized Additive
+#' Models (`"gam"`). All models use both depth and fetch as predictors.
 #'
 #' @export
 #'
 #' @examples
 #' \donttest{
-#' # Load a random forest model for presence/absence using depth
-#' model <- sav_load_model("pa", "depth", "rf")
+#' # Load a random forest model for presence/absence
+#' model <- sav_load_model("pa", "rf")
 #'
-#' # Load a cover model using both predictors
-#' model <- sav_load_model("cover", "depth+fetch", "rf")
+#' # Load a cover model using Linear Mixed Model
+#' model <- sav_load_model("cover", "lmm")
+#'
+#' # Load a GAM model for cover
+#' model <- sav_load_model("cover", "gam")
 #' }
 sav_load_model <- function(
   type = c("cover", "pa"),
-  predictors = c("depth", "fetch", "depth+fetch"),
   method = "rf"
 ) {
   type <- match.arg(type)
-  predictors <- match.arg(predictors)
-  method <- match.arg(method, c("rf", "glmm", "gam"))
-  if (predictors != "depth+fetch") {
-    if (method != "rf") {
-      cli::cli_abort("Both depth and fetch required for {method} method.")
-    } else {
-      path <- path_model(paste0("sav_rf_", type, "_", predictors, ".rds"))
-    }
-  } else {
-    path <- path_model(paste0(method, "_", type, ".rds"))
-  }
+  method <- match.arg(method, c("rf", "lmm", "gam"))
+  path <- path_model(paste0(method, "_", type, ".rds"))
   path |> readRDS()
 }
 
@@ -328,4 +310,7 @@ scrub_if_present <- function(.data, x, y) {
   .data
 }
 
-inv_logit <- function(x) exp(x) / (1 + exp(x))
+inv_logit <- function(x) {
+  out <- exp(x) / (1 + exp(x))
+  as.vector(out)
+}

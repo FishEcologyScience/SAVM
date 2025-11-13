@@ -1,8 +1,8 @@
 #--- path
 test_that("path helpers work", {
   expect_identical(
-    path_package("extdata/models/sav_rf_pa_depth.rds"),
-    path_model("sav_rf_pa_depth.rds")
+    path_package("extdata/models/rf_pa.rds"),
+    path_model("rf_pa.rds")
   )
   #
   expect_error(path_model("wrong"))

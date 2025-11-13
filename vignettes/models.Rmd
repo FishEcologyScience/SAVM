@@ -33,17 +33,12 @@ The package includes three types of models, each predicting either presence/abse
 
 1. **Random Forest (RF)** - Default models with flexible predictor selection
 2. **Generalized Additive Models (GAM)** - Captures non-linear relationships
-3. **Generalized Linear Mixed Models (GLMM)** - Accounts for hierarchical structure
+3. **Linear Mixed Models (LMM)** - Accounts for hierarchical structure
 
 ## Model Specifications
 
 ### Random Forest Models
 
-Random Forest models are the default choice and are available for three predictor combinations:
-
-- **Depth only**: Uses only depth measurements
-- **Fetch only**: Uses only fetch measurements
-- **Depth + Fetch**: Uses both predictors (recommended when available)
 
 **Cover Model (rf_cover)**
 
@@ -79,11 +74,11 @@ GAMs use smooth terms to capture non-linear relationships. These models require 
 - Smooths: Thin plate regression splines
 - Output: Probability of presence
 
-### Generalized Linear Mixed Models (GLMMs)
+### Linear Mixed Models (LMMs)
 
-GLMMs incorporate random effects for Project and Year, accounting for hierarchical structure in the data. These models require both depth and fetch.
+LMMs incorporate random effects for Project and Year, accounting for hierarchical structure in the data. These models require both depth and fetch.
 
-**Cover Model (glmm_cover)**
+**Cover Model (lmm_cover)**
 
 - Formula: `Cover ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
 - Fixed effects: Linear and quadratic terms for Depth and Fetch, plus interaction
@@ -91,7 +86,7 @@ GLMMs incorporate random effects for Project and Year, accounting for hierarchic
 - Training size: 36,193 observations
 - Residual SD: ~28.4
 
-**Presence/Absence Model (glmm_pa)**
+**Presence/Absence Model (lmm_pa)**
 
 - Family: Binomial with logit link
 - Formula: `Presence ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
@@ -109,32 +104,27 @@ The `sav_load_model()` function provides direct access to the pre-trained models
 ## Function Syntax
 
 ```{r eval=FALSE}
-sav_load_model(
-  type = c("cover", "pa"),
-  predictors = c("depth", "fetch", "depth+fetch"),
-  method = "rf"
-)
+sav_load_model(type = c("cover", "pa"), method = "rf")
 ```
 
 **Parameters:**
 
 - `type`: Model output type - `"cover"` for percent cover or `"pa"` for presence/absence
-- `predictors`: Variables to use - `"depth"`, `"fetch"`, or `"depth+fetch"`
-- `method`: Modeling approach - `"rf"` (default), `"gam"`, or `"glmm"`
+- `method`: Modeling approach - `"rf"` (default), `"gam"`, or `"lmm"`
 
-**Note:** GAM and GLMM methods only support `predictors = "depth+fetch"`.
+**Note:** GAM and LMM methods only support both depth and fetch as predictors.
 
 ## Examples
 
 ### Loading Random Forest Models
 
 ```{r}
-# Load presence/absence model using only depth
-model_pa_depth <- sav_load_model("pa", "depth", "rf")
-class(model_pa_depth)
+# Load presence/absence model
+model_pa <- sav_load_model("pa", "rf")
+class(model_pa)
 
-# Load cover model using depth and fetch
-model_cover <- sav_load_model("cover", "depth+fetch", "rf")
+# Load cover model 
+model_cover <- sav_load_model("cover", "rf")
 model_cover
 ```
 
@@ -148,7 +138,7 @@ new_data <- data.frame(
 )
 
 # Predict presence/absence (returns 0 or 1)
-predict(model_pa_depth, new_data[, "Depth", drop = FALSE])
+predict(model_pa, new_data)
 
 # Predict cover (returns percent cover)
 predict(model_cover, new_data)
@@ -158,26 +148,26 @@ predict(model_cover, new_data)
 
 ```{r eval=FALSE}
 # Load GAM for cover prediction
-model_gam_cover <- sav_load_model("cover", "depth+fetch", "gam")
+model_gam_cover <- sav_load_model("cover", "gam")
 
 # Make predictions
 predictions_gam <- predict(model_gam_cover, new_data)
 
 # For presence/absence GAM, use type = "response" for probabilities
-model_gam_pa <- sav_load_model("pa", "depth+fetch", "gam")
+model_gam_pa <- sav_load_model("pa", "gam")
 prob_presence <- predict(model_gam_pa, new_data, type = "response")
 ```
 
-### Loading and Using GLMM Models
+### Loading and Using LMM Models
 
 ```{r eval=FALSE}
-# Load GLMM for cover prediction
-model_glmm_cover <- sav_load_model("cover", "depth+fetch", "glmm")
+# Load LMM for cover prediction
+model_lmm_cover <- sav_load_model("cover", "lmm")
 
-# GLMMs require Project and Year for predictions
+# LMMs require Project and Year for predictions
 # For new predictions without these variables, use re.form = NA to ignore random effects
-predictions_glmm <- predict(
-  model_glmm_cover,
+predictions_lmm <- predict(
+  model_lmm_cover,
   new_data,
   re.form = NA
 )
@@ -205,11 +195,11 @@ summary(model_gam_cover)
 # GAM: plot smooth terms
 plot(model_gam_cover, pages = 1)
 
-# GLMM: fixed effects
-fixef(model_glmm_cover)
+# LMM: fixed effects
+lme4::fixef(model_lmm_cover)
 
-# GLMM: random effects
-ranef(model_glmm_cover)
+# LMM: random effects
+lme4::ranef(model_lmm_cover)
 ```
 
 # Choosing a Model
@@ -226,7 +216,7 @@ ranef(model_glmm_cover)
 - You have both depth and fetch available
 - You need smooth response curves
 
-**Use GLMM when:**
+**Use LMM when:**
 
 - Your data has hierarchical structure (multiple projects/years)
 - You want to account for random effects
@@ -243,7 +233,7 @@ The `sav_model()` function automatically selects the appropriate Random Forest m
 result1 <- sav_model(data.frame(depth_m = 5, fetch_km = 2))
 
 # Manual approach:
-model <- sav_load_model("cover", "depth+fetch", "rf")
+model <- sav_load_model("cover", "rf")
 result2 <- predict(model, data.frame(Depth = 5, Fetch = 2))
 ```
 

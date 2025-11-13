@@ -7,7 +7,10 @@
 a column `outsider` which identifies outsiders has been added.  
 * `identify_outsiders()` has been renamed `visualize_outsiders()`.
 * `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
-* New `glmm` and `gam` models.
+* Only models using both fetch and depth are supported, therefore argument 
+`type` has been dropped from `sav_model()`.
+* New `glmm` and `gam` models available.
+
 
 # SAVM 0.0.1
 

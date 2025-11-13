@@ -2,12 +2,13 @@
 % Please edit documentation in R/model.R
 \name{sav_model}
 \alias{sav_model}
-\title{Apply SAV prdiction models}
+\title{Apply SAV prediction models}
 \usage{
 sav_model(
   dat,
-  type = c("cover", "pa"),
-  method = "rf",
+  method_pa = "rf",
+  method_cover = method_pa,
+  pa_threshold = 0.5,
   depth = NULL,
   fetch = NULL,
   substrate = NULL,
@@ -30,11 +31,16 @@ limitations.
 Additional columns will be ignored.
 }}
 
-\item{type}{{\verb{character vector}, either \code{"cover"} or \code{"pa"}}\cr{}
-Model type(s).}
+\item{method_pa}{{\code{character}}\cr{} Statistical method for presence/absence
+model. One of \code{"rf"} (random forest), \code{"gam"} (Generalized Additive Model),
+or \code{"lmm"} (Linear Mixed Model). Default is \code{"rf"}.}
 
-\item{method}{{\verb{character vector}, either \code{"rf"}, \code{"gam"} or \code{"glmm"}}\cr{}
-Statistical method.}
+\item{method_cover}{{\code{character}}\cr{} Statistical method for cover model.
+One of \code{"rf"} (random forest), \code{"gam"} (Generalized Additive Model), or
+\code{"lmm"} (Linear Mixed Model). Default is the same as \code{method_pa}.}
+
+\item{pa_threshold}{{\code{numeric}}\cr{} Probability threshold for converting
+presence/absence predictions to binary values. Default is 0.5.}
 
 \item{depth, fetch}{{\code{character}}\cr{} Column specification for the predictors,
 see \emph{Details}.}
@@ -50,37 +56,37 @@ Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 A data frame (or a sf object) containing the input columns along with model
 predictions.
 
-The prediction column names match the values specified in \code{type} followed
-by the suffix \verb{_pred}, and contain the raw model outputs (i.e., without
-post-hoc adjustment).
-
-Post-hoc adjusted predictions (see \emph{Details}) are included in additional
-columns with the same names as the \code{type} values, but with the suffix
-\verb{_post_hoc}.
+The following prediction columns are returned:
+\itemize{
+\item \code{pa_pred}: Raw presence/absence probability predictions (0-1).
+\item \code{pa}: Binary presence/absence classification based on \code{pa_threshold}.
+\item \code{cover_pred}: Raw cover predictions (percent).
+\item \code{cover}: Cover predictions adjusted by presence/absence classification.
+\item \code{pa_post_hoc}: Presence/absence after post-hoc treatment (accounting for limitations).
+\item \code{cover_post_hoc}: Cover after post-hoc treatment (accounting for limitations).
+}
 
 If a column \code{secchi} is present, then two additional columns are
 returned: \code{vmax} and \code{limitation_secchi}, see details for further
 explanation.
 }
 \description{
-Apply SAV prdiction models to predict SAV cover and presence/absence, with
+Apply SAV prediction models to predict SAV cover and presence/absence, with
 optional post-hoc processing.
 }
 \details{
-There are two sets of models available. The first set consists of models
-predicting the presence or absence of SAV, while the second set focuses on
-SAV cover. Each set includes three random forest models: one using depth as
-a predictor, another using fetch, and a third combining both variables. For
-further details, see Croft-White (2022).
+The function applies two types of models: one for predicting presence/absence
+of SAV and another for predicting SAV cover. Three statistical methods are
+available: Random Forest (\code{"rf"}), Generalized Additive Models (\code{"gam"}), and
+Linear Mixed Models (\code{"lmm"}). You can specify different methods for
+presence/absence and cover predictions using the \code{method_pa} and \code{method_cover}
+parameters. For further details about the models, see Croft-White et al. (2022).
 
-The selected model for generating predictions is determined by the type
-argument, which specifies the output as either cover or presence-absence,
-depending on the available predictors. The required input variables—depth,
-fetch, substrate, secchi, limitation—must correspond to column names in
-\code{dat}; otherwise, an error is thrown. If neither 'depth' nor 'fetch' is
-explicitly provided, the function will attempt to infer them from the column
-names. Matching is case-insensitive and will detect 'depth_m', 'depth',
-'fetch_km' and 'fetch'.
+The required input variables—depth, fetch, substrate, secchi, limitation—must
+correspond to column names in \code{dat}; otherwise, an error is thrown. If neither
+'depth' nor 'fetch' is explicitly provided, the function will attempt to infer
+them from the column names. Matching is case-insensitive and will detect
+'depth_m', 'depth', 'fetch_km' and 'fetch'.
 
 If \code{secchi} is provided, two additional columns are returned:
 \itemize{
@@ -106,14 +112,11 @@ corresponding prediction is set to 0 in the post-hoc adjusted output.
 }
 \examples{
 \donttest{
-
 # basic usage
-sav_model(data.frame(depth = c(5, 10)))
-sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)), type = "pa")
+sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)))
 sav_model(
- data.frame(depth = c(5, 10), fetch = c(1, 2)), 
- type = "cover", 
- method = "glmm"
+  data.frame(depth = c(5, 10), fetch = c(1, 2)),
+  method_pa = "lmm"
 )
 # using post-hoc treatment
 sav_model(

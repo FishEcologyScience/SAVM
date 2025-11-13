@@ -4,151 +4,107 @@ test_that("sav_load_model() works", {
     "'arg' should be one of \"cover\", \"pa\"",
     fixed = TRUE
   )
-  expect_error(
-    sav_load_model("pa", "depth", "glmm"),
-    "Both depth and fetch required for glmm method"
-  )
-  expect_true(inherits(sav_load_model("pa", "depth+fetch"), "randomForest"))
+  expect_s3_class(sav_load_model("pa", "rf"), "randomForest")
 })
 
 
-df_ok_1 <- data.frame(depth = c(5, 10))
-df_ok_2 <- data.frame(FETCH_km = c(1, 2))
-df_ok_3 <- cbind(df_ok_1, df_ok_2)
+test_that("sav_load_model() works", {
+  withr::with_options(
+    list(savm.verbose = "quiet"),
+    {
+      expect_error(
+        sav_model(data.frame(FETCH_km = c(1, 2))),
+        "Both depth and fetch must be defined."
+      )
+    }
+  )
+})
+
+
+df_ok1 <- data.frame(
+  depth = c(5, 1, 10),
+  fetch = c(1, 3, 2),
+  limitation = c(TRUE, FALSE, TRUE)
+)
 
 res1 <- structure(
   list(
-    depth_m = c(5, 10),
-    pa_pred = 1:0,
-    cover_pred = c(85.4316666666667, 21.144),
-    pa_post_hoc = 1:0,
-    cover_post_hoc = c(85.4316666666667, 0)
+    depth_m = c(5, 1, 10),
+    fetch_km = c(1, 3, 2),
+    limitation = c(TRUE, FALSE, TRUE),
+    pa_pred = c(0.984, 0.44, 0),
+    pa = c(1, 0, 0),
+    cover_pred = c(88.3866124814003, 39.3158240240619, 45.7916938687299),
+    cover = c(88.3866124814003, 0, 0),
+    pa_post_hoc = c(
+      1,
+      0, 0
+    ),
+    cover_post_hoc = c(88.3866124814003, 0, 0)
   ),
-  row.names = c(NA, -2L), class = "data.frame"
+  row.names = c(
+    NA,
+    -3L
+  ),
+  class = "data.frame"
 )
 
 res2 <- structure(
   list(
-    fetch_km = c(1, 2),
-    pa_pred = 0:1,
-    cover_pred = c(78.8616666666666, 98.5113333333333),
-    pa_post_hoc = 0:1,
-    cover_post_hoc = c(0, 98.5113333333333)
+    depth_m = c(5, 1, 10),
+    fetch_km = c(1, 3, 2),
+    limitation = c(TRUE, FALSE, TRUE),
+    pa_pred = c(0.984, 0.44, 0),
+    pa = c(1, 1, 0),
+    cover_pred = c(85.2773622236459, 58.8615007837882, 41.9112417990861),
+    cover = c(85.2773622236459, 58.8615007837882, 0),
+    pa_post_hoc = c(1, 0, 0),
+    cover_post_hoc = c(85.2773622236459, 0, 0)
   ),
-  row.names = c(NA, -2L), class = "data.frame"
+  row.names = c(NA, -3L),
+  class = "data.frame"
 )
-
-res3 <- structure(
-  list(
-    depth_m = c(5, 10),
-    fetch_km = c(1, 2),
-    pa_pred = 1:0,
-    cover_pred = c(88.3866124814003, 45.7916938687299),
-    pa_post_hoc = 1:0,
-    cover_post_hoc = c(88.3866124814003, 0)
-  ),
-  row.names = c(NA, -2L), class = "data.frame"
-)
-
-
-res1_pred <- structure(
-  list(
-    depth_m = c(5, 10),
-    cover_pred = c(85.4316666666667, 21.144),
-    cover_post_hoc = c(85.4316666666667, 21.144)
-  ),
-  row.names = c(NA, -2L), class = "data.frame"
-)
-
-res1_pa <- structure(
-  list(
-    depth_m = c(5, 10),
-    pa_pred = 1:0,
-    pa_post_hoc = 1:0
-  ),
-  row.names = c(NA, -2L), class = "data.frame"
-)
-
 
 test_that("sav_model() works", {
   withr::with_options(
-    list(savm.verbose = "q"),
+    list(savm.verbose = "quiet"),
     {
-      expect_equal(sav_model(df_ok_1), res1)
-      expect_equal(sav_model(df_ok_2), res2)
-      expect_equal(sav_model(df_ok_3), res3)
-      #
-      expect_equal(sav_model(df_ok_1, type = "cover"), res1_pred)
-      expect_equal(sav_model(df_ok_1, type = "pa"), res1_pa)
-      #
-    }
-  )
-})
-
-
-df_not_ok_1 <- data.frame(depth2 = c(5, 10))
-test_that("sav_load_model() fails gracefully", {
-  expect_error(sav_model("wrong"))
-  withr::with_options(
-    list(savm.verbose = "q"),
-    {
-      expect_error(
-        sav_model(df_not_ok_1),
-        "Either depth or fetch or both must be defined"
-      )
-      expect_error(
-        sav_model(df_ok_1, depth = "depth2"),
-        "`depth2` is not a column of `dat`"
+      expect_equal(sav_model(df_ok1), res1)
+      expect_equal(
+        sav_model(df_ok1, method_cover = "lmm", pa_threshold = 0.4),
+        res2
       )
     }
   )
 })
 
 
-df_ok_ph_2 <- df_ok_ph_1 <- data.frame(
+res3_e <- data.frame(
   depth_m = c(2, 2, 5),
   fetch_km = c(1, 1, 1),
   substrate = c(TRUE, TRUE, FALSE),
   secchi = c(20, 1, 20),
-  custom = c(FALSE, TRUE, TRUE)
-)
-df_ok_ph_2[["depth_m"]] <- NULL
-
-res_ph1a <- structure(
-  structure(
-    list(
-      depth_m = c(2, 2, 5),
-      fetch_km = c(1, 1, 1),
-      substrate = c(TRUE, TRUE, FALSE),
-      secchi = c(20, 1, 20),
-      limitation_secchi = c(TRUE, FALSE, TRUE),
-      vmax = c(28.242038767358, 1.7689, 28.242038767358),
-      pa_pred = c(1L, 1L, 1L),
-      cover_pred = c(89.8206592543998, 89.8206592543998, 88.3866124814003), pa_post_hoc = c(1L, 0L, 0L),
-      cover_post_hoc = c(89.8206592543998, 0, 0)
-    ),
-    row.names = c(NA, -3L),
-    class = "data.frame"
-  )
+  limitation_secchi = c(TRUE, FALSE, TRUE),
+  vmax = c(28.242038767358, 1.7689, 28.242038767358),
+  limitation = c(FALSE, TRUE, TRUE),
+  pa_pred = c(0.887758272418952, 0.887758272418952, 0.750382647568143),
+  pa = c(1, 1, 1),
+  cover_pred = c(100, 100, 100),
+  cover = c(100, 100, 100),
+  pa_post_hoc = c(0, 0, 0),
+  cover_post_hoc = c(0, 0, 0)
 )
 
-
-# next call
-res_ph1b <- res_ph1a
-res_ph1b$limitation <- df_ok_ph_2$custom
-res_ph1b <- res_ph1b |>
-  dplyr::relocate(limitation, .after = vmax)
-res_ph1b$pa_post_hoc[1L] <- 0L
-res_ph1b$cover_post_hoc[1L] <- 0
-
-
-test_that("sav_model() works", {
-  withr::with_options(
-    list(savm.verbose = "warning"),
-    {
-      expect_equal(sav_model(df_ok_ph_1), res_ph1a)
-      expect_equal(sav_model(df_ok_ph_1, limitation = "custom"), res_ph1b)
-      expect_warning(sav_model(df_ok_ph_2))
-    }
+test_that("sav_model() with full post-hoc works", {
+  df_ok2 <- data.frame(
+    depth_m = c(2, 2, 5),
+    fetch_km = c(1, 1, 1),
+    substrate = c(TRUE, TRUE, FALSE),
+    secchi = c(20, 1, 20),
+    custom = c(FALSE, TRUE, TRUE)
   )
+  expect_snapshot(
+    res3_a <- sav_model(df_ok2, method_pa = "gam", limitation = "custom")
+  )
+  expect_equal(res3_a, res3_e)
 })

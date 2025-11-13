@@ -4,18 +4,12 @@
 \alias{sav_load_model}
 \title{Load SAV Model}
 \usage{
-sav_load_model(
-  type = c("cover", "pa"),
-  predictors = c("depth", "fetch", "depth+fetch"),
-  method = "rf"
-)
+sav_load_model(type = c("cover", "pa"), method = "rf")
 }
 \arguments{
 \item{type}{{\code{character}}\cr{} Model type, either \code{"cover"} or \code{"pa"} (presence/absence).}
 
-\item{predictors}{{\code{character}}\cr{} Predictors to use: \code{"depth"}, \code{"fetch"}, or \code{"depth+fetch"}.}
-
-\item{method}{{\code{character}}\cr{} Modeling method: \code{"rf"} (random forest), \code{"glmm"}, or \code{"gam"}.}
+\item{method}{{\code{character}}\cr{} Modeling method: \code{"rf"} (random forest), \code{"lmm"}, or \code{"gam"}.}
 }
 \value{
 A model object (e.g., randomForest, glmm, or gam object) that can be used for predictions.
@@ -25,16 +19,20 @@ Load a pre-trained SAV model for predicting cover or presence/absence.
 }
 \details{
 This function loads pre-trained models from the package's internal data
-directory. For random forest models, individual predictor models
-(depth-only, fetch-only) and combined models (depth+fetch) are available.
-For GLMM and GAM methods, only the combined depth+fetch model is available.
+directory. Models are available for both presence/absence (\code{"pa"}) and cover
+prediction (\code{"cover"}), using three different statistical methods: Random
+Forest (\code{"rf"}), Linear Mixed Models (\code{"lmm"}), and Generalized Additive
+Models (\code{"gam"}). All models use both depth and fetch as predictors.
 }
 \examples{
 \donttest{
-# Load a random forest model for presence/absence using depth
-model <- sav_load_model("pa", "depth", "rf")
+# Load a random forest model for presence/absence
+model <- sav_load_model("pa", "rf")
 
-# Load a cover model using both predictors
-model <- sav_load_model("cover", "depth+fetch", "rf")
+# Load a cover model using Linear Mixed Model
+model <- sav_load_model("cover", "lmm")
+
+# Load a GAM model for cover
+model <- sav_load_model("cover", "gam")
 }
 }
