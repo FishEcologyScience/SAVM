@@ -79,10 +79,12 @@ mod_fetch_calc_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == true", ns("use_wind_weights")),
+            h6(strong("Upload wind weights CSV")),
             helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
+            template_download_button(ns("download_wind_weight_template"), "Wind Weights Template"),
             fileInput(
               ns("wind_weights_file"),
-              "Upload wind weights CSV:",
+              NULL,
               accept = ".csv"
             ),
             conditionalPanel(
@@ -185,51 +187,6 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       )
     })
 
-    # # Handle polygon selection from library
-    # observeEvent(input$polygon_library, {
-    #   req(input$polygon_library)
-    #   req(!input$use_polygon_upload)
-
-    #   tryCatch(
-    #     {
-    #       polygon_path <- system.file("extdata", "polygons", input$polygon_library, package = "SAVM")
-    #       polygon_data <- sf::st_read(polygon_path, quiet = TRUE)
-    #       values$polygon_data <- polygon_data
-    #       showNotification("Polygon loaded from library", type = "message", duration = 3)
-    #     },
-    #     error = function(e) {
-    #       showNotification(
-    #         paste("Error loading polygon from library:", e$message),
-    #         type = "error",
-    #         duration = 5
-    #       )
-    #       values$polygon_data <- NULL
-    #     }
-    #   )
-    # })
-
-    # # Handle uploaded polygon file
-    # observeEvent(input$aoi_polygon, {
-    #   req(input$aoi_polygon)
-    #   req(input$use_polygon_upload)
-
-    #   tryCatch(
-    #     {
-    #       polygon_data <- sf::st_read(input$aoi_polygon$datapath, quiet = TRUE)
-    #       values$polygon_data <- polygon_data
-    #       showNotification("Polygon uploaded successfully", type = "message", duration = 3)
-    #     },
-    #     error = function(e) {
-    #       showNotification(
-    #         paste("Error reading uploaded polygon:", e$message),
-    #         type = "error",
-    #         duration = 5
-    #       )
-    #       values$polygon_data <- NULL
-    #     }
-    #   )
-    # })
-
     # Wind weights file processing
     observeEvent(input$wind_weights_file, {
       req(input$wind_weights_file)
@@ -295,8 +252,18 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       )
     })
 
-    # Fetch calculation
+    # Download handlers for CSV and wind weight template
+    output$download_wind_weight_template <- downloadHandler(
+      filename = function() {
+        "sav_wind_weights_template.csv"
+      },
+      content = function(file) {
+        template_path <- system.file("extdata", "templates", "wind_weights_template.csv", package = "SAVM")
+        file.copy(template_path, file)
+      }
+    )
 
+    # Fetch calculation
     observeEvent(input$calculate_fetch, {
       req(app_data$original_data)
       req(app_data$data_valid)
