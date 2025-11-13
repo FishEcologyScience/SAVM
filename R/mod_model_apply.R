@@ -88,64 +88,74 @@ mod_model_apply_ui <- function(id) {
             ),
             br(),
             h5(strong("Predictor Columns")),
-            shinyWidgets::prettySwitch(
-              inputId = ns("custom_predictors"),
-              label = "Specify custom column names",
-              status = "primary",
-              fill = TRUE,
-              value = FALSE
-            ),
-            conditionalPanel(
-              condition = sprintf("input['%s'] == true", ns("custom_predictors")),
-              helpText(
-                tags$span(
-                  style = "color: #6c757d;",
-                  icon("info-circle"),
-                  " Select which columns in your data correspond to depth and fetch."
-                )
-              ),
-              selectInput(
-                ns("depth_column"),
-                "Depth Column:",
-                choices = NULL
-              ),
-              selectInput(
-                ns("fetch_column"),
-                "Fetch Column:",
-                choices = NULL
+            helpText(
+              tags$span(
+                style = "color: #6c757d;",
+                icon("info-circle"),
+                " Select which columns in your data correspond to depth and fetch."
               )
+            ),
+            selectInput(
+              ns("depth_column"),
+              "Depth Column:",
+              choices = NULL
+            ),
+            selectInput(
+              ns("fetch_column"),
+              "Fetch Column:",
+              choices = NULL
             ),
             br(),
             h5(strong("Post-hoc Predictor Columns")),
+            helpText(
+              tags$span(
+                style = "color: #6c757d;",
+                icon("info-circle"),
+                " Select which post-hoc predictors to use for refining predictions."
+              )
+            ),
             shinyWidgets::prettySwitch(
-              inputId = ns("custom_posthoc"),
-              label = "Specify custom post-hoc column names",
+              inputId = ns("use_substrate"),
+              label = "Use substrate limitation",
               status = "info",
               fill = TRUE,
               value = FALSE
             ),
             conditionalPanel(
-              condition = sprintf("input['%s'] == true", ns("custom_posthoc")),
-              helpText(
-                tags$span(
-                  style = "color: #6c757d;",
-                  icon("info-circle"),
-                  " Select columns for post-hoc adjustments (optional predictors)."
-                )
-              ),
+              condition = sprintf("input['%s'] == true", ns("use_substrate")),
               selectInput(
                 ns("substrate_column"),
-                "Substrate Column (optional):",
+                "Substrate Column:",
                 choices = NULL
-              ),
+              )
+            ),
+            shinyWidgets::prettySwitch(
+              inputId = ns("use_secchi"),
+              label = "Use Secchi depth (Vmax calculation)",
+              status = "info",
+              fill = TRUE,
+              value = FALSE
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == true", ns("use_secchi")),
               selectInput(
                 ns("secchi_column"),
-                "Secchi Depth Column (optional):",
+                "Secchi Depth Column:",
                 choices = NULL
-              ),
+              )
+            ),
+            shinyWidgets::prettySwitch(
+              inputId = ns("use_limitation"),
+              label = "Use user-supplied limitation",
+              status = "info",
+              fill = TRUE,
+              value = FALSE
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == true", ns("use_limitation")),
               selectInput(
                 ns("limitation_column"),
-                "Limitation Column (optional):",
+                "Limitation Column:",
                 choices = NULL
               )
             ),
@@ -283,53 +293,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
         size = "l",
         easyClose = TRUE,
         footer = modalButton("Close"),
-        tags$div(
-          style = "font-size: 14px;",
-          p(
-            strong("Overview:"),
-            " Apply SAV prediction models using depth and fetch data. Three statistical methods are available:"
-          ),
-          tags$ul(
-            tags$li(
-              strong("Random Forest (RF):"),
-              " Non-parametric ensemble method, robust to non-linear relationships. Best for complex patterns and when you don't need to interpret individual variable effects."
-            ),
-            tags$li(
-              strong("Linear Mixed Model (LMM):"),
-              " Parametric approach accounting for hierarchical data structure. Useful when you have grouped data and want to account for random effects."
-            ),
-            tags$li(
-              strong("Generalized Additive Model (GAM):"),
-              " Flexible semi-parametric method with smooth functions. Good balance between interpretability and flexibility for non-linear relationships."
-            )
-          ),
-          hr(),
-          p(
-            strong("Model Selection:"),
-            " You can select different methods for Presence/Absence and Cover predictions. For example, you might use Random Forest for presence/absence and GAM for cover estimation."
-          ),
-          p(
-            strong("PA Threshold:"),
-            " Adjust the probability threshold (0-1) for converting presence/absence predictions to binary values. Lower values (e.g., 0.3) are more liberal in predicting SAV presence, while higher values (e.g., 0.7) are more conservative."
-          ),
-          p(
-            strong("Predictor Columns:"),
-            " By default, the model auto-detects columns named 'depth', 'depth_m', 'fetch', or 'fetch_km'. Enable custom column specification if your data uses different column names."
-          ),
-          p(
-            strong("Post-hoc Adjustments:"),
-            " Optional columns (secchi depth, substrate, limitation) can be used to refine predictions:",
-            tags$ul(
-              tags$li(strong("Secchi depth:"), " Used to calculate maximum colonization depth (Vmax) based on light availability."),
-              tags$li(strong("Substrate:"), " Binary indicator of substrate limitations that prevent SAV growth."),
-              tags$li(strong("Limitation:"), " User-supplied limitation data for additional constraints.")
-            )
-          ),
-          p(
-            strong("Vmax Parameters:"),
-            " Chambers and Kalff (1985) equation parameters control how light availability affects maximum colonization depth. Model A uses parameters from Quebec and international lakes, while Model B is calibrated for Quebec lakes only."
-          )
-        )
+        includeHTML(app_sys("app/www/doc/model_configuration_guide.html"))
       ))
     })
 
@@ -366,28 +330,26 @@ mod_model_apply_server <- function(id, app_data, app_session) {
           selected = if ("fetch_km" %in% col_names) "fetch_km" else if ("fetch" %in% tolower(col_names)) col_names[which(tolower(col_names) == "fetch")[1]] else col_names[1]
         )
 
-        # Update post-hoc column dropdowns with "None" option
-        posthoc_choices <- c("None" = "", col_names)
-
+        # Update post-hoc column dropdowns
         updateSelectInput(
           session,
           "substrate_column",
-          choices = posthoc_choices,
-          selected = if ("substrate" %in% col_names) "substrate" else ""
+          choices = col_names,
+          selected = if ("substrate" %in% col_names) "substrate" else col_names[1]
         )
 
         updateSelectInput(
           session,
           "secchi_column",
-          choices = posthoc_choices,
-          selected = if ("secchi" %in% col_names) "secchi" else ""
+          choices = col_names,
+          selected = if ("secchi" %in% col_names) "secchi" else col_names[1]
         )
 
         updateSelectInput(
           session,
           "limitation_column",
-          choices = posthoc_choices,
-          selected = if ("limitation" %in% col_names) "limitation" else ""
+          choices = col_names,
+          selected = if ("limitation" %in% col_names) "limitation" else col_names[1]
         )
       }
     })
@@ -421,15 +383,14 @@ mod_model_apply_server <- function(id, app_data, app_session) {
             "custom" = list(intercept = input$vmax_intercept, slope = input$vmax_slope)
           )
 
-          # Prepare column specifications if custom predictors are enabled
-          depth_col <- if (input$custom_predictors) input$depth_column else NULL
-          fetch_col <- if (input$custom_predictors) input$fetch_column else NULL
+          # Prepare column specifications for predictors
+          depth_col <- input$depth_column
+          fetch_col <- input$fetch_column
 
           # Prepare post-hoc column specifications if enabled
-          substrate_col <- if (input$custom_posthoc && nzchar(input$substrate_column)) input$substrate_column else NULL
-          secchi_col <- if (input$custom_posthoc && nzchar(input$secchi_column)) input$secchi_column else NULL
-          limitation_col <- if (input$custom_posthoc && nzchar(input$limitation_column)) input$limitation_column else NULL
-
+          substrate_col <- if (input$use_substrate) input$substrate_column else NULL
+          secchi_col <- if (input$use_secchi) input$secchi_column else NULL
+          limitation_col <- if (input$use_limitation) input$limitation_column else NULL
           # Apply the model to assembled data
           sav_model(
             dat = modeling_data,
@@ -471,13 +432,14 @@ mod_model_apply_server <- function(id, app_data, app_session) {
           method_pa = input$method_pa,
           method_cover = input$method_cover,
           pa_threshold = input$pa_threshold,
-          custom_predictors = input$custom_predictors,
-          depth_column = if (input$custom_predictors) input$depth_column else "auto-detected",
-          fetch_column = if (input$custom_predictors) input$fetch_column else "auto-detected",
-          custom_posthoc = input$custom_posthoc,
-          substrate_column = if (input$custom_posthoc && nzchar(input$substrate_column)) input$substrate_column else "auto-detected",
-          secchi_column = if (input$custom_posthoc && nzchar(input$secchi_column)) input$secchi_column else "auto-detected",
-          limitation_column = if (input$custom_posthoc && nzchar(input$limitation_column)) input$limitation_column else "auto-detected",
+          depth_column = input$depth_column,
+          fetch_column = input$fetch_column,
+          use_substrate = input$use_substrate,
+          substrate_column = if (input$use_substrate) input$substrate_column else "not used",
+          use_secchi = input$use_secchi,
+          secchi_column = if (input$use_secchi) input$secchi_column else "not used",
+          use_limitation = input$use_limitation,
+          limitation_column = if (input$use_limitation) input$limitation_column else "not used",
           vmax_model = input$vmax_model,
           vmax_intercept = if (input$vmax_model == "custom") input$vmax_intercept else NULL,
           vmax_slope = if (input$vmax_model == "custom") input$vmax_slope else NULL,
@@ -532,7 +494,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
         )
       }
 
-      # 
+      #
       summary_items[[length(summary_items) + 1]] <- p(
         strong("Predictors used: Fetch and Depth"),
       )

@@ -71,8 +71,13 @@ test_that("sav_model() works", {
     {
       expect_equal(sav_model(df_ok1), res1)
       expect_equal(
-        sav_model(df_ok1, method_cover = "lmm", pa_threshold = 0.4),
-        res2
+        sav_model(
+          df_ok1,
+          method_cover = "lmm",
+          pa_threshold = 0.4,
+          depth = NULL,
+          fetch = NULL
+        ), res2
       )
     }
   )
