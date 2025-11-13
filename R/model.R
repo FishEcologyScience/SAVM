@@ -17,27 +17,27 @@
 #' converting presence/absence predictions to binary values. Values below the
 #' threshold are classified as absent (0), values at or above as present (1).
 #' Default is 0.5.
-#' @param depth {`character` (required)}\cr{} Name of the column containing 
+#' @param depth {`character` (required)}\cr{} Name of the column containing
 #' depth data (in meters). Default is `"depth"`.
-#' @param fetch {`character` (required)}\cr{} Name of the column containing 
+#' @param fetch {`character` (required)}\cr{} Name of the column containing
 #' fetch data (in kilometers). Default is `"fetch"`.
-#' @param substrate {`character` (optional)}\cr{} Name of the column containing 
-#' substrate limitation data (optional). Binary indicator (0 = no limitation, 1 
-#' = limited) for substrate constraints. Default is `"substrate"`. Set to 
+#' @param substrate {`character` (optional)}\cr{} Name of the column containing
+#' substrate limitation data (optional). Binary indicator (0 = no limitation, 1
+#' = limited) for substrate constraints. Default is `"substrate"`. Set to
 #' `NULL` to disable substrate-based post-hoc adjustments.
-#' @param secchi {`character` (optional)}\cr{} Name of the column containing 
-#' Secchi depth data in meters (optional). Used to calculate maximum 
-#' colonization depth (Vmax) via the Chambers and Kalff equation. Default is 
+#' @param secchi {`character` (optional)}\cr{} Name of the column containing
+#' Secchi depth data in meters (optional). Used to calculate maximum
+#' colonization depth (Vmax) via the Chambers and Kalff equation. Default is
 #' `"secchi"`. Set to `NULL` to disable Vmax calculations.
-#' @param limitation {`character` (optional)}\cr{} Name of the column 
-#' containing user-supplied limitation data (optional). Binary indicator (0 = 
-#' no limitation, 1 = limited) for additional constraints. Default is 
-#' `"limitation"`. Set to `NULL` to disable user-supplied limitation 
+#' @param limitation {`character` (optional)}\cr{} Name of the column
+#' containing user-supplied limitation data (optional). Binary indicator (0 =
+#' no limitation, 1 = limited) for additional constraints. Default is
+#' `"limitation"`. Set to `NULL` to disable user-supplied limitation
 #' adjustments.
-#' @param vmax_par {`named list` (required `secchi`)}\cr{} Named list with 
-#' `intercept` and `slope` parameters for the Chambers and Kalff (1985) 
-#' equation to compute maximum depth of plant colonization (Vmax). Default is 
-#' `list(intercept = 1.40, slope = 1.33)` (Model A: Quebec + international 
+#' @param vmax_par {`named list` (required `secchi`)}\cr{} Named list with
+#' `intercept` and `slope` parameters for the Chambers and Kalff (1985)
+#' equation to compute maximum depth of plant colonization (Vmax). Default is
+#' `list(intercept = 1.40, slope = 1.33)` (Model A: Quebec + international
 #' lakes). See *Details* for Model B parameters.
 #'
 #' @return
@@ -141,7 +141,7 @@
 #' # Adjusting PA threshold
 #' sav_model(
 #'   data.frame(depth = c(5, 10), fetch = c(1, 2)),
-#'   pa_threshold = 0.7  # More conservative predictions
+#'   pa_threshold = 0.7 # More conservative predictions
 #' )
 #'
 #' # Using post-hoc treatment with Secchi and substrate data
@@ -169,9 +169,9 @@
 #'   dat = data.frame(
 #'     depth = c(5, 10),
 #'     fetch = c(1, 2),
-#'     substrate = c(1, 0)  # substrate column exists but will be ignored
+#'     substrate = c(1, 0) # substrate column exists but will be ignored
 #'   ),
-#'   substrate = NULL  # explicitly disable substrate adjustments
+#'   substrate = NULL # explicitly disable substrate adjustments
 #' )
 #'
 #' # Using Model B Vmax parameters (Quebec lakes only)
@@ -198,7 +198,7 @@ sav_model <- function(
     sav_stop_if_not(inherits(dat, "data.frame"))
   }
 
-  # MAIN PREDICTORS 
+  # MAIN PREDICTORS
   # using upper case for fetch and depth for consistency with model predictors
   dat <- dat |>
     rename_if_present(fetch, "Fetch") |>
@@ -206,14 +206,14 @@ sav_model <- function(
 
   if (!"Fetch" %in% colnames(dat)) {
     # extra search
-    dat <- dat |> rename_if_present("^Fetch(_km)?$", "Fetch")
+    dat <- dat |> rename_if_present("^fetch(_km)?$", "Fetch")
     if (!"Fetch" %in% colnames(dat)) {
       rlang::abort("`fetch` must point to an existing column in `dat.")
     }
   }
   if (!"Depth" %in% colnames(dat)) {
     dat <- dat |> rename_if_present("^depth(_m)?$", "Depth")
-    if (!"column" %in% colnames(dat)) {
+    if (!"Depth" %in% colnames(dat)) {
       rlang::abort("`depth` must point to an existing column in `dat`.")
     }
   }
@@ -355,11 +355,13 @@ rename_if_valid <- function(.data, x, y) {
 }
 
 rename_if_present <- function(.data, x, y) {
-  # detect column name irrespectively of the case
-  col_nm <- names(.data) |> tolower()
-  out <- names(.data)[grepl(x, col_nm)][1L] # take 1st if more than 1
-  if (!is.na(out)) {
-    names(.data)[grepl(x, col_nm)][1L] <- y
+  if (!is.null(x)) {
+    # detect column name irrespectively of the case
+    col_nm <- names(.data) |> tolower()
+    out <- names(.data)[grepl(x, col_nm)][1L] # take 1st if more than 1
+    if (!is.na(out)) {
+      names(.data)[grepl(x, col_nm)][1L] <- y
+    }
   }
   .data
 }

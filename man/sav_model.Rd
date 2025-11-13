@@ -166,7 +166,7 @@ sav_model(
 # Adjusting PA threshold
 sav_model(
   data.frame(depth = c(5, 10), fetch = c(1, 2)),
-  pa_threshold = 0.7  # More conservative predictions
+  pa_threshold = 0.7 # More conservative predictions
 )
 
 # Using post-hoc treatment with Secchi and substrate data
@@ -194,9 +194,9 @@ sav_model(
   dat = data.frame(
     depth = c(5, 10),
     fetch = c(1, 2),
-    substrate = c(1, 0)  # substrate column exists but will be ignored
+    substrate = c(1, 0) # substrate column exists but will be ignored
   ),
-  substrate = NULL  # explicitly disable substrate adjustments
+  substrate = NULL # explicitly disable substrate adjustments
 )
 
 # Using Model B Vmax parameters (Quebec lakes only)
