@@ -6,6 +6,7 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
+    shinyjs::useShinyjs(),
     # Your application UI logic
     bs4Dash::dashboardPage(
       bs4Dash::dashboardHeader(title = "SAVM"),
@@ -14,10 +15,55 @@ app_ui <- function(request) {
           id = "sidebar",
           bs4Dash::menuItem("Welcome", tabName = "welcome", icon = icon("home")),
           br(),
-          bs4Dash::menuItem("1. Data Input", tabName = "data_input", icon = icon("upload")),
-          bs4Dash::menuItem("2. Fetch Calculation", tabName = "fetch_calc", icon = icon("wind")),
-          bs4Dash::menuItem("3. Depth extraction", tabName = "depth_extr", icon = icon("water")),
-          bs4Dash::menuItem("4. Model Application", tabName = "model_apply", icon = icon("brain")),
+          shiny::tagAppendAttributes(
+            bs4Dash::menuItem(
+              shiny::tagList(
+                shiny::span("1. Data Input", class = "step-label"),
+                icon("check-circle", class = "step-check", id = "check-data-input")
+              ),
+              tabName = "data_input",
+              icon = icon("upload")
+            ),
+            id = "menu-data-input",
+            class = "step-entry"
+          ),
+          shiny::tagAppendAttributes(
+            bs4Dash::menuItem(
+              shiny::tagList(
+                shiny::span("2. Fetch Calculation", class = "step-label"),
+                icon("check-circle", class = "step-check", id = "check-fetch")
+              ),
+              tabName = "fetch_calc",
+              icon = icon("wind")
+            ),
+            id = "menu-fetch",
+            class = "step-entry"
+          ),
+          shiny::tagAppendAttributes(
+            bs4Dash::menuItem(
+              shiny::tagList(
+                shiny::span("3. Depth extraction", class = "step-label"),
+                icon("check-circle", class = "step-check", id = "check-depth")
+              ),
+              tabName = "depth_extr",
+              icon = icon("water")
+            ),
+            id = "menu-depth",
+            class = "step-entry"
+          ),
+          shiny::tagAppendAttributes(
+            bs4Dash::menuItem(
+              shiny::tagList(
+                shiny::span("4. Model Application", class = "step-label"),
+                icon("check-circle", class = "step-check", id = "check-model")
+              ),
+              tabName = "model_apply",
+              icon = icon("brain")
+            ),
+            id = "menu-model",
+            class = "step-entry"
+          ),
+          br(),
           bs4Dash::menuItem("5. Results & Visualization", tabName = "results", icon = icon("chart-line")),
           br(),
           bs4Dash::menuItem("Help", tabName = "help", icon = icon("question-circle"))
@@ -121,7 +167,8 @@ golem_add_external_resources <- function() {
     golem::bundle_resources(
       path = app_sys("app/www"),
       app_title = "SAVM"
-    )
+    ),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/custom.css")
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )

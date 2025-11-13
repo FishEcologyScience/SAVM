@@ -44,4 +44,36 @@ app_server <- function(input, output, session) {
   mod_depth_extract_server("depth_extract_1", app_data, app_session = session)
   mod_model_apply_server("model_apply_1", app_data, app_session = session)
   mod_results_viz_server("results_viz_1", app_data)
+
+  observeEvent(app_data$data_loaded, {
+    shinyjs::toggleClass(
+      id = "check-data-input",
+      class = "is-visible",
+      condition = isTRUE(app_data$data_loaded)
+    )
+  }, ignoreNULL = FALSE)
+
+  observeEvent(app_data$fetch_calculated, {
+    shinyjs::toggleClass(
+      id = "check-fetch",
+      class = "is-visible",
+      condition = isTRUE(app_data$fetch_calculated)
+    )
+  }, ignoreNULL = FALSE)
+
+  observeEvent(app_data$depth_extracted, {
+    shinyjs::toggleClass(
+      id = "check-depth",
+      class = "is-visible",
+      condition = isTRUE(app_data$depth_extracted)
+    )
+  }, ignoreNULL = FALSE)
+
+  observeEvent(app_data$model_applied, {
+    shinyjs::toggleClass(
+      id = "check-model",
+      class = "is-visible",
+      condition = isTRUE(app_data$model_applied)
+    )
+  }, ignoreNULL = FALSE)
 }

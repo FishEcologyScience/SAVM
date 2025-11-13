@@ -1,0 +1,9 @@
+.sidebar .step-check {
+  display: none;
+  margin-left: 6px;
+  color: #1b5e20;
+}
+
+.sidebar .step-check.is-visible {
+  display: inline-block;
+}

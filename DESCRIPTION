@@ -46,6 +46,7 @@ Imports:
     rlang (>= 1.1.5),
     sf (>= 1.0-19),
     shiny,
+    shinyjs,
     shinycssloaders,
     shinydashboard,
     shinyWidgets,

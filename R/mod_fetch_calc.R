@@ -39,7 +39,7 @@ mod_fetch_calc_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == true", ns("use_polygon_upload")),
-            helpText(tags$span(icon("info-circle"), " Supported formats: GeoPackage (.gpkg), GeoJSON (.geojson), ESRI Shapefile (.shp)")),
+            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Supported formats: GeoPackage (.gpkg), GeoJSON (.geojson), ESRI Shapefile (.shp, .dbf, .shx, .prj, .cpg, .sbn, .sbx, .xml)")),
             fileInput(
               ns("aoi_polygon"),
               "Choose Spatial File:",
@@ -70,14 +70,16 @@ mod_fetch_calc_ui <- function(id) {
           # -----------------
           # Wind weights
           h4("Wind weights (optional)"),
-          checkboxInput(
-            ns("use_wind_weights"),
-            "Use custom wind weights",
-            value = FALSE
+          shinyWidgets::prettySwitch(
+            inputId = ns("use_wind_weights"),
+            label = "Use custom wind weights",
+            value = FALSE,
+            status = "primary",
+            inline = TRUE
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == true", ns("use_wind_weights")),
-            helpText(tags$span(icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
+            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
             fileInput(
               ns("wind_weights_file"),
               "Upload wind weights CSV:",
@@ -299,6 +301,17 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       req(app_data$original_data)
       req(app_data$data_valid)
 
+
+      # Calculate fetch
+      shinycssloaders::showPageSpinner(
+        background = "#cccccccc",
+        color = "#333333",
+        caption = "Calculating Fetch",
+        image = "www/img/insil.gif",
+        image.width = "200",
+        image.height = "200"
+      )
+
       tryCatch(
         {
           showNotification("Processing polygon...", type = "message", duration = 2)
@@ -347,15 +360,6 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
             NULL
           }
 
-          # Calculate fetch
-          shinycssloaders::showPageSpinner(
-            background = "#cccccccc",
-            color = "#333333",
-            caption = "Calculating Fetch",
-            image = "www/img/insil.gif",
-            image.width = "200",
-            image.height = "200"
-          )
           fetch_result <- compute_fetch(
             points = points,
             polygon = polygon,
@@ -363,7 +367,6 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
             n_bearings = input$n_bearings,
             wind_weights = wind_weights
           )
-          shinycssloaders::hidePageSpinner()
 
           # Store results separately (don't modify original data)
           values$fetch_results <- fetch_result
@@ -390,6 +393,7 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
           )
         }
       )
+      shinycssloaders::hidePageSpinner()
     })
 
     # Clear results
