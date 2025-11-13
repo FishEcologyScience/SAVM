@@ -129,21 +129,7 @@ app_ui <- function(request) {
                 status = "info",
                 solidHeader = TRUE,
                 width = 12,
-                h4("SAVM Help"),
-                h5("About SAVM"),
-                p("The Submerged Aquatic Vegetation Model (SAVM) was developed by the Fish Ecology Science Lab at DFO to predict SAV presence and cover in the Laurentian Great Lakes."),
-                h5("Required Data Format"),
-                p("Your data should include:"),
-                tags$ul(
-                  tags$li(strong("Required:"), " longitude, latitude coordinates"),
-                  tags$li(strong("Optional:"), " depth_m, fetch_km, secchi, substrate, limitation")
-                ),
-                h5("Citation"),
-                p(
-                  "Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J. D. 2022. ",
-                  "Modelling submerged aquatic vegetation presence and percent cover to support the development of a freshwater fish habitat management tool. ",
-                  "Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p."
-                )
+                includeHTML(app_sys("app/www/doc/help.html"))
               )
             )
           )

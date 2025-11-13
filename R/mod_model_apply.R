@@ -577,7 +577,7 @@ mod_model_apply_server <- function(id, app_data, app_session) {
         if ("fetch_km" %in% names(pts_data)) pts_data$fetch_km else NA,
         if ("pa_pred" %in% names(pts_data)) pts_data$pa_pred else NA,
         if ("cover_pred" %in% names(pts_data)) pts_data$cover_pred else NA
-      ) |> lapply(htmltools::HTML)
+      ) |> lapply(HTML)
 
       map <- leaflet::leaflet() |>
         leaflet::addProviderTiles("CartoDB.Positron")

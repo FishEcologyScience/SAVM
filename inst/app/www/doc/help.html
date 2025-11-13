@@ -1,0 +1,70 @@
+<h4>SAVM Help</h4>
+
+<h5>Getting Started</h5>
+
+<div class="workflow-step">
+    <span class="step-number">1</span>
+    <strong>Data Input:</strong> Upload your spatial data (GeoPackage, GeoJSON, or Shapefile) containing
+    location information and environmental variables.
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">2</span>
+    <strong>Fetch Calculation:</strong> Calculate wave fetch distances for your study sites using the
+    integrated fetch calculator with customizable parameters.
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">3</span>
+    <strong>Model Application:</strong> Apply SAV prediction models by selecting your preferred statistical
+    method, specifying predictor columns, and configuring post-hoc adjustments.
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">4</span>
+    <strong>Results & Export:</strong> Review model predictions, visualize results on interactive maps,
+    and export your data for further analysis.
+</div>
+
+<h5>Key Features</h5>
+
+<ul>
+    <li><strong>Multiple Statistical Methods:</strong> Choose between Random Forest, Generalized Additive
+        Models (GAM), or Linear Mixed Models (LMM) for both presence/absence and cover predictions.</li>
+
+    <li><strong>Flexible Column Mapping:</strong> Easily map your data columns to model requirements,
+        with automatic detection of common naming conventions.</li>
+
+    <li><strong>Post-hoc Refinements:</strong> Incorporate water clarity (Secchi depth), substrate
+        limitations, and custom constraints to refine predictions.</li>
+
+    <li><strong>Interactive Visualization:</strong> Explore predictions on interactive maps with tooltips
+        showing detailed information for each point.</li>
+
+    <li><strong>Integrated Fetch Calculator:</strong> Calculate wave fetch directly within the application
+        using shoreline polygons and customizable parameters.</li>
+</ul>
+
+<h5>About the Models</h5>
+
+<p>
+    The prediction models implemented in SAVM are based on extensive field surveys and statistical modeling
+    of SAV distribution patterns in freshwater systems. The models use water depth and wave fetch as primary
+    predictors, recognizing that these environmental factors strongly influence SAV colonization and growth.
+</p>
+
+<p>
+    <strong>Light Availability:</strong> When Secchi depth data is available, SAVM calculates the maximum
+    depth of plant colonization (Vmax) using the Chambers and Kalff (1985) equation, accounting for light
+    limitation effects on SAV distribution.
+</p>
+
+<div class="reference">
+    <strong>References:</strong><br />
+    Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.D. 2022. Modelling submerged
+    aquatic vegetation presence and percent cover to support the development of a freshwater fish habitat
+    management tool. Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.<br /><br />
+
+    Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of Submerged aquatic macrophyte
+    communities in relation to secchi depth. Can. J. Fish. Aquat. Sci. 42: 701–709
+</div>
