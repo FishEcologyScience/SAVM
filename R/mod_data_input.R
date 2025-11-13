@@ -435,8 +435,8 @@ process_input_data <- function(file_path,
   )
 
   # Add id_point column to points data
-  # result$points <- result$points |>
-  #   dplyr::mutate(id_point = dplyr::row_number())
+  result$points <- result$points |>
+    dplyr::mutate(id_point = dplyr::row_number())
 
   # Basic structural validation
   if (is.null(result$points) || nrow(result$points) == 0) {

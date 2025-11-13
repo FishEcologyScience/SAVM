@@ -64,7 +64,8 @@ app_ui <- function(request) {
             class = "step-entry"
           ),
           br(),
-          bs4Dash::menuItem("5. Results & Visualization", tabName = "results", icon = icon("chart-line")),
+          bs4Dash::menuItem("Input table", tabName = "input_tab", icon = icon("table")),
+          bs4Dash::menuItem("Results & Visualization", tabName = "results", icon = icon("chart-line")),
           br(),
           bs4Dash::menuItem("Help", tabName = "help", icon = icon("question-circle"))
         )
@@ -111,6 +112,10 @@ app_ui <- function(request) {
           bs4Dash::tabItem(
             tabName = "model_apply",
             mod_model_apply_ui("model_apply_1")
+          ),
+          bs4Dash::tabItem(
+            tabName = "input_tab",
+            mod_input_tab_ui("input_tab_1")
           ),
           bs4Dash::tabItem(
             tabName = "results",
