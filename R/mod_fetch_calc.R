@@ -12,100 +12,110 @@ mod_fetch_calc_ui <- function(id) {
       # Configuration Panel
       column(
         4,
-        # -----------------
-        # Parameters
         bs4Dash::box(
           title = tags$span(icon("wind"), " Fetch Calculation"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
-          # Polygon for fetch calculation
-          h4("Choose Spatial Polygon"),
-          shinyWidgets::prettySwitch(
-            inputId = ns("use_polygon_upload"),
-            label = "Upload from file",
-            value = FALSE,
-            status = "primary",
-            inline = TRUE
-          ),
           conditionalPanel(
-            condition = sprintf("input['%s'] == false", ns("use_polygon_upload")),
-            selectInput(
-              ns("polygon_library"),
-              "Available polygons:",
-              choices = NULL,
-              selected = NULL
+            condition = sprintf("output['%s'] == false", ns("data_available")),
+            div(
+              style = "text-align: center; padding: 20px;",
+              icon("exclamation-triangle", "fa-2x", style = "color: #f39c12;"),
+              h4("No Data Avaliable", style = "color: #f39c12;"),
+              p("Please complete the Data Input step first.", style = "color: #7f8c8d;")
             )
           ),
           conditionalPanel(
-            condition = sprintf("input['%s'] == true", ns("use_polygon_upload")),
-            shp_help_text(),
-            fileInput(
-              ns("aoi_polygon"),
-              "Choose Spatial File:",
-              accept = c(".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
-              multiple = TRUE
-            )
-          ),
-
-          # Parameters
-          h4("Main parameters"),
-          numericInput(
-            ns("max_dist"),
-            "Maximum fetch distance (km):",
-            value = 15,
-            min = 1,
-            max = 100,
-            step = 1
-          ),
-          numericInput(
-            ns("n_bearings"),
-            "Number of bearings:",
-            value = 16,
-            min = 4,
-            max = 64,
-            step = 1
-          ),
-
-          # -----------------
-          # Wind weights
-          h4("Wind weights (optional)"),
-          shinyWidgets::prettySwitch(
-            inputId = ns("use_wind_weights"),
-            label = "Use custom wind weights",
-            value = FALSE,
-            status = "primary",
-            inline = TRUE
-          ),
-          conditionalPanel(
-            condition = sprintf("input['%s'] == true", ns("use_wind_weights")),
-            h6(strong("Upload wind weights CSV")),
-            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
-            template_download_button(ns("download_wind_weight_template"), "Wind Weights Template"),
-            fileInput(
-              ns("wind_weights_file"),
-              NULL,
-              accept = ".csv"
+            condition = sprintf("output['%s'] == true", ns("data_available")),
+            # Polygon for fetch calculation
+            h4("Choose Spatial Polygon"),
+            shinyWidgets::prettySwitch(
+              inputId = ns("use_polygon_upload"),
+              label = "Upload from file",
+              value = FALSE,
+              status = "primary",
+              inline = TRUE
             ),
             conditionalPanel(
-              condition = sprintf("output['%s'] == true", ns("wind_weights_valid")),
-              h5("Wind Weights Preview:"),
-              DT::DTOutput(ns("wind_weights_preview"))
-            )
-          ),
-          br(),
-          fluidRow(
-            column(2),
-            column(
-              4,
-              actionButton(ns("calculate_fetch"), "Calculate Fetch", class = "btn-primary btn-block", icon = icon("wind"))
+              condition = sprintf("input['%s'] == false", ns("use_polygon_upload")),
+              selectInput(
+                ns("polygon_library"),
+                "Available polygons:",
+                choices = NULL,
+                selected = NULL
+              )
             ),
-            column(
-              4,
-              actionButton(ns("clear_results"), "Clear Results", class = "btn-danger btn-block", icon = icon("eraser"))
+            conditionalPanel(
+              condition = sprintf("input['%s'] == true", ns("use_polygon_upload")),
+              shp_help_text(),
+              fileInput(
+                ns("aoi_polygon"),
+                "Choose Spatial File:",
+                accept = c(".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+                multiple = TRUE
+              )
+            ),
+
+            # Parameters
+            h4("Main parameters"),
+            numericInput(
+              ns("max_dist"),
+              "Maximum fetch distance (km):",
+              value = 15,
+              min = 1,
+              max = 100,
+              step = 1
+            ),
+            numericInput(
+              ns("n_bearings"),
+              "Number of bearings:",
+              value = 16,
+              min = 4,
+              max = 64,
+              step = 1
+            ),
+
+            # -----------------
+            # Wind weights
+            h4("Wind weights (optional)"),
+            shinyWidgets::prettySwitch(
+              inputId = ns("use_wind_weights"),
+              label = "Use custom wind weights",
+              value = FALSE,
+              status = "primary",
+              inline = TRUE
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == true", ns("use_wind_weights")),
+              h6(strong("Upload wind weights CSV")),
+              helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " CSV must contain 'direction' (0-360 degrees) and 'weight' columns.")),
+              template_download_button(ns("download_wind_weight_template"), "Wind Weights Template"),
+              fileInput(
+                ns("wind_weights_file"),
+                NULL,
+                accept = ".csv"
+              ),
+              conditionalPanel(
+                condition = sprintf("output['%s'] == true", ns("wind_weights_valid")),
+                h5("Wind Weights Preview:"),
+                DT::DTOutput(ns("wind_weights_preview"))
+              )
+            ),
+            br(),
+            fluidRow(
+              column(2),
+              column(
+                4,
+                actionButton(ns("calculate_fetch"), "Calculate Fetch", class = "btn-primary btn-block", icon = icon("wind"))
+              ),
+              column(
+                4,
+                actionButton(ns("clear_results"), "Clear Results", class = "btn-danger btn-block", icon = icon("eraser"))
+              )
             )
           )
-        ),
+        )
       ),
 
       # Results Panel
@@ -169,6 +179,12 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       fetch_results = NULL,
       polygon_data = NULL
     )
+
+    # Check if data is available
+    output$data_available <- reactive({
+      !is.null(app_data$original_data) && app_data$data_valid
+    })
+    outputOptions(output, "data_available", suspendWhenHidden = FALSE)
 
     # Initialize polygon library choices
     observe({

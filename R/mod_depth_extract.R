@@ -23,7 +23,7 @@ mod_depth_extract_ui <- function(id) {
             div(
               style = "text-align: center; padding: 20px;",
               icon("exclamation-triangle", "fa-2x", style = "color: #f39c12;"),
-              h4("No Point Data", style = "color: #f39c12;"),
+              h4("No Data Available", style = "color: #f39c12;"),
               p("Please complete the Data Input step first.", style = "color: #7f8c8d;")
             )
           ),
