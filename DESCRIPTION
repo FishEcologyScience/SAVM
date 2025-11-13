@@ -40,6 +40,7 @@ Imports:
     golem,
     leaflet,
     mapedit,
+    leafpm,
     lme4,
     lmerTest,
     mgcv,
