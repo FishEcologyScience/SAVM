@@ -95,15 +95,23 @@ mod_model_apply_ui <- function(id) {
                 " Select which columns in your data correspond to depth and fetch."
               )
             ),
-            selectInput(
-              ns("depth_column"),
-              "Depth Column:",
-              choices = NULL
-            ),
-            selectInput(
-              ns("fetch_column"),
-              "Fetch Column:",
-              choices = NULL
+            fluidRow(
+              column(
+                6,
+                selectInput(
+                  ns("depth_column"),
+                  "Depth Column:",
+                  choices = NULL
+                )
+              ),
+              column(
+                6,
+                selectInput(
+                  ns("fetch_column"),
+                  "Fetch Column:",
+                  choices = NULL
+                ),
+              )
             ),
             br(),
             h5(strong("Post-hoc Predictor Columns")),
@@ -142,7 +150,45 @@ mod_model_apply_ui <- function(id) {
                 ns("secchi_column"),
                 "Secchi Depth Column:",
                 choices = NULL
-              )
+              ),
+              helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Chambers and Kalff (1985) equation parameters for maximum colonization depth.")),
+              selectInput(
+                ns("vmax_model"),
+                "Vmax Model:",
+                choices = list(
+                  "Model A (Quebec + International lakes)" = "model_a",
+                  "Model B (Quebec lakes only)" = "model_b",
+                  "Custom" = "custom"
+                ),
+                selected = "model_a"
+              ),
+              conditionalPanel(
+                condition = sprintf("input['%s'] == 'custom'", ns("vmax_model")),
+                fluidRow(
+                  column(
+                    6,
+                    numericInput(
+                      ns("vmax_intercept"),
+                      "Intercept:",
+                      value = 1.40,
+                      min = 0,
+                      max = 5,
+                      step = 0.01
+                    )
+                  ),
+                  column(
+                    6,
+                    numericInput(
+                      ns("vmax_slope"),
+                      "Slope:",
+                      value = 1.33,
+                      min = 0,
+                      max = 5,
+                      step = 0.01
+                    )
+                  )
+                )
+              ),
             ),
             shinyWidgets::prettySwitch(
               inputId = ns("use_limitation"),
@@ -157,38 +203,6 @@ mod_model_apply_ui <- function(id) {
                 ns("limitation_column"),
                 "Limitation Column:",
                 choices = NULL
-              )
-            ),
-            br(),
-            h5(strong("Post-hoc Parameters")),
-            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Chambers and Kalff (1985) equation parameters for maximum colonization depth.")),
-            selectInput(
-              ns("vmax_model"),
-              "Vmax Model:",
-              choices = list(
-                "Model A (Quebec + International lakes)" = "model_a",
-                "Model B (Quebec lakes only)" = "model_b",
-                "Custom" = "custom"
-              ),
-              selected = "model_a"
-            ),
-            conditionalPanel(
-              condition = sprintf("input['%s'] == 'custom'", ns("vmax_model")),
-              numericInput(
-                ns("vmax_intercept"),
-                "Intercept:",
-                value = 1.40,
-                min = 0,
-                max = 5,
-                step = 0.01
-              ),
-              numericInput(
-                ns("vmax_slope"),
-                "Slope:",
-                value = 1.33,
-                min = 0,
-                max = 5,
-                step = 0.01
               )
             ),
             br(),
@@ -316,18 +330,20 @@ mod_model_apply_server <- function(id, app_data, app_session) {
         }
 
         # Update dropdown choices
+        col_depth <- col_names[grepl("depth", tolower(col_names))][1L]
         updateSelectInput(
           session,
           "depth_column",
           choices = col_names,
-          selected = if ("depth_m" %in% col_names) "depth_m" else if ("depth" %in% tolower(col_names)) col_names[which(tolower(col_names) == "depth")[1]] else col_names[1]
+          selected = ifelse(is.na(col_depth), col_names[1], col_depth)
         )
 
+        col_fetch <- col_names[grepl("fetch", tolower(col_names))][1L]
         updateSelectInput(
           session,
           "fetch_column",
           choices = col_names,
-          selected = if ("fetch_km" %in% col_names) "fetch_km" else if ("fetch" %in% tolower(col_names)) col_names[which(tolower(col_names) == "fetch")[1]] else col_names[1]
+          selected = ifelse(is.na(col_fetch), col_names[1], col_fetch)
         )
 
         # Update post-hoc column dropdowns
@@ -536,6 +552,11 @@ mod_model_apply_server <- function(id, app_data, app_session) {
         pts <- sf::st_transform(pts, 4326)
       }
 
+      # Add point ID if not present
+      if (!"point_id" %in% names(pts)) {
+        pts$point_id <- seq_len(nrow(pts))
+      }
+
       # Choose color variable (prefer cover, then pa)
       color_var <- if ("cover_pred" %in% names(pts)) {
         "cover_pred"
@@ -544,6 +565,19 @@ mod_model_apply_server <- function(id, app_data, app_session) {
       } else {
         NULL
       }
+
+      # Create tooltip labels
+      pts_data <- sf::st_drop_geometry(pts)
+      tooltip_labels <- sprintf(
+        "<strong>Point ID:</strong> %s<br/><strong>Depth:</strong> %.2f m<br/>
+        <strong>Fetch:</strong> %.2f km<br/><strong>PA Pred:</strong> %.3f<br/>
+        <strong>Cover Pred:</strong> %.1f%%",
+        pts_data$point_id,
+        if ("depth_m" %in% names(pts_data)) pts_data$depth_m else NA,
+        if ("fetch_km" %in% names(pts_data)) pts_data$fetch_km else NA,
+        if ("pa_pred" %in% names(pts_data)) pts_data$pa_pred else NA,
+        if ("cover_pred" %in% names(pts_data)) pts_data$cover_pred else NA
+      ) |> lapply(htmltools::HTML)
 
       map <- leaflet::leaflet() |>
         leaflet::addProviderTiles("CartoDB.Positron")
@@ -563,6 +597,12 @@ mod_model_apply_server <- function(id, app_data, app_session) {
             fillOpacity = 0.8,
             stroke = TRUE,
             weight = 1,
+            label = tooltip_labels,
+            labelOptions = leaflet::labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "12px",
+              direction = "auto"
+            )
           ) |>
           leaflet::addLegend(
             pal = pal,
@@ -576,7 +616,13 @@ mod_model_apply_server <- function(id, app_data, app_session) {
             data = pts,
             radius = 5,
             color = "blue",
-            fillOpacity = 0.7
+            fillOpacity = 0.7,
+            label = tooltip_labels,
+            labelOptions = leaflet::labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "12px",
+              direction = "auto"
+            )
           )
       }
 
