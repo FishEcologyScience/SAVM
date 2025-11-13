@@ -404,6 +404,29 @@
         "Built": "R 4.4.0; x86_64-pc-linux-gnu; 2024-10-05 04:17:58 UTC; unix"
       }
     },
+    "assertthat": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "assertthat",
+        "Title": "Easy Pre and Post Assertions",
+        "Version": "0.2.1",
+        "Authors@R": "\n  person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", c(\"aut\", \"cre\"))",
+        "Description": "An extension to stopifnot() that makes it easy to declare \n    the pre and post conditions that you code should satisfy, while also \n    producing friendly error messages so that your users know what's gone\n    wrong.",
+        "License": "GPL-3",
+        "Imports": "tools",
+        "Suggests": "testthat, covr",
+        "RoxygenNote": "6.0.1",
+        "Collate": "'assert-that.r' 'on-failure.r' 'assertions-file.r'\n'assertions-scalar.R' 'assertions.r' 'base.r'\n'base-comparison.r' 'base-is.r' 'base-logical.r' 'base-misc.r'\n'utils.r' 'validate-that.R'",
+        "NeedsCompilation": "no",
+        "Packaged": "2019-03-21 13:11:01 UTC; hadley",
+        "Author": "Hadley Wickham [aut, cre]",
+        "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2019-03-21 14:53:46 UTC",
+        "Built": "R 4.0.1; ; 'Sat, 30 May 2020 09:46:33 +0000'; unix"
+      }
+    },
     "attempt": {
       "Source": "CRAN",
       "Repository": "https://cran.wu.ac.at",
@@ -476,6 +499,31 @@
         "Date/Publication": "2025-08-29 13:00:08 UTC",
         "Encoding": "UTF-8",
         "Built": "R 4.5.0; ; 2025-08-30 04:37:03 UTC; unix"
+      }
+    },
+    "brew": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Type": "Package",
+        "Package": "brew",
+        "Title": "Templating Framework for Report Generation",
+        "Version": "1.0-10",
+        "Authors@R": "c(\n    person(\"Jeffrey\", \"Horner\", role = c(\"aut\", \"cph\")),\n    person(\"Greg\", \"Hunt\", , \"greg@firmansyah.com\", role = c(\"aut\", \"cre\", \"cph\"))\n  )",
+        "Description": "Implements a templating framework for mixing text and R code\n    for report generation. brew template syntax is similar to PHP, Ruby's\n    erb module, Java Server Pages, and Python's psp module.",
+        "License": "GPL (>= 2)",
+        "URL": "https://github.com/gregfrog/brew",
+        "BugReports": "https://github.com/gregfrog/brew/issues",
+        "Suggests": "testthat (>= 3.0.0)",
+        "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "Repository": "RSPM",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-12-16 07:21:30 UTC; greg",
+        "Author": "Jeffrey Horner [aut, cph],\n  Greg Hunt [aut, cre, cph]",
+        "Maintainer": "Greg Hunt <greg@firmansyah.com>",
+        "Date/Publication": "2023-12-16 08:30:02 UTC",
+        "Built": "R 4.4.0; ; 2024-04-26 04:42:40 UTC; unix"
       }
     },
     "brio": {
@@ -2117,6 +2165,34 @@
         "Built": "R 4.5.0; ; 2025-09-05 04:58:02 UTC; unix"
       }
     },
+    "leaflet.extras": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "leaflet.extras",
+        "Type": "Package",
+        "Title": "Extra Functionality for 'leaflet' Package",
+        "Version": "2.0.1",
+        "Authors@R": "c(\n      person(\"Sebastian\", \"Gatscha\", email = \"sebastian_gatscha@gmx.at\", role = c(\"aut\", \"cre\")),\n      person(\"Bhaskar\", \"Karambelkar\", email = \"bhaskarvk@gmail.com\", role = c(\"aut\")),\n      person(\"Barret\", \"Schloerke\", email = \"barret@rstudio.com\", role = c(\"aut\")),\n      person(\"Bangyou\", \"Zheng\", email= \"Bangyou.Zheng@csiro.au\", role = c(\"ctb\"),\n        comment = \"Leaflet-search and Leaflet-GPS plugin integration\"),\n      person(\"Robin\", \"Cura\", email= \"robin@cura.info\", role = c(\"ctb\"),\n        comment = \"Fixes for Draw Options\"),\n      person(\"Markus\", \"Voge\", email= \"markus.voge@ea-aw.de\", role = c(\"ctb\"),\n        comment = \"Enhancements for Draw Options\"),\n      person(\"Markus\", \"Dumke\", role = c(\"ctb\"), comment = \"Bounce Marker addition\"),\n      person(family = \"Mapbox\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-omnivore, csv2geojson, and togeojson libraries\"),\n      person(\"Henry\", \"Thasler\", role = c(\"ctb\", \"cph\"), comment = \"Leaflet.Geodesic library\"),\n      person(\"Dennis\", \"Wilhelm\", role = c(\"ctb\", \"cph\"), comment = \"Leaflet.StyleEditor library\"),\n      person(\"Kirollos\", \"Risk\", role = c(\"ctb\", \"cph\"), comment = \"fuse.js library\"),\n      person(\"Tim\", \"Wisniewski\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-choropleth library\"),\n      person(family = \"Leaflet\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-draw library\"),\n      person(\"Alexander\", \"Milevski\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-draw-drag library\"),\n      person(\"John\", \"Firebaugh\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-fullscreen library\"),\n      person(\"Stefano\", \"Cudini\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-gps library\"),\n      person(\"Johannes\", \"Rudolph\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-hash library\"),\n      person(\"Per\", \"Liedman\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-measure-path library\"),\n      person(\"Pavel\", \"Shramov\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-plugins library\"),\n      person(\"Filip\", \"Zavadil\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-pulse-icon library\"),\n      person(\"Stefano\", \"Cudini\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-search library\"),\n      person(family = \"CliffCloud\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-sleep library\"),\n      person(family = \"Ursudio\", role = c(\"ctb\", \"cph\"), comment = \"leaflet-webgl-heatmap library\"),\n      person(\"Maxime\", \"Hadjinlian\", role = c(\"ctb\", \"cph\"), comment = \"leaflet.BounceMarker library\"),\n      person(\"Vladimir\", \"Agafonkin\", role = c(\"ctb\", \"cph\"), comment = \"leaflet.heat library\"),\n      person(\"Iván Sánchez\", \"Ortega\", role = c(\"ctb\", \"cph\"), comment = \"leaflet.tilelayer.pouchdbcached library\"),\n      person(\"Dale\", \"Harvey\", role = c(\"ctb\", \"cph\"), comment = \"pouchdb-browser library\"),\n      person(\"Mike\", \"Bostock\", role = c(\"ctb\", \"cph\"), comment = \"topojson library\")\n    )",
+        "Description": "The 'leaflet' JavaScript library provides many plugins some of which\n    are available in the core 'leaflet' package, but there are many more. It is not\n    possible to support them all in the core 'leaflet' package. This package serves\n    as an add-on to the 'leaflet' package by providing extra functionality via 'leaflet'\n    plugins.",
+        "License": "GPL-3 | file LICENSE",
+        "Encoding": "UTF-8",
+        "Depends": "R (>= 3.1.0), leaflet (>= 2.0.0)",
+        "Imports": "htmlwidgets, htmltools, stringr, magrittr",
+        "Suggests": "jsonlite, readr, sf, xfun, testthat (>= 3.0.0)",
+        "URL": "https://github.com/trafficonese/leaflet.extras,\nhttps://trafficonese.github.io/leaflet.extras/",
+        "BugReports": "https://github.com/trafficonese/leaflet.extras/issues",
+        "RoxygenNote": "7.3.1",
+        "Config/testthat/edition": "3",
+        "NeedsCompilation": "no",
+        "Packaged": "2024-08-19 20:41:21 UTC; kona1",
+        "Author": "Sebastian Gatscha [aut, cre],\n  Bhaskar Karambelkar [aut],\n  Barret Schloerke [aut],\n  Bangyou Zheng [ctb] (Leaflet-search and Leaflet-GPS plugin integration),\n  Robin Cura [ctb] (Fixes for Draw Options),\n  Markus Voge [ctb] (Enhancements for Draw Options),\n  Markus Dumke [ctb] (Bounce Marker addition),\n  Mapbox [ctb, cph] (leaflet-omnivore, csv2geojson, and togeojson\n    libraries),\n  Henry Thasler [ctb, cph] (Leaflet.Geodesic library),\n  Dennis Wilhelm [ctb, cph] (Leaflet.StyleEditor library),\n  Kirollos Risk [ctb, cph] (fuse.js library),\n  Tim Wisniewski [ctb, cph] (leaflet-choropleth library),\n  Leaflet [ctb, cph] (leaflet-draw library),\n  Alexander Milevski [ctb, cph] (leaflet-draw-drag library),\n  John Firebaugh [ctb, cph] (leaflet-fullscreen library),\n  Stefano Cudini [ctb, cph] (leaflet-gps library),\n  Johannes Rudolph [ctb, cph] (leaflet-hash library),\n  Per Liedman [ctb, cph] (leaflet-measure-path library),\n  Pavel Shramov [ctb, cph] (leaflet-plugins library),\n  Filip Zavadil [ctb, cph] (leaflet-pulse-icon library),\n  Stefano Cudini [ctb, cph] (leaflet-search library),\n  CliffCloud [ctb, cph] (leaflet-sleep library),\n  Ursudio [ctb, cph] (leaflet-webgl-heatmap library),\n  Maxime Hadjinlian [ctb, cph] (leaflet.BounceMarker library),\n  Vladimir Agafonkin [ctb, cph] (leaflet.heat library),\n  Iván Sánchez Ortega [ctb, cph] (leaflet.tilelayer.pouchdbcached\n    library),\n  Dale Harvey [ctb, cph] (pouchdb-browser library),\n  Mike Bostock [ctb, cph] (topojson library)",
+        "Maintainer": "Sebastian Gatscha <sebastian_gatscha@gmx.at>",
+        "Repository": "RSPM",
+        "Date/Publication": "2024-08-19 22:40:03 UTC",
+        "Built": "R 4.4.0; ; 2024-08-20 06:14:33 UTC; unix"
+      }
+    },
     "leaflet.providers": {
       "Source": "CRAN",
       "Repository": "https://cran.wu.ac.at",
@@ -2146,6 +2222,63 @@
         "Repository": "RSPM",
         "Date/Publication": "2023-10-17 17:10:02 UTC",
         "Built": "R 4.4.0; ; 2024-04-25 01:58:06 UTC; unix"
+      }
+    },
+    "leafpm": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "leafpm",
+        "Version": "0.1.0",
+        "Date": "2019-03-09",
+        "Title": "Leaflet Map Plugin for Drawing and Editing",
+        "Description": "A collection of tools for interactive manipulation of (spatial) data \n    layers on leaflet web maps. Tools include editing of existing layers, creation \n    of new layers through drawing of shapes (points, lines, polygons), deletion \n    of shapes as well as cutting holes into existing shapes. Provides control over \n    options to e.g. prevent self-intersection of polygons and lines or to enable/disable \n    snapping to align shapes.",
+        "Authors@R": "c(\n    person(\"Kenton\", \"Russell\", role = c(\"aut\", \"cre\"), email = \"kent.russell@timelyportfolio.com\"),\n    person(\"Tim\", \"Appelhans\", role = c(\"aut\")),\n    person(\"Sumit\", \"Kumar\", role = c(\"ctb\"), comment = \"Leaflet.pm plugin\")\n  )",
+        "License": "MIT + file LICENSE",
+        "URL": "https://github.com/r-spatial/leafpm",
+        "BugReports": "https://github.com/r-spatial/leafpm/issues",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "ByteCompile": "true",
+        "RoxygenNote": "6.1.1",
+        "Depends": "R (>= 3.1.0)",
+        "Imports": "dplyr, htmltools (>= 0.3), htmlwidgets, jsonlite, leaflet (>=\n2.0.1), sf (>= 0.5-2),",
+        "Enhances": "geojsonio, mapedit, mapview, shiny",
+        "Suggests": "testthat",
+        "NeedsCompilation": "no",
+        "Packaged": "2019-03-09 14:18:12 UTC; kentr",
+        "Author": "Kenton Russell [aut, cre],\n  Tim Appelhans [aut],\n  Sumit Kumar [ctb] (Leaflet.pm plugin)",
+        "Maintainer": "Kenton Russell <kent.russell@timelyportfolio.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2019-03-13 12:10:03 UTC",
+        "Built": "R 4.4.0; ; 2024-04-26 05:14:00 UTC; unix"
+      }
+    },
+    "leafpop": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "leafpop",
+        "Type": "Package",
+        "Title": "Include Tables, Images and Graphs in Leaflet Pop-Ups",
+        "Version": "0.1.0",
+        "Date": "2021-05-22",
+        "Authors@R": "\n    c(person(given = \"Tim\",\n             family = \"Appelhans\",\n             role = c(\"cre\", \"aut\"),\n             email = \"tim.appelhans@gmail.com\"),\n      person(given = \"Florian\",\n             family = \"Detsch\",\n             role = \"aut\",\n             email = \"fdetsch@web.de\"))",
+        "Maintainer": "Tim Appelhans <tim.appelhans@gmail.com>",
+        "Description": "Creates 'HTML' strings to embed tables, images or graphs in pop-ups\n  of interactive maps created with packages like 'leaflet' or 'mapview'. Handles\n  local images located on the file system or via remote URL. Handles graphs created \n  with 'lattice' or 'ggplot2' as well as interactive plots created with 'htmlwidgets'.",
+        "License": "MIT + file LICENSE",
+        "URL": "https://github.com/r-spatial/leafpop",
+        "BugReports": "https://github.com/r-spatial/leafpop/issues",
+        "Encoding": "UTF-8",
+        "Imports": "base64enc, brew, htmltools, htmlwidgets, sf, svglite, uuid",
+        "Suggests": "lattice, leaflet (>= 2.0.0), sp",
+        "RoxygenNote": "7.1.1",
+        "NeedsCompilation": "no",
+        "Packaged": "2021-05-22 09:14:01 UTC; timpanse",
+        "Author": "Tim Appelhans [cre, aut],\n  Florian Detsch [aut]",
+        "Repository": "RSPM",
+        "Date/Publication": "2021-05-22 10:10:03 UTC",
+        "Built": "R 4.4.0; ; 2024-04-26 19:23:53 UTC; unix"
       }
     },
     "leafsync": {
@@ -2352,6 +2485,33 @@
         "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-09-13 04:49:20 UTC; unix"
       }
     },
+    "mapedit": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "mapedit",
+        "Title": "Interactive Editing of Spatial Data in R",
+        "Description": "Suite of interactive functions and helpers for selecting and editing\n    geospatial data.",
+        "Version": "0.7.0",
+        "Authors@R": "c(\n    person(\"Tim\", \"Appelhans\", role = c(\"aut\", \"cre\"), email = \"tim.appelhans@gmail.com\"),\n    person(\"Kenton\", \"Russell\", role = c(\"aut\")),\n    person(\"Lorenzo\", \"Busetto\", role = c(\"aut\")),\n    person(\"Josh\", \"O'Brien\", role = c(\"ctb\")),\n    person(\"Jakob\", \"Gutschlhofer\", role = c(\"ctb\")),\n    person(\"Matt\", \"Johnson\", role = c(\"ctb\")),\n    person(\"Eli\", \"Pousson\", role = \"ctb\", comment = c(ORCID = \"0000-0001-8280-1706\"))\n  )",
+        "URL": "https://github.com/r-spatial/mapedit",
+        "BugReports": "https://github.com/r-spatial/mapedit/issues",
+        "License": "MIT + file LICENSE",
+        "Depends": "R (>= 3.1.0)",
+        "Imports": "assertthat, dplyr, DT, htmltools (>= 0.3), htmlwidgets,\njsonlite, leafem, leaflet (>= 2.0.1), leaflet.extras (>= 1.0),\nleafpm, leafpop, mapview, methods, miniUI, raster, rstudioapi,\nscales, sf (>= 0.5-2), shiny, tmaptools, shinyWidgets (>=\n0.4.3)",
+        "Suggests": "crayon, sp",
+        "Enhances": "geojsonio",
+        "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.2",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-04-20 07:25:58 UTC; tim",
+        "Author": "Tim Appelhans [aut, cre],\n  Kenton Russell [aut],\n  Lorenzo Busetto [aut],\n  Josh O'Brien [ctb],\n  Jakob Gutschlhofer [ctb],\n  Matt Johnson [ctb],\n  Eli Pousson [ctb] (<https://orcid.org/0000-0001-8280-1706>)",
+        "Maintainer": "Tim Appelhans <tim.appelhans@gmail.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-04-20 08:20:01 UTC",
+        "Built": "R 4.4.0; ; 2025-04-21 04:18:01 UTC; unix"
+      }
+    },
     "maptiles": {
       "Source": "CRAN",
       "Repository": "https://cran.wu.ac.at",
@@ -2376,6 +2536,35 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-05-07 13:10:02 UTC",
         "Built": "R 4.5.0; ; 2025-05-08 04:23:40 UTC; unix"
+      }
+    },
+    "mapview": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "mapview",
+        "Title": "Interactive Viewing of Spatial Data in R",
+        "Version": "2.11.4",
+        "Authors@R": "\n    c(person(given = \"Tim\",\n             family = \"Appelhans\",\n             role = c(\"cre\", \"aut\"),\n             email = \"tim.appelhans@gmail.com\"),\n      person(given = \"Florian\",\n             family = \"Detsch\",\n             role = \"aut\",\n             email = \"fdetsch@web.de\"),\n      person(given = \"Christoph\",\n             family = \"Reudenbach\",\n             role = \"aut\",\n             email = \"reudenbach@geo.uni-marburg.de\"),\n      person(given = \"Stefan\",\n             family = \"Woellauer\",\n             role = \"aut\",\n             email = \"stephan.woellauer@geo.uni-marburg.de\"),\n      person(given = \"Spaska\",\n             family = \"Forteva\",\n             role = \"ctb\",\n             email = \"spaska.forteva@geo.uni-marburg.de\"),\n      person(given = \"Thomas\",\n             family = \"Nauss\",\n             role = \"ctb\",\n             email = \"nauss@staff.uni-marburg.de\"),\n      person(given = \"Edzer\",\n             family = \"Pebesma\",\n             role = \"ctb\"),\n      person(given = \"Kenton\",\n             family = \"Russell\",\n             role = \"ctb\"),\n      person(given = \"Michael\",\n             family = \"Sumner\",\n             role = \"ctb\"),\n      person(given = \"Jochen\",\n             family = \"Darley\",\n             role = \"ctb\",\n             email = \"Debugger@jedimasters.de\"),\n      person(given = \"Pierre\",\n             family = \"Roudier\",\n             role = \"ctb\"),\n      person(given = \"Patrick\",\n             family = \"Schratz\",\n             role = \"ctb\"),\n      person(given = \"Environmental Informatics Marburg\",\n             role = \"ctb\"),\n      person(given = \"Lorenzo\",\n             family = \"Busetto\",\n             role = \"ctb\"))",
+        "Maintainer": "Tim Appelhans <tim.appelhans@gmail.com>",
+        "Description": "Quickly and conveniently create interactive\n    visualisations of spatial data with or without background maps.\n    Attributes of displayed features are fully queryable via pop-up\n    windows. Additional functionality includes methods to visualise true-\n    and false-color raster images and bounding boxes.",
+        "License": "GPL (>= 3) | file LICENSE",
+        "URL": "https://github.com/r-spatial/mapview,\nhttps://r-spatial.github.io/mapview/",
+        "BugReports": "https://github.com/r-spatial/mapview/issues",
+        "Depends": "methods, R (>= 3.6.0)",
+        "Imports": "base64enc, htmltools, htmlwidgets, lattice, leafem, leaflet\n(>= 2.0.0), leafpop, png, raster (>= 3.6.3), satellite, scales\n(>= 0.2.5), servr, sf, sp",
+        "Suggests": "knitr, later, leaflet.extras2, leafsync, lwgeom, mapdeck,\nplainview, poorman, rmarkdown, rstudioapi, s2, stars, tinytest,\nwebshot, webshot2",
+        "ByteCompile": "yes",
+        "Encoding": "UTF-8",
+        "LazyData": "TRUE",
+        "RoxygenNote": "7.3.2",
+        "SystemRequirements": "GNU make",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-09-05 08:14:37 UTC; tim",
+        "Author": "Tim Appelhans [cre, aut],\n  Florian Detsch [aut],\n  Christoph Reudenbach [aut],\n  Stefan Woellauer [aut],\n  Spaska Forteva [ctb],\n  Thomas Nauss [ctb],\n  Edzer Pebesma [ctb],\n  Kenton Russell [ctb],\n  Michael Sumner [ctb],\n  Jochen Darley [ctb],\n  Pierre Roudier [ctb],\n  Patrick Schratz [ctb],\n  Environmental Informatics Marburg [ctb],\n  Lorenzo Busetto [ctb]",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-09-08 07:00:18 UTC",
+        "Built": "R 4.5.0; ; 2025-09-09 05:30:26 UTC; unix"
       }
     },
     "memoise": {
@@ -2452,6 +2641,31 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-03-17 20:20:02 UTC",
         "Built": "R 4.4.0; x86_64-pc-linux-gnu; 2025-03-18 05:31:26 UTC; unix"
+      }
+    },
+    "miniUI": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "miniUI",
+        "Type": "Package",
+        "Title": "Shiny UI Widgets for Small Screens",
+        "Version": "0.1.2",
+        "Authors@R": "c(\n    person(\"Joe\", \"Cheng\", role = c(\"cre\", \"aut\"), email = \"joe@posit.co\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n    )",
+        "Description": "Provides UI widget and layout functions for writing Shiny apps\n    that work well on small screens.",
+        "License": "GPL-3",
+        "URL": "https://github.com/rstudio/miniUI",
+        "BugReports": "https://github.com/rstudio/miniUI/issues",
+        "Imports": "shiny (>= 0.13), htmltools (>= 0.3), utils",
+        "RoxygenNote": "7.3.2",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-04-17 22:30:11 UTC; jcheng",
+        "Author": "Joe Cheng [cre, aut],\n  Posit Software, PBC [cph, fnd] (03wc8by49)",
+        "Maintainer": "Joe Cheng <joe@posit.co>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-04-17 23:20:02 UTC",
+        "Built": "R 4.4.0; ; 2025-04-18 04:19:44 UTC; unix"
       }
     },
     "minqa": {
@@ -2792,6 +3006,34 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-09-23 10:20:02 UTC",
         "Built": "R 4.5.0; ; 2025-09-24 04:19:27 UTC; unix"
+      }
+    },
+    "plyr": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "plyr",
+        "Title": "Tools for Splitting, Applying and Combining Data",
+        "Version": "1.8.9",
+        "Authors@R": "\n    person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = c(\"aut\", \"cre\"))",
+        "Description": "A set of tools that solves a common set of problems: you need\n    to break a big problem down into manageable pieces, operate on each\n    piece and then put all the pieces back together.  For example, you\n    might want to fit a model to each spatial location or time point in\n    your study, summarise data by panels or collapse high-dimensional\n    arrays to simpler summary statistics. The development of 'plyr' has\n    been generously supported by 'Becton Dickinson'.",
+        "License": "MIT + file LICENSE",
+        "URL": "http://had.co.nz/plyr, https://github.com/hadley/plyr",
+        "BugReports": "https://github.com/hadley/plyr/issues",
+        "Depends": "R (>= 3.1.0)",
+        "Imports": "Rcpp (>= 0.11.0)",
+        "Suggests": "abind, covr, doParallel, foreach, iterators, itertools,\ntcltk, testthat",
+        "LinkingTo": "Rcpp",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "RoxygenNote": "7.2.3",
+        "NeedsCompilation": "yes",
+        "Packaged": "2023-09-27 13:58:04 UTC; hadleywickham",
+        "Author": "Hadley Wickham [aut, cre]",
+        "Maintainer": "Hadley Wickham <hadley@rstudio.com>",
+        "Repository": "RSPM",
+        "Date/Publication": "2023-10-02 06:50:08 UTC",
+        "Built": "R 4.4.0; x86_64-pc-linux-gnu; 2024-04-25 19:48:04 UTC; unix"
       }
     },
     "png": {
@@ -3352,6 +3594,35 @@
         "Built": "R 4.4.0; x86_64-pc-linux-gnu; 2025-04-14 16:54:18 UTC; unix"
       }
     },
+    "satellite": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "satellite",
+        "Title": "Handling and Manipulating Remote Sensing Data",
+        "Version": "1.0.6",
+        "Authors@R": "c(\n        person(given = \"Thomas\",\n               family = \"Nauss\",\n               role = \"aut\"),\n        person(given = \"Hanna\",\n               family = \"Meyer\",\n               role = \"aut\"),\n        person(given = \"Tim\",\n               family = \"Appelhans\",\n               role = \"aut\"),\n        person(given = \"Florian\",\n               family = \"Detsch\",\n               role = c(\"aut\", \"cre\"),\n               email = \"fdetsch@web.de\"))",
+        "Description": "Herein, we provide a broad variety of functions which are useful\n    for handling, manipulating, and visualizing satellite-based remote sensing \n    data. These operations range from mere data import and layer handling (eg \n    subsetting), over Raster* typical data wrangling (eg crop, extend), to more \n    sophisticated (pre-)processing tasks typically applied to satellite imagery \n    (eg atmospheric and topographic correction). This functionality is \n    complemented by a full access to the satellite layers' metadata at any \n    stage and the documentation of performed actions in a separate log file. \n    Currently available sensors include Landsat 4-5 (TM), 7 (ETM+), and 8 \n    (OLI/TIRS Combined), and additional compatibility is ensured for the Landsat \n    Global Land Survey data set. ",
+        "URL": "https://github.com/environmentalinformatics-marburg/satellite",
+        "BugReports": "https://github.com/environmentalinformatics-marburg/satellite/issues",
+        "Depends": "R (>= 2.10), raster, methods, utils, stats, grDevices,\ngraphics",
+        "Imports": "plyr, Rcpp (>= 0.10.3), terra, tools, stats4",
+        "License": "MIT + file LICENSE",
+        "Suggests": "devtools, knitr, testthat, rmarkdown",
+        "LazyData": "true",
+        "VignetteBuilder": "knitr",
+        "LinkingTo": "Rcpp",
+        "RoxygenNote": "7.3.2",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "yes",
+        "Packaged": "2025-08-21 05:21:11 UTC; flowd",
+        "Author": "Thomas Nauss [aut],\n  Hanna Meyer [aut],\n  Tim Appelhans [aut],\n  Florian Detsch [aut, cre]",
+        "Maintainer": "Florian Detsch <fdetsch@web.de>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-08-21 06:10:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-08-22 04:33:06 UTC; unix"
+      }
+    },
     "scales": {
       "Source": "CRAN",
       "Repository": "https://cran.wu.ac.at",
@@ -3776,6 +4047,70 @@
         "Built": "R 4.4.0; x86_64-pc-linux-gnu; 2025-03-28 04:21:18 UTC; unix"
       }
     },
+    "stringr": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "stringr",
+        "Title": "Simple, Consistent Wrappers for Common String Operations",
+        "Version": "1.6.0",
+        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\", \"cph\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
+        "Description": "A consistent, simple and easy to use set of wrappers around\n    the fantastic 'stringi' package. All function and argument names (and\n    positions) are consistent, all functions deal with \"NA\"'s and zero\n    length vectors in the same way, and the output from one function is\n    easy to feed into the input of another.",
+        "License": "MIT + file LICENSE",
+        "URL": "https://stringr.tidyverse.org,\nhttps://github.com/tidyverse/stringr",
+        "BugReports": "https://github.com/tidyverse/stringr/issues",
+        "Depends": "R (>= 4.1.0)",
+        "Imports": "cli, glue (>= 1.6.1), lifecycle (>= 1.0.3), magrittr, rlang\n(>= 1.0.0), stringi (>= 1.5.3), vctrs (>= 0.4.0)",
+        "Suggests": "covr, dplyr, gt, htmltools, htmlwidgets, knitr, rmarkdown,\ntestthat (>= 3.0.0), tibble",
+        "VignetteBuilder": "knitr",
+        "Config/Needs/website": "tidyverse/tidytemplate",
+        "Config/potools/style": "explicit",
+        "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "LazyData": "true",
+        "RoxygenNote": "7.3.3",
+        "NeedsCompilation": "no",
+        "Packaged": "2025-11-03 22:09:58 UTC; hadleywickham",
+        "Author": "Hadley Wickham [aut, cre, cph],\n  Posit Software, PBC [cph, fnd]",
+        "Maintainer": "Hadley Wickham <hadley@posit.co>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-11-04 14:00:02 UTC",
+        "Built": "R 4.5.0; ; 2025-11-05 04:22:30 UTC; unix"
+      }
+    },
+    "svglite": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "svglite",
+        "Title": "An 'SVG' Graphics Device",
+        "Version": "2.2.2",
+        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"),\n    person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = \"aut\"),\n    person(\"Thomas Lin\", \"Pedersen\", , \"thomas.pedersen@posit.co\", role = c(\"cre\", \"aut\"),\n           comment = c(ORCID = \"0000-0002-5147-4711\")),\n    person(\"T Jake\", \"Luciani\", , \"jake@apache.org\", role = \"aut\"),\n    person(\"Matthieu\", \"Decorde\", , \"matthieu.decorde@ens-lyon.fr\", role = \"aut\"),\n    person(\"Vaudor\", \"Lise\", , \"lise.vaudor@ens-lyon.fr\", role = \"aut\"),\n    person(\"Tony\", \"Plate\", role = \"ctb\",\n           comment = \"Early line dashing code\"),\n    person(\"David\", \"Gohel\", role = \"ctb\",\n           comment = \"Line dashing code and early raster code\"),\n    person(\"Yixuan\", \"Qiu\", role = \"ctb\",\n           comment = \"Improved styles; polypath implementation\"),\n    person(\"Håkon\", \"Malmedal\", role = \"ctb\",\n           comment = \"Opacity code\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
+        "Description": "A graphics device for R that produces 'Scalable Vector\n    Graphics'. 'svglite' is a fork of the older 'RSvgDevice' package.",
+        "License": "GPL (>= 2)",
+        "URL": "https://svglite.r-lib.org, https://github.com/r-lib/svglite",
+        "BugReports": "https://github.com/r-lib/svglite/issues",
+        "Depends": "R (>= 4.1)",
+        "Imports": "base64enc, cli, lifecycle, rlang (>= 1.1.0), systemfonts (>=\n1.3.0), textshaping (>= 0.3.0)",
+        "Suggests": "covr, fontquiver (>= 0.2.0), htmltools, knitr, rmarkdown,\ntestthat (>= 3.0.0), xml2 (>= 1.0.0)",
+        "LinkingTo": "cpp11, systemfonts, textshaping",
+        "VignetteBuilder": "knitr",
+        "Config/build/compilation-database": "true",
+        "Config/Needs/website": "tidyverse/tidytemplate",
+        "Config/testthat/edition": "3",
+        "Config/usethis/last-upkeep": "2025-04-25",
+        "Encoding": "UTF-8",
+        "RoxygenNote": "7.3.2",
+        "SystemRequirements": "libpng",
+        "NeedsCompilation": "yes",
+        "Packaged": "2025-10-20 15:57:25 UTC; thomas",
+        "Author": "Hadley Wickham [aut],\n  Lionel Henry [aut],\n  Thomas Lin Pedersen [cre, aut] (ORCID:\n    <https://orcid.org/0000-0002-5147-4711>),\n  T Jake Luciani [aut],\n  Matthieu Decorde [aut],\n  Vaudor Lise [aut],\n  Tony Plate [ctb] (Early line dashing code),\n  David Gohel [ctb] (Line dashing code and early raster code),\n  Yixuan Qiu [ctb] (Improved styles; polypath implementation),\n  Håkon Malmedal [ctb] (Opacity code),\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
+        "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
+        "Repository": "RSPM",
+        "Date/Publication": "2025-10-21 16:10:02 UTC",
+        "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-10-22 17:25:53 UTC; unix"
+      }
+    },
     "sys": {
       "Source": "CRAN",
       "Repository": "https://cran.wu.ac.at",
@@ -4132,6 +4467,29 @@
         "Repository": "RSPM",
         "Date/Publication": "2025-06-08 19:00:02 UTC",
         "Built": "R 4.5.0; x86_64-pc-linux-gnu; 2025-06-09 04:17:34 UTC; unix"
+      }
+    },
+    "uuid": {
+      "Source": "CRAN",
+      "Repository": "https://cran.wu.ac.at",
+      "description": {
+        "Package": "uuid",
+        "Version": "1.2-1",
+        "Title": "Tools for Generating and Handling of UUIDs",
+        "Author": "Simon Urbanek [aut, cre, cph] (https://urbanek.org,\n    <https://orcid.org/0000-0003-2297-1732>),\n  Theodore Ts'o [aut, cph] (libuuid)",
+        "Maintainer": "Simon Urbanek <Simon.Urbanek@r-project.org>",
+        "Authors@R": "c(person(\"Simon\", \"Urbanek\", role=c(\"aut\",\"cre\",\"cph\"), email=\"Simon.Urbanek@r-project.org\", comment=c(\"https://urbanek.org\", ORCID=\"0000-0003-2297-1732\")), person(\"Theodore\",\"Ts'o\", email=\"tytso@thunk.org\", role=c(\"aut\",\"cph\"), comment=\"libuuid\"))",
+        "Depends": "R (>= 2.9.0)",
+        "Description": "Tools for generating and handling of UUIDs (Universally Unique Identifiers).",
+        "License": "MIT + file LICENSE",
+        "URL": "https://www.rforge.net/uuid",
+        "BugReports": "https://github.com/s-u/uuid/issues",
+        "NeedsCompilation": "yes",
+        "Packaged": "2024-07-29 03:16:54 UTC; rforge",
+        "Repository": "RSPM",
+        "Date/Publication": "2024-07-29 07:09:22 UTC",
+        "Encoding": "UTF-8",
+        "Built": "R 4.4.2; x86_64-pc-linux-gnu; 2025-02-25 01:19:18 UTC; unix"
       }
     },
     "vctrs": {
@@ -4522,10 +4880,10 @@
       "checksum": "f4c174d9ce768b54e1d17652c6c619be"
     },
     "app.R": {
-      "checksum": "7e3d1b6ff389546a3835e18035be8908"
+      "checksum": "37fe603c77faff0c4e23bc1e358c9bb9"
     },
     "DESCRIPTION": {
-      "checksum": "f9443804b61f97389e3c5ef2c16b463f"
+      "checksum": "1c0f1dc143dda33eac9ad318ad7c3555"
     },
     "dev/run_dev.R": {
       "checksum": "dbe93f975d51ef6c92ce5f067b2dcbfc"
@@ -5023,7 +5381,10 @@
       "checksum": "2994074bf2d4fefcded73b25d12fb85f"
     },
     "inst/app/www/custom.css": {
-      "checksum": "6e10b1ea40d6dd6a43ed7a9aed6e0df0"
+      "checksum": "f0c805151366726f32195114fbbc4bb3"
+    },
+    "inst/app/www/doc/model_configuration_guide.html": {
+      "checksum": "e92db93e99226aa29bd307c2a382d76a"
     },
     "inst/app/www/favicon.ico": {
       "checksum": "81560d1b906a530c87fa0acbb2f5cca4"
@@ -5140,7 +5501,10 @@
       "checksum": "19d8c97400f3ff2132364c892ecd3f0c"
     },
     "inst/extdata/templates/file_input_template.csv": {
-      "checksum": "36dfb5db931b5876c64facebe4bb778c"
+      "checksum": "cc7e200710295eb0d8b1c7456f5b1287"
+    },
+    "inst/extdata/templates/wind_weights_template.csv": {
+      "checksum": "cb37f84b38b7fe278b9314260a5e3d30"
     },
     "inst/golem-config.yml": {
       "checksum": "071815d03d00930f69c5947f4ff4cf38"
@@ -5185,7 +5549,7 @@
       "checksum": "02b85e5de7aef2ac5f3e7630cb600d54"
     },
     "man/sav_model.Rd": {
-      "checksum": "25c76e53e7e95f527a56617f77588f83"
+      "checksum": "f36852c1123215f73777bf0794ceeea4"
     },
     "Meta/vignette.rds": {
       "checksum": "1816aa2b74886bb73ff03b4785759470"
@@ -5212,25 +5576,25 @@
       "checksum": "ad1138c2f1e4a75bf22bbd53305f7ad6"
     },
     "R/mod_data_input.R": {
-      "checksum": "d4271ce7503d52076b3355907b256357"
+      "checksum": "1062608ec9d75dbe525d8ccdc3ef1321"
     },
     "R/mod_depth_extract.R": {
-      "checksum": "b017fab2c58f287c4c449b82566eaad1"
+      "checksum": "3f9899959d8b8a6a61fdbf5e64690228"
     },
     "R/mod_fetch_calc.R": {
-      "checksum": "f9e451be51e3844dd6047868a6f62fa8"
+      "checksum": "5fab3c34c69d8e8334d8b7e4f4bc7c18"
     },
     "R/mod_input_tab.R": {
       "checksum": "318806c5e54f1da6da7cfcd86145c05b"
     },
     "R/mod_model_apply.R": {
-      "checksum": "7b24cd9a4595e0da69a9a2f9d5126232"
+      "checksum": "d65fd7ad82807bf68e34b8feb4b47d69"
     },
     "R/mod_results_viz.R": {
       "checksum": "1f6068f14bf7dfcfeee2598544e59ddc"
     },
     "R/model.R": {
-      "checksum": "a63136cdc9419837b2a5449dee738988"
+      "checksum": "bc4ed816bd8e82b41bb9fdead2e76275"
     },
     "R/plot_sav.R": {
       "checksum": "88c0a03e0d09fb6341311c26e79897f9"
@@ -5245,7 +5609,7 @@
       "checksum": "93bac9a8c9957f485836a1596e50156b"
     },
     "R/utils_data_assembly.R": {
-      "checksum": "d240b699c74e7eb3eabd144c8b029019"
+      "checksum": "030104ec7a25bd9600f17fd134bb718b"
     },
     "R/zzz.R": {
       "checksum": "2dbff5d02890326b9d67d5354c7f30ae"
@@ -5256,14 +5620,8 @@
     "tests/testthat.R": {
       "checksum": "b311d190da2d9daa544433f647378a3c"
     },
-    "tests/testthat/_snaps/compute-fetch.md": {
-      "checksum": "ce4209b0dc21f0b1da0f19533a9801ef"
-    },
-    "tests/testthat/_snaps/helpers.md": {
-      "checksum": "2c74a18cbdbd4f70cec4e57f09ff4a9e"
-    },
     "tests/testthat/_snaps/model.md": {
-      "checksum": "3b0871e1cd60a0dd07217b98dc9b834a"
+      "checksum": "b6742e78c2c0618aa7d833007baaa26d"
     },
     "tests/testthat/_snaps/plot/density-max-depth-10.svg": {
       "checksum": "fbaf7468ff8b810f8b5d991e0c701b72"
@@ -5278,7 +5636,7 @@
       "checksum": "15f39b7b7360f728f1ace090fddb3f05"
     },
     "tests/testthat/test_model.R": {
-      "checksum": "3712df02756148e2c49ef4ed88fd2422"
+      "checksum": "f5c4354be7455d2871fdfa2462900995"
     },
     "tests/testthat/test-compute-fetch.R": {
       "checksum": "56a426c54f4bbe804beee173764184f3"
