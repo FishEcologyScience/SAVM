@@ -14,7 +14,7 @@ test_that("sav_load_model() works", {
     {
       expect_error(
         sav_model(data.frame(FETCH_km = c(1, 2))),
-        "Both depth and fetch must be defined."
+        "`depth` must point to an existing column in `dat`."
       )
     }
   )

@@ -9,123 +9,200 @@ sav_model(
   method_pa = "rf",
   method_cover = method_pa,
   pa_threshold = 0.5,
-  depth = NULL,
-  fetch = NULL,
-  substrate = NULL,
-  secchi = NULL,
-  limitation = NULL,
+  depth = "depth",
+  fetch = "fetch",
+  substrate = "substrate",
+  secchi = "secchi",
+  limitation = "limitation",
   vmax_par = list(intercept = 1.4, slope = 1.33)
 )
 }
 \arguments{
-\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or a \code{sf} object
-containing some or all of the following columns:
-\itemize{
-\item \code{depth_m}: Numeric, depth in meters.
-\item \code{fetch_km}: Numeric, fetch in kilometers.
-\item \code{secchi}: Numeric Secchi depth in meters (post_hoc)
-\item \code{substrate}: Binary (0 = absent, 1 = present), indicating substrate
-limitations. (post_hoc)
-\item \code{limitation}: Binary (0 = absent, 1 = present), indicating user-supplied
-limitations.
-Additional columns will be ignored.
-}}
+\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or \code{sf} object containing
+depth and fetch data (required), and optionally secchi, substrate, and
+limitation columns for post-hoc adjustments. Additional columns will be
+ignored.}
 
 \item{method_pa}{{\code{character}}\cr{} Statistical method for presence/absence
-model. One of \code{"rf"} (random forest), \code{"gam"} (Generalized Additive Model),
+model. One of \code{"rf"} (Random Forest), \code{"gam"} (Generalized Additive Model),
 or \code{"lmm"} (Linear Mixed Model). Default is \code{"rf"}.}
 
 \item{method_cover}{{\code{character}}\cr{} Statistical method for cover model.
-One of \code{"rf"} (random forest), \code{"gam"} (Generalized Additive Model), or
+One of \code{"rf"} (Random Forest), \code{"gam"} (Generalized Additive Model), or
 \code{"lmm"} (Linear Mixed Model). Default is the same as \code{method_pa}.}
 
-\item{pa_threshold}{{\code{numeric}}\cr{} Probability threshold for converting
-presence/absence predictions to binary values. Default is 0.5.}
+\item{pa_threshold}{{\code{numeric}}\cr{} Probability threshold (0-1) for
+converting presence/absence predictions to binary values. Values below the
+threshold are classified as absent (0), values at or above as present (1).
+Default is 0.5.}
 
-\item{depth, fetch}{{\code{character}}\cr{} Column specification for the
-predictors, see \emph{Details}.}
+\item{depth}{{\code{character} (required)}\cr{} Name of the column containing
+depth data (in meters). Default is \code{"depth"}.}
 
-\item{substrate, secchi, limitation}{{\code{character}}\cr{}Column specification
-for post_hoc variables, see \emph{Details}.}
+\item{fetch}{{\code{character} (required)}\cr{} Name of the column containing
+fetch data (in kilometers). Default is \code{"fetch"}.}
 
-\item{vmax_par}{{\verb{named list}}\cr{} intercept and slope of the equation from
-Chambers and Kalff (1985) to compute the maximum depth of plant colonization
-(Vmax), see \emph{Details} below.}
+\item{substrate}{{\code{character} (optional)}\cr{} Name of the column containing
+substrate limitation data (optional). Binary indicator (0 = no limitation, 1
+= limited) for substrate constraints. Default is \code{"substrate"}. Set to
+\code{NULL} to disable substrate-based post-hoc adjustments.}
+
+\item{secchi}{{\code{character} (optional)}\cr{} Name of the column containing
+Secchi depth data in meters (optional). Used to calculate maximum
+colonization depth (Vmax) via the Chambers and Kalff equation. Default is
+\code{"secchi"}. Set to \code{NULL} to disable Vmax calculations.}
+
+\item{limitation}{{\code{character} (optional)}\cr{} Name of the column
+containing user-supplied limitation data (optional). Binary indicator (0 =
+no limitation, 1 = limited) for additional constraints. Default is
+\code{"limitation"}. Set to \code{NULL} to disable user-supplied limitation
+adjustments.}
+
+\item{vmax_par}{{\verb{named list} (required \code{secchi})}\cr{} Named list with
+\code{intercept} and \code{slope} parameters for the Chambers and Kalff (1985)
+equation to compute maximum depth of plant colonization (Vmax). Default is
+\code{list(intercept = 1.40, slope = 1.33)} (Model A: Quebec + international
+lakes). See \emph{Details} for Model B parameters.}
 }
 \value{
-A data frame (or a sf object) containing the input columns along with model
-predictions.
+A data frame (or \code{sf} object) containing the input columns along with model
+predictions. Column names are standardized to \code{depth_m} and \code{fetch_km}.
 
-The following prediction columns are returned:
+The following prediction columns are always returned:
 \itemize{
 \item \code{pa_pred}: Raw presence/absence probability predictions (0-1).
 \item \code{pa}: Binary presence/absence classification based on \code{pa_threshold}.
-\item \code{cover_pred}: Raw cover predictions (percent).
-\item \code{cover}: Cover predictions adjusted by presence/absence classification.
-\item \code{pa_post_hoc}: Presence/absence after post-hoc treatment (accounting for limitations).
-\item \code{cover_post_hoc}: Cover after post-hoc treatment (accounting for limitations).
+\item \code{cover_pred}: Raw cover predictions (percent, 0-100).
+\item \code{cover}: Cover predictions adjusted by presence/absence (0 if absent).
+\item \code{pa_post_hoc}: Presence/absence after post-hoc treatment (0 if any limitation).
+\item \code{cover_post_hoc}: Cover after post-hoc treatment (0 if any limitation).
 }
 
-If a column \code{secchi} is present, then two additional columns are
-returned: \code{vmax} and \code{limitation_secchi}, see details for further
-explanation.
+If Secchi depth data is provided, two additional columns are returned:
+\itemize{
+\item \code{vmax}: Maximum colonization depth calculated via Chambers & Kalff equation.
+\item \code{limitation_secchi}: Logical indicating light limitation (\code{TRUE} if depth exceeds vmax).
+}
 }
 \description{
 Apply SAV prediction models to predict SAV cover and presence/absence, with
 optional post-hoc processing.
 }
-\details{
+\section{Statistical Methods}{
 The function applies two types of models: one for predicting presence/absence
 of SAV and another for predicting SAV cover. Three statistical methods are
-available: Random Forest (\code{"rf"}), Generalized Additive Models (\code{"gam"}), and
-Linear Mixed Models (\code{"lmm"}). You can specify different methods for
-presence/absence and cover predictions using the \code{method_pa} and \code{method_cover}
-parameters. For further details about the models, see Croft-White et al. (2022).
-
-The required input variables—depth, fetch, substrate, secchi, limitation—must
-correspond to column names in \code{dat}; otherwise, an error is thrown. If neither
-'depth' nor 'fetch' is explicitly provided, the function will attempt to infer
-them from the column names. Matching is case-insensitive and will detect
-'depth_m', 'depth', 'fetch_km' and 'fetch'.
-
-If \code{secchi} is provided, two additional columns are returned:
+available:
 \itemize{
-\item \code{vmax}: Predicted maximum colonization depth calculated using the Chambers
-and Kalff equation.
-\item \code{limitation_secchi}: Logical column indicating light limitation. \code{TRUE} if
-\code{vmax >= depth_m},  indicating the site is light-limited; \code{FALSE} otherwise.
+\item \strong{Random Forest (\code{"rf"})}: Non-parametric ensemble method, robust to
+non-linear relationships. Best for complex patterns.
+\item \strong{Generalized Additive Models (\code{"gam"})}: Semi-parametric method with
+smooth functions. Good balance between interpretability and flexibility.
+\item \strong{Linear Mixed Models (\code{"lmm"})}: Parametric approach accounting for
+hierarchical data structure. Useful for grouped data.
 }
 
-The regression parameters for the Chambers and Kalff equation can be
-adjusted via the \code{vmax_par} argument. By default, parameters from Model A
-(Quebec and international lakes) in Croft-White et al. (2022) are used. To
-apply Model B (Quebec lakes only), use:
-
-\code{vmax_par = list(intercept = 1.32, slope = 1.14)}
-
-The post-hoc treatment adjusts raw predictions by setting them to 0 wherever
-limitations are present. Possible limitation columns include \code{substrate},
-\code{limitation}, and \code{limitation_secchi} (see descriptions above). These
-columns are treated as binary indicators: any value greater than 0 is
-interpreted as a limiting condition. If a limitation is detected, the
-corresponding prediction is set to 0 in the post-hoc adjusted output.
+You can specify different methods for presence/absence and cover predictions
+using the \code{method_pa} and \code{method_cover} parameters. For further details about
+the models, see Croft-White et al. (2022).
 }
+
+\section{Column Specification}{
+\strong{Required predictors (depth and fetch)}: Both depth and fetch data are
+mandatory. By default, the function looks for columns named \code{"depth"} and
+\code{"fetch"}. If these columns are not found, the function will attempt to
+auto-detect columns using case-insensitive matching for 'depth_m', 'depth',
+'fetch_km', or 'fetch'. If columns cannot be found, an error is thrown. To
+use custom column names, explicitly specify them via the \code{depth} and \code{fetch}
+parameters.
+
+\strong{Optional predictors (substrate, secchi, limitation)}: These columns are
+optional for post-hoc adjustments. By default, the function looks for columns
+with these exact names. If a column is not found in the data, that post-hoc
+adjustment is skipped. To use custom column names, explicitly specify them
+via the respective parameters. To explicitly disable a post-hoc adjustment
+even if the column exists, set the parameter to \code{NULL}.
+}
+
+\section{Post-hoc Treatment}{
+Post-hoc adjustments refine raw predictions by setting them to 0 wherever
+limitations are detected:
+\itemize{
+\item \strong{substrate}: Substrate limitation (e.g., unsuitable bottom substrate).
+\item \strong{limitation}: User-supplied limitation data.
+\item \strong{limitation_secchi}: Light limitation calculated from Secchi depth.
+}
+
+These columns are treated as binary indicators: any value > 0 indicates a
+limiting condition. When limitations are present, both \code{pa_post_hoc} and
+\code{cover_post_hoc} are set to 0.
+}
+
+\section{Vmax Calculation}{
+When Secchi depth data is provided, maximum colonization depth (Vmax) is
+calculated using the Chambers and Kalff (1985) equation. The \code{vmax_par}
+parameter controls the regression coefficients:
+\itemize{
+\item \strong{Model A} (default): \code{list(intercept = 1.40, slope = 1.33)} - Quebec +
+international lakes
+\item \strong{Model B}: \code{list(intercept = 1.32, slope = 1.14)} - Quebec lakes only
+}
+
+Sites where depth exceeds Vmax are flagged as light-limited via the
+\code{limitation_secchi} column.
+}
+
 \examples{
 \donttest{
-# basic usage
+# Basic usage with auto-detection of column names
 sav_model(data.frame(depth = c(5, 10), fetch = c(1, 2)))
+
+# Using different methods for PA and cover
+sav_model(
+  data.frame(depth_m = c(5, 10), fetch_km = c(1, 2)),
+  method_pa = "rf",
+  method_cover = "gam"
+)
+
+# Adjusting PA threshold
 sav_model(
   data.frame(depth = c(5, 10), fetch = c(1, 2)),
-  method_pa = "lmm"
+  pa_threshold = 0.7  # More conservative predictions
 )
-# using post-hoc treatment
+
+# Using post-hoc treatment with Secchi and substrate data
 sav_model(
   dat = data.frame(
     depth = c(5, 10, 5),
     fetch = c(1, 2, 10),
     secchi = c(1, 10, 10),
-    substrate = c(TRUE, TRUE, FALSE)
+    substrate = c(1, 1, 0)
   )
+)
+
+# Using custom column names
+sav_model(
+  dat = data.frame(
+    water_depth = c(5, 10),
+    wave_fetch = c(1, 2)
+  ),
+  depth = "water_depth",
+  fetch = "wave_fetch"
+)
+
+# Disabling post-hoc adjustments by setting to NULL
+sav_model(
+  dat = data.frame(
+    depth = c(5, 10),
+    fetch = c(1, 2),
+    substrate = c(1, 0)  # substrate column exists but will be ignored
+  ),
+  substrate = NULL  # explicitly disable substrate adjustments
+)
+
+# Using Model B Vmax parameters (Quebec lakes only)
+sav_model(
+  dat = data.frame(depth = c(5, 10), fetch = c(1, 2), secchi = c(2, 3)),
+  vmax_par = list(intercept = 1.32, slope = 1.14)
 )
 }
 }
