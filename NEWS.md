@@ -1,6 +1,7 @@
 # SAVM (devel)
 
 * Shiny App that expose the package capacities.
+* `compute_fetch()` gains argument `land_polygon` to work with land polygons.
 * Bearings are oriented properly and the element `transect_lines` of the object returned by `compute_fetch()` gains a column `cardinal_direction` (see #15).
 * Argument `remove_outsiders` has been removed from `compute_fetch()`, instead
 a column `outsider` which identifies outsiders has been added.  

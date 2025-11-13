@@ -18,8 +18,8 @@
 #' transform `points` and `polygon`.
 #' @param land_polygon {`logical`}\cr{}
 #' Indicates whether the polygon represents land (`TRUE`) or water (`FALSE)`.
-#' When `TRUE`, points inside the polygon are considered outsiders (inland 
-#' points). When `FALSE`, points outside the polygon are considered outsiders. 
+#' When `TRUE`, points inside the polygon are considered outsiders (inland
+#' points). When `FALSE`, points outside the polygon are considered outsiders.
 #' Default is `FALSE`.
 #'
 #'
@@ -150,6 +150,8 @@ compute_fetch <- function(
     }
   }
 
+  points <- points |>
+    dplyr::select(id_point)
   points$outsider <- identify_outsiders(points, polygon, land_polygon)
 
   if (is.null(wind_weights)) {
@@ -189,13 +191,17 @@ compute_fetch <- function(
       )
     }
   }
+
   sav_msg_info("Creating fetch lines")
-  fetch_lines <- create_fetch_lines(points |> dplyr::filter(!outsider), d_direction, max_dist)
+  fetch_lines <- create_fetch_lines(
+    points |> dplyr::filter(!outsider), d_direction, max_dist
+  )
 
   sav_msg_info("Cropping fetch lines")
-  fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
   if (land_polygon) {
-    # browser()
+    fetch_crop <- suppressWarnings(fetch_lines |> sf::st_difference(polygon))
+  } else {
+    fetch_crop <- suppressWarnings(fetch_lines |> sf::st_intersection(polygon))
   }
   geom_type <- sf::st_geometry_type(fetch_crop)
   # sf::st_intersection() generates MULTILINESTRING with extra lines if there

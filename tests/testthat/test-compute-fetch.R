@@ -3,6 +3,8 @@ le_bound <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
 
 le_bound_merc <- le_bound |> sf::st_transform(crs = 3857)
 
+le_bound_merc_inv <- suppressWarnings(le_bound_merc |> invert_polygon())
+
 le_pt <- system.file("example", "le_points.geojson", package = "SAVM") |>
   sf::st_read(quiet = TRUE)
 
@@ -32,6 +34,22 @@ test_that("helpers work", {
   expect_true(all(!identify_outsiders(le_pt, le_bound)))
   expect_snapshot(res <- identify_outsiders(le_pt_out, le_bound))
   expect_true(res)
+  expect_false(
+    identify_outsiders(
+      le_pt_out |> sf::st_transform(crs = 3857),
+      le_bound_merc_inv
+    )
+  )
+  withr::with_options(
+    list(savm.verbose = "quiet"),
+    expect_true(
+      identify_outsiders(
+        le_pt_out |> sf::st_transform(crs = 3857),
+        le_bound_merc_inv,
+        TRUE
+      )
+    )
+  )
   #
   expect_true(valid_direction(seq(0, 350, 10)))
   expect_warning(
@@ -74,13 +92,13 @@ test_that("compute_fetch() throws meaningful errors", {
 })
 
 test_that("compute_fetch() generates NA for outsiders", {
-    expect_snapshot(res1  <- compute_fetch(le_pt_in_out, le_bound_merc))
-    expect_identical(res1$mean_fetch$outsider, c(FALSE, FALSE, TRUE, TRUE))
-    expect_identical(round(res1$mean_fetch$fetch_km), c(15, 15, NA, NA))
-    expect_identical(round(res1$mean_fetch$weighted_fetch_km), c(15, 15, NA, NA))
-    expect_identical(unique(res1$transect_lines$id_point), 1:2)
-    expect_snapshot(res2 <- compute_fetch(le_pt_out, le_bound_merc))
-    expect_null(res2$transect_lines)
+  expect_snapshot(res1 <- compute_fetch(le_pt_in_out, le_bound_merc))
+  expect_identical(res1$mean_fetch$outsider, c(FALSE, FALSE, TRUE, TRUE))
+  expect_identical(round(res1$mean_fetch$fetch_km), c(15, 15, NA, NA))
+  expect_identical(round(res1$mean_fetch$weighted_fetch_km), c(15, 15, NA, NA))
+  expect_identical(unique(res1$transect_lines$id_point), 1:2)
+  expect_snapshot(res2 <- compute_fetch(le_pt_out, le_bound_merc))
+  expect_null(res2$transect_lines)
 })
 
 test_that("compute_fetch() work", {
@@ -116,11 +134,13 @@ test_that("compute_fetch() work", {
   )
 })
 
-test_that("compute_fetch() with wind_weight", {
+test_that("compute_fetch() work with wind_weight and land polygons", {
   withr::with_options(
     list(savm.verbose = "quiet"),
     {
-      res <- compute_fetch(le_pt_mid, le_bound_merc,
+      res <- compute_fetch(
+        le_pt_mid,
+        le_bound_merc,
         wind_weights = data.frame(
           direction = seq(0, 360, by = 22.5)[-1],
           weight = 1
@@ -130,7 +150,7 @@ test_that("compute_fetch() with wind_weight", {
       expect_equal(res$mean_fetch$weighted_fetch_km, 15)
       #
       v_wei <- rep(c(0, 1), each = 4) |> rep(times = 2)
-      res2 <- compute_fetch(le_pt[1, ], le_bound_merc,
+      res2 <- compute_fetch(le_pt[1L, ], le_bound_merc,
         wind_weights = data.frame(
           direction = seq(0, 360, by = 22.5)[-1],
           weight = v_wei
@@ -138,6 +158,14 @@ test_that("compute_fetch() with wind_weight", {
       )
       expect_equal(round(res2$mean_fetch$fetch_km, 4), 2.3682)
       expect_equal(round(res2$mean_fetch$weighted_fetch_km, 4), 1.6469)
+      #
+      res_inv <- compute_fetch(
+        le_pt[1L, ] |> sf::st_transform(crs = 3857),
+        le_bound_merc_inv,
+        land_polygon = TRUE
+      )
+      expect_equal(round(res_inv$mean_fetch$fetch_km, 4), 2.3682)
     }
   )
 })
+
