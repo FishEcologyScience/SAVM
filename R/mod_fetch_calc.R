@@ -29,7 +29,7 @@ mod_fetch_calc_ui <- function(id) {
           conditionalPanel(
             condition = sprintf("output['%s'] == true", ns("data_available")),
             # Polygon for fetch calculation
-            h4("Choose Spatial Polygon"),
+            h5(strong("Choose Spatial Polygon")),
             shinyWidgets::prettySwitch(
               inputId = ns("use_polygon_upload"),
               label = "Upload from file",

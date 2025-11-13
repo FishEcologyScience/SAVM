@@ -13,86 +13,142 @@ mod_data_input_ui <- function(id) {
       # File Upload Section
       column(
         4,
-        bs4Dash::box(
-          title = tags$span(icon("upload"), " Data Input"),
+        bs4Dash::tabBox(
+          id = ns("data_input_tabs"),
           status = "primary",
           solidHeader = TRUE,
           width = NULL,
-          h5(strong("Select Data Source")),
-          h6(strong("Data Type:")),
-          conditionalPanel(
-            condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
-            data_format_text("csv"),
-            template_download_button(ns("download_csv_template"), "Data Template"),
-          ),
-          conditionalPanel(
-            condition = sprintf("input['%s'] == 'spatial_points'", ns("data_source_type")),
-            data_format_text("spatial_points"),
-            template_download_button(ns("download_spatial_template"), "Data Template"),
-          ),
-          selectInput(
-            ns("data_source_type"),
-            NULL,
-            choices = list(
-              "Point Data (CSV)" = "csv",
-              "Point Data (Spatial)" = "spatial_points",
-              "Area of Interest (Polygon)" = "spatial_polygon"
+          tabPanel(
+            title = tagList(icon("upload"), " Upload Data"),
+            value = "upload_data",
+            h6(strong("Data Type:")),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
+              data_format_text("csv"),
+              template_download_button(ns("download_csv_template"), "Data Template"),
             ),
-            selected = "csv"
-          ),
-          br(),
-          h6(strong("Choose file:")),
-          shp_help_text(),
-          fileInput(
-            ns("data_file"),
-            NULL,
-            accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
-            multiple = TRUE
-          ),
-          hr(),
-          # Conditional inputs based on data type
-          conditionalPanel(
-            condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == 'spatial_points'", ns("data_source_type")),
+              data_format_text("spatial_points"),
+              template_download_button(ns("download_spatial_template"), "Data Template"),
+            ),
+            selectInput(
+              ns("data_source_type"),
+              NULL,
+              choices = list(
+                "Point Data (CSV)" = "csv",
+                "Point Data (Spatial)" = "spatial_points",
+                "Area of Interest (Polygon)" = "spatial_polygon"
+              ),
+              selected = "csv"
+            ),
+            br(),
+            h6(strong("Choose file:")),
+            shp_help_text(),
+            fileInput(
+              ns("data_file"),
+              NULL,
+              accept = c(".csv", ".shp", ".geojson", ".gpkg", ".cpg", ".dbf", ".prj", ".sbn", ".sbx", ".xml", ".shx"),
+              multiple = TRUE
+            ),
+            hr(),
+            # Conditional inputs based on data type
+            conditionalPanel(
+              condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
+              numericInput(
+                ns("crs_input"),
+                "Input CRS (EPSG):",
+                value = 4326,
+                min = 1,
+                max = 99999
+              )
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == 'spatial_polygon'", ns("data_source_type")),
+              numericInput(
+                ns("grid_spacing"),
+                "Grid Spacing (meters):",
+                value = 500,
+                min = 10,
+                max = 10000,
+                step = 50
+              )
+            ),
             numericInput(
-              ns("crs_input"),
-              "Input CRS (EPSG):",
-              value = 4326,
+              ns("crs_output"),
+              "Output CRS (EPSG):",
+              value = 32617,
               min = 1,
               max = 99999
-            )
-          ),
-          conditionalPanel(
-            condition = sprintf("input['%s'] == 'spatial_polygon'", ns("data_source_type")),
-            numericInput(
-              ns("grid_spacing"),
-              "Grid Spacing (meters):",
-              value = 500,
-              min = 10,
-              max = 10000,
-              step = 50
-            )
-          ),
-          numericInput(
-            ns("crs_output"),
-            "Output CRS (EPSG):",
-            value = 32617,
-            min = 1,
-            max = 99999
-          ),
-          crs_help_text(),
-          br(),
-          fluidRow(
-            column(2),
-            column(
-              4,
-              actionButton(ns("process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("upload"))
             ),
-            column(
-              4,
-              actionButton(ns("clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("eraser"))
+            crs_help_text(),
+            br(),
+            fluidRow(
+              column(2),
+              column(
+                4,
+                actionButton(ns("process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("upload"))
+              ),
+              column(
+                4,
+                actionButton(ns("clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("eraser"))
+              )
+            )
+          ),
+          tabPanel(
+            title = tagList(icon("hand-pointer"), " Manual Entry"),
+            value = "manual_entry",
+            h6(strong("Data Type:")),
+            selectInput(
+              ns("manual_data_type"),
+              NULL,
+              choices = list(
+                "Point Data" = "points",
+                "Area of Interest (Polygon)" = "polygon"
+              ),
+              selected = "points"
+            ),
+            conditionalPanel(
+              condition = sprintf("input['%s'] == 'polygon'", ns("manual_data_type")),
+              numericInput(
+                ns("manual_grid_spacing"),
+                "Grid Spacing (meters):",
+                value = 500,
+                min = 10,
+                max = 10000,
+                step = 50
+              )
+            ),
+            br(),
+            numericInput(
+              ns("manual_crs_output"),
+              "Output CRS (EPSG):",
+              value = 32617,
+              min = 1,
+              max = 99999
+            ),
+            crs_help_text(),
+            br(),
+            div(
+              style = "text-align: center; padding: 20px; color: #7f8c8d;",
+              icon("map", "fa-2x"),
+              h4("Interactive map editing coming soon"),
+              p("You'll be able to add points or draw an AOI directly on the map.")
+            ),
+            br(),
+            fluidRow(
+              column(2),
+              column(
+                4,
+                actionButton(ns("manual_process_data"), "Process Data", class = "btn-primary btn-block", icon = icon("upload"))
+              ),
+              column(
+                4,
+                actionButton(ns("manual_clear_data"), "Clear Data", class = "btn-danger btn-block", icon = icon("eraser"))
+              )
             )
           )
-        ) # ,
+        )
       ),
 
       # Data Preview Section
