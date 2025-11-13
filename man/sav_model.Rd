@@ -18,8 +18,8 @@ sav_model(
 )
 }
 \arguments{
-\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or a \code{sf} object containing some or all of the
-following columns:
+\item{dat}{{\code{data.frame}|\code{sf}}\cr{} A \code{data.frame} or a \code{sf} object
+containing some or all of the following columns:
 \itemize{
 \item \code{depth_m}: Numeric, depth in meters.
 \item \code{fetch_km}: Numeric, fetch in kilometers.
@@ -42,11 +42,11 @@ One of \code{"rf"} (random forest), \code{"gam"} (Generalized Additive Model), o
 \item{pa_threshold}{{\code{numeric}}\cr{} Probability threshold for converting
 presence/absence predictions to binary values. Default is 0.5.}
 
-\item{depth, fetch}{{\code{character}}\cr{} Column specification for the predictors,
-see \emph{Details}.}
+\item{depth, fetch}{{\code{character}}\cr{} Column specification for the
+predictors, see \emph{Details}.}
 
-\item{substrate, secchi, limitation}{{\code{character}}\cr{}Column specification for post_hoc
-variables, see \emph{Details}.}
+\item{substrate, secchi, limitation}{{\code{character}}\cr{}Column specification
+for post_hoc variables, see \emph{Details}.}
 
 \item{vmax_par}{{\verb{named list}}\cr{} intercept and slope of the equation from
 Chambers and Kalff (1985) to compute the maximum depth of plant colonization
