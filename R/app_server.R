@@ -7,6 +7,8 @@
 app_server <- function(input, output, session) {
   # Reactive values to store application state
   app_data <- reactiveValues(
+    #
+    show_welcome_dialog = get_golem_config("show_welcome_dialog"),
     # Data flow states
     data_loaded = FALSE,
     data_valid = FALSE,
@@ -39,6 +41,7 @@ app_server <- function(input, output, session) {
   })
 
   # Module servers
+  mod_modal_welcome("welcome", app_data)
   mod_data_input_server("data_input_1", app_data, app_session = session)
   mod_fetch_calc_server("fetch_calc_1", app_data, app_session = session)
   mod_depth_extract_server("depth_extract_1", app_data, app_session = session)
