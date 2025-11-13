@@ -180,6 +180,10 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       polygon_data = NULL
     )
 
+    observeEvent(app_data$fetch_results, {
+      values$fetch_results <- app_data$fetch_results
+    }, ignoreNULL = FALSE)
+
     # Check if data is available
     output$data_available <- reactive({
       !is.null(app_data$original_data) && app_data$data_valid

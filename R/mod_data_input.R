@@ -119,7 +119,6 @@ mod_data_input_ui <- function(id) {
                 step = 50
               )
             ),
-            br(),
             numericInput(
               ns("manual_crs_output"),
               "Output CRS (EPSG):",
@@ -130,11 +129,11 @@ mod_data_input_ui <- function(id) {
             crs_help_text(),
             hr(),
             h6(strong("Draw or edit features:")),
-            p(class = "text-muted", "Use the map tools to add points or polygons. Switch tools using the buttons on the map toolbar."),
-            mapedit::editModUI(ns("manual_editor"), height = 360),
+            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Use the map tools to add points or polygons. Switch tools using the buttons on the map toolbar.")),
+            uiOutput(ns("manual_editor_container")),
             br(),
             uiOutput(ns("manual_draw_summary")),
-            br(),
+            hr(),
             fluidRow(
               column(2),
               column(
@@ -212,46 +211,79 @@ mod_data_input_server <- function(id, app_data, app_session) {
     ns <- session$ns
 
     # Reactive values for module
+    manual_map <- reactiveVal(NULL)
+
     values <- reactiveValues(
       processed_data = NULL,
-      validation_results = NULL
+      validation_results = NULL,
+      manual_features = NULL,
+      manual_map_generation = 0
     )
 
-    manual_map <- callModule(
-      mapedit::editMod,
-      "manual_editor",
-      leafmap = leaflet::leaflet() |>
+    manual_map_ui <- reactive({
+      generation <- values$manual_map_generation
+      module_id <- sprintf("manual_editor_%s", generation)
+
+      draw_points <- isTRUE(input$manual_data_type == "points")
+
+      base_manual_map <- leaflet::leaflet() |>
+        leaflet::setView(lng = -83.5, lat = 45.0, zoom = 6) |>
         leaflet::addProviderTiles("CartoDB.Positron") |>
-        leaflet::addScaleBar(position = "bottomleft"),
-      editor = "leafpm",
-      editorOptions = list(
-        position = "topleft",
-        drawMarker = TRUE,
-        drawRectangle = FALSE,
-        drawPolyline = FALSE,
-        drawCircle = FALSE,
-        drawCircleMarker = FALSE,
-        drawPolygon = TRUE,
-        editMode = TRUE,
-        removalMode = TRUE
-      )
-    )
+        leaflet::addScaleBar(position = "bottomleft") |>
+        leafpm::addPmToolbar(
+          toolbarOptions = leafpm::pmToolbarOptions(
+            position = "topleft",
+            drawMarker = draw_points,
+            drawPolygon = !draw_points,
+            drawPolyline = FALSE,
+            drawCircle = FALSE,
+            drawRectangle = !draw_points,
+            editMode = TRUE,
+            removalMode = TRUE
+          )
+        )
 
-    manual_features <- reactive({
-      req(manual_map)
-      feats <- manual_map()
-      if (is.null(feats) || is.null(feats$finished)) {
-        return(NULL)
-      }
-      finished <- feats$finished
-      if (is.null(finished) || nrow(finished) == 0) {
-        return(NULL)
-      }
-      finished
+      manual_map(callModule(
+        mapedit::editMod,
+        module_id,
+        leafmap = base_manual_map,
+        editor = "leafpm"
+      ))
+
+      mapedit::editModUI(ns(module_id), height = 360)
     })
 
+    output$manual_editor_container <- renderUI({
+      manual_map_ui()
+    })
+
+    manual_map_data <- reactive({
+      map_fun <- manual_map()
+      req(map_fun)
+      map_fun()
+    })
+
+    reset_manual_editor <- function() {
+      values$manual_features <- NULL
+      manual_map(NULL)
+      values$manual_map_generation <- values$manual_map_generation + 1
+    }
+
+    observeEvent(input$manual_data_type, {
+      reset_manual_editor()
+    }, ignoreNULL = FALSE)
+
+    observeEvent(manual_map_data(), {
+      feats <- manual_map_data()
+      if (is.null(feats) || is.null(feats$finished) || nrow(feats$finished) == 0) {
+        values$manual_features <- NULL
+      } else {
+        values$manual_features <- feats$finished
+      }
+    }, ignoreNULL = TRUE)
+
     output$manual_draw_summary <- renderUI({
-      feats <- manual_features()
+      feats <- values$manual_features
       if (is.null(feats)) {
         return(tags$p(class = "text-muted", "No features drawn yet."))
       }
@@ -275,8 +307,8 @@ mod_data_input_server <- function(id, app_data, app_session) {
     }
 
     clear_manual_map <- function() {
-      leaflet::leafletProxy(ns("manual_editor-map")) |>
-        leaflet::clearShapes()
+      values$manual_features <- NULL
+      reset_manual_editor()
     }
 
     prepare_manual_points <- function(features, target_epsg) {
@@ -336,7 +368,7 @@ mod_data_input_server <- function(id, app_data, app_session) {
     }
 
     observeEvent(input$manual_process_data, {
-      drawn <- manual_features()
+      drawn <- values$manual_features
 
       if (is.null(drawn)) {
         showNotification("Draw at least one feature on the map before processing.", type = "error", duration = 4)
@@ -372,6 +404,7 @@ mod_data_input_server <- function(id, app_data, app_session) {
       values$processed_data <- result
       app_data$original_data <- result
       app_data$data_loaded <- TRUE
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
 
       showNotification("Manual data processed successfully!", type = "message", duration = 3)
     })
@@ -411,6 +444,7 @@ mod_data_input_server <- function(id, app_data, app_session) {
       values$processed_data <- result
       app_data$original_data <- result
       app_data$data_loaded <- TRUE
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
 
       showNotification("Data processed successfully!", type = "message", duration = 3)
     })
