@@ -64,10 +64,14 @@ read_sav <- function(file_path, spacing = 500, layer = NULL, crs = 32617, crs_in
   } else if (file_ext %in% c("shp", "geojson", "gpkg", "gbd")) {
     if (file_ext == "gbd") {
       sav_msg_info("gdb detected")
-      sf_obj <- sf::st_read(file_path, layer = layer, quiet = TRUE)
+      sf_obj <- sf::st_read(file_path, layer = layer, quiet = TRUE) |>
+        sf::st_make_valid() |>
+        sf::st_zm()
     } else {
       sav_msg_info("spatial file detected")
-      sf_obj <- sf::st_read(file_path, quiet = TRUE)
+      sf_obj <- sf::st_read(file_path, quiet = TRUE) |>
+        sf::st_make_valid() |>
+        sf::st_zm()
     }
 
     geom_type <- sf::st_geometry_type(sf_obj)
@@ -213,7 +217,9 @@ read_sav_csv <- function(file_path, crs = 32617, crs_input = 4326, ...) {
 #'
 read_sav_pts <- function(file_path, crs = 32617) {
   # Read spatial file
-  sf_obj <- sf::st_read(file_path, quiet = TRUE)
+  sf_obj <- sf::st_read(file_path, quiet = TRUE) |>
+    sf::st_make_valid() |>
+    sf::st_zm()
 
   # Ensure it's a point geometry
   if (!all(sf::st_geometry_type(sf_obj) %in% c("POINT", "MULTIPOINT"))) {
@@ -279,7 +285,9 @@ read_sav_pts <- function(file_path, crs = 32617) {
 #' read_sav_aoi(temp_file, spacing = 500)
 read_sav_aoi <- function(file_path, spacing = 500, crs = 32617) {
   # Read spatial file
-  polygon_sf <- sf::st_read(file_path, quiet = TRUE)
+  polygon_sf <- sf::st_read(file_path, quiet = TRUE) |>
+    sf::st_make_valid() |>
+    sf::st_zm()
 
   # Ensure it's a polygon
   if (!all(sf::st_geometry_type(polygon_sf) %in% c("POLYGON", "MULTIPOLYGON"))) {

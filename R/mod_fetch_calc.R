@@ -39,7 +39,7 @@ mod_fetch_calc_ui <- function(id) {
           ),
           conditionalPanel(
             condition = sprintf("input['%s'] == true", ns("use_polygon_upload")),
-            helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Supported formats: GeoPackage (.gpkg), GeoJSON (.geojson), ESRI Shapefile (.shp, .dbf, .shx, .prj, .cpg, .sbn, .sbx, .xml)")),
+            shp_help_text(),
             fileInput(
               ns("aoi_polygon"),
               "Choose Spatial File:",
@@ -328,7 +328,9 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
               polygon_file <- file_paths
             }
 
-            polygon <- sf::st_read(polygon_file, quiet = TRUE)
+            polygon <- sf::st_read(polygon_file, quiet = TRUE) |>
+              sf::st_make_valid() |>
+              sf::st_zm()
           } else {
             req(input$polygon_library)
 
@@ -416,38 +418,115 @@ mod_fetch_calc_server <- function(id, app_data, app_session) {
       req(values$fetch_results)
 
       fetch_data <- values$fetch_results$mean_fetch |> sf::st_drop_geometry()
+      valid_fetch <- fetch_data |> dplyr::filter(!is.na(fetch_km))
+      na_count <- sum(is.na(fetch_data$fetch_km))
+
+      mean_fetch <- if (nrow(valid_fetch) > 0) {
+        paste0(round(mean(valid_fetch$fetch_km), 2), " km")
+      } else {
+        "Not available"
+      }
+
+      weighted_mean <- if (nrow(valid_fetch) > 0) {
+        paste0(round(mean(valid_fetch$weighted_fetch_km), 2), " km")
+      } else {
+        "Not available"
+      }
+
+      fetch_range <- if (nrow(valid_fetch) > 0) {
+        rng <- range(valid_fetch$fetch_km)
+        paste0(round(rng[1], 2), " - ", round(rng[2], 2), " km")
+      } else {
+        "Not available"
+      }
 
       tagList(
         p(strong("Points processed:"), nrow(fetch_data)),
-        p(strong("Mean fetch:"), round(mean(fetch_data$fetch_km, na.rm = TRUE), 2), "km"),
-        p(strong("Mean weighted fetch:"), round(mean(fetch_data$weighted_fetch_km, na.rm = TRUE), 2), "km"),
-        p(
-          strong("Fetch range:"),
-          paste(round(range(fetch_data$fetch_km, na.rm = TRUE), 2), collapse = " - "), "km"
-        )
+        p(strong("Points outside polygon (no fetch):"), na_count),
+        p(strong("Mean fetch:"), mean_fetch),
+        p(strong("Mean weighted fetch:"), weighted_mean),
+        p(strong("Fetch range:"), fetch_range)
       )
     })
 
     output$fetch_map <- leaflet::renderLeaflet({
       req(values$fetch_results)
 
-      pts <- values$fetch_results$mean_fetch |>
-        sf::st_make_valid()
-      transects <- values$fetch_results$transect_lines |>
-        sf::st_make_valid()
+      pts <- values$fetch_results$mean_fetch |> sf::st_make_valid()
+      pts <- pts |>
+        dplyr::mutate(
+          fetch_color = dplyr::if_else(is.na(fetch_km), "#d73027", "#1f78b4"),
+          fetch_label = dplyr::if_else(
+            is.na(fetch_km),
+            "Fetch unavailable (outside polygon)",
+            paste0("Fetch: ", round(fetch_km, 2), " km")
+          )
+        )
 
-      # Transform if needed
-      if (sf::st_crs(pts)$epsg != 4326) {
-        pts <- sf::st_transform(pts, 4326)
-        transects <- sf::st_transform(transects, 4326)
+      transects <- values$fetch_results$transect_lines
+      polygon <- values$polygon_data
+
+      # Ensure geometries are valid
+      if (!is.null(transects)) {
+        transects <- sf::st_make_valid(transects)
+      }
+      if (!is.null(polygon)) {
+        polygon <- sf::st_make_valid(polygon)
       }
 
-      leaflet::leaflet() |>
-        leaflet::addProviderTiles("CartoDB.Positron") |>
-        leaflet::addPolylines(data = transects, color = "red", weight = 1, group = "Transects") |>
-        leaflet::addCircleMarkers(data = pts, color = "blue", radius = 4, group = "Mean fetch") |>
+      target_crs <- 4326
+      if (!is.null(sf::st_crs(pts)) && !identical(sf::st_crs(pts)$epsg, target_crs)) {
+        pts <- sf::st_transform(pts, target_crs)
+      }
+      if (!is.null(transects) && !is.null(sf::st_crs(transects)) &&
+        !identical(sf::st_crs(transects)$epsg, target_crs)) {
+        transects <- sf::st_transform(transects, target_crs)
+      }
+      if (!is.null(polygon) && !is.null(sf::st_crs(polygon)) &&
+        !identical(sf::st_crs(polygon)$epsg, target_crs)) {
+        polygon <- sf::st_transform(polygon, target_crs)
+      }
+
+      overlay_groups <- c("Points")
+      map <- leaflet::leaflet() |>
+        leaflet::addProviderTiles("CartoDB.Positron")
+
+      if (!is.null(polygon)) {
+        map <- map |>
+          leaflet::addPolygons(
+            data = polygon,
+            fillColor = "#a6cee3",
+            fillOpacity = 0.2,
+            color = "#1f78b4",
+            weight = 2,
+            group = "Polygon"
+          )
+        overlay_groups <- c(overlay_groups, "Polygon")
+      }
+
+      if (!is.null(transects)) {
+        map <- map |>
+          leaflet::addPolylines(
+            data = transects,
+            color = "#fb6a4a",
+            weight = 1,
+            group = "Transects"
+          )
+        overlay_groups <- c(overlay_groups, "Transects")
+      }
+
+      map |>
+        leaflet::addCircleMarkers(
+          data = pts,
+          color = ~fetch_color,
+          radius = 4,
+          stroke = FALSE,
+          fillOpacity = 0.9,
+          label = ~fetch_label,
+          group = "Points"
+        ) |>
         leaflet::addLayersControl(
-          overlayGroups = c("Transects", "Mean fetch"),
+          overlayGroups = overlay_groups,
           options = leaflet::layersControlOptions(collapsed = TRUE)
         )
     })

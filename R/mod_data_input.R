@@ -435,8 +435,8 @@ process_input_data <- function(file_path,
   )
 
   # Add id_point column to points data
-  result$points <- result$points |>
-    dplyr::mutate(id_point = dplyr::row_number())
+  # result$points <- result$points |>
+  #   dplyr::mutate(id_point = dplyr::row_number())
 
   # Basic structural validation
   if (is.null(result$points) || nrow(result$points) == 0) {
@@ -514,9 +514,13 @@ shp_help_text <- function() {
     tags$span(
       style = "color: #6c757d;",
       icon("info-circle"),
-      " For shapefiles, select all files with the same name ",
-      em("(shp, dbf, shx, prj)"),
-      " and any additional files ", em("(cpg, sbn, sbx, xml).")
+      " Supported formats: GeoPackage (",
+      em("gpkg"),
+      "), GeoJSON (",
+      em("geojson"),
+      "), ESRI Shapefile (",
+      em("shp, dbf, shx, prj, cpg, sbn, sbx, xml"),
+      "): import all files."
     )
   )
 }
