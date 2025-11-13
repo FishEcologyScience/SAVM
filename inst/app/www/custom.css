@@ -7,3 +7,19 @@
 .sidebar .step-check.is-visible {
   display: inline-block;
 }
+
+#data_input_1-data_input_tabs_box .card-header {
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+  padding-left: 0.3rem !important;
+}
+
+#data_input_1-data_input_tabs_box .nav-pills .nav-link {
+  background-color: #00000022 !important;
+  color: #fff !important;
+}
+
+#data_input_1-data_input_tabs_box .nav-pills .nav-link.active {
+  background-color: #00000066 !important;
+  color: #fff !important;
+}
