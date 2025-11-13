@@ -12,14 +12,16 @@ plot_sav_distribution(
   predictors = c("depth", "fetch"),
   post_hoc = TRUE,
   max_depth = 30,
-  max_fetch = 15
+  max_fetch = 15,
+  ...
 )
 
 plot_sav_density(
   dat,
   predictors = c("depth", "fetch"),
   max_depth = 30,
-  post_hoc = TRUE
+  post_hoc = TRUE,
+  ...
 )
 
 plot_sav_tmap(
@@ -57,6 +59,8 @@ Character vector specifying the type of plots to generate. Options:
 
 \item{max_fetch}{{\code{numeric}}\cr{}
 Numeric value specifying the maximum fetch bin (default: 15 km).}
+
+\item{...}{Further arguments passed to \code{\link[ggplot2:theme]{ggplot2::theme()}}.}
 
 \item{study_zone}{A list containing spatial objects:
 \itemize{

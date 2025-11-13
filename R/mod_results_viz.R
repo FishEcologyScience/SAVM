@@ -542,9 +542,11 @@ mod_results_viz_server <- function(id, app_data) {
             predictors = input$dist_predictors,
             post_hoc = input$dist_post_hoc,
             max_depth = input$dist_max_depth,
-            max_fetch = input$dist_max_fetch
+            max_fetch = input$dist_max_fetch,
+            legend.text = ggplot2::element_text(size = 12),
+            axis.text = ggplot2::element_text(size = 12),
+            axis.title = ggplot2::element_text(size = 14)
           )
-
           values$dist_plot_ready <- TRUE
           showNotification("Distribution plot generated successfully!", type = "message", duration = 3)
         },
@@ -587,7 +589,10 @@ mod_results_viz_server <- function(id, app_data) {
             dat = plot_data,
             predictors = input$density_predictors,
             max_depth = input$density_max_depth,
-            post_hoc = input$density_post_hoc
+            post_hoc = input$density_post_hoc,
+            legend.text = ggplot2::element_text(size = 12),
+            axis.text = ggplot2::element_text(size = 12),
+            axis.title = ggplot2::element_text(size = 14)
           )
 
           values$density_plot_ready <- TRUE
@@ -746,16 +751,16 @@ mod_results_viz_server <- function(id, app_data) {
         req(app_data$model_results)
 
         data <- app_data$model_results
-        export_data <- data 
+        export_data <- data
         if (inherits(data, "sf")) {
           coords <- sf::st_coordinates(data) |> as.data.frame()
-          export_data  <- dplyr::bind_cols(
+          export_data <- dplyr::bind_cols(
             sf::st_drop_geometry(data),
             coords |>
               dplyr::select(c(X, Y)) |>
               dplyr::rename(longitue = X, latitude = Y)
           )
-         } 
+        }
 
         utils::write.csv(export_data, file, row.names = FALSE)
       }
