@@ -1,4 +1,4 @@
-# SAVM (devel)
+# SAVM 0.0.2
 
 * Shiny App that expose the package capacities.
 * `compute_fetch()` gains argument `land_polygon` to work with land polygons.
