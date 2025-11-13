@@ -17,7 +17,7 @@
 #' Coordinate reference system (CRS) passed to [sf::st_crs()], used to
 #' transform `points` and `polygon`.
 #' @param land_polygon {`logical`}\cr{}
-#' Indicates whether the polygon represents land (`TRUE`) or water (`FALSE)`.
+#' Indicates whether the polygon represents land (`TRUE`) or water (`FALSE`).
 #' When `TRUE`, points inside the polygon are considered outsiders (inland
 #' points). When `FALSE`, points outside the polygon are considered outsiders.
 #' Default is `FALSE`.
@@ -70,7 +70,7 @@
 #'
 #' @references
 #' * For an implementation leveraging  [`sf::st_buffer()`], see
-#'   <https://github.com/blasee/windfetch>.
+#' <https://github.com/blasee/windfetch>.
 #' * Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.
 #' D. 2022. Modelling submerged aquatic vegetation presence and percent cover to
 #' support the development of a freshwater fish habitat management tool. Can.

@@ -41,7 +41,7 @@ Coordinate reference system (CRS) passed to \code{\link[sf:st_crs]{sf::st_crs()}
 transform \code{points} and \code{polygon}.}
 
 \item{land_polygon}{{\code{logical}}\cr{}
-Indicates whether the polygon represents land (\code{TRUE}) or water (\verb{FALSE)}.
+Indicates whether the polygon represents land (\code{TRUE}) or water (\code{FALSE}).
 When \code{TRUE}, points inside the polygon are considered outsiders (inland
 points). When \code{FALSE}, points outside the polygon are considered outsiders.
 Default is \code{FALSE}.}

@@ -1,7 +1,7 @@
 Package: SAVM
 Title: Submerged aquatic vegetation model
-Version: 0.0.1.9012
-Date: 2025-11-12
+Version: 0.0.1.9013
+Date: 2025-11-13
 Authors@R: c(
     person(given = "Kevin",
            family = "Cazelles",
@@ -31,6 +31,7 @@ Depends:
     R (>= 4.2),
     randomForest (>= 4.7-1.2)
 Imports: 
+    bs4Dash,
     cli (>= 3.6.4),
     config,
     DT,
@@ -50,7 +51,6 @@ Imports:
     shiny,
     shinyjs,
     shinycssloaders,
-    shinydashboard,
     shinyWidgets,
     stats,
     tmap (>= 4.0),

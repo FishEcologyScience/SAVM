@@ -3,8 +3,8 @@
 #' Apply SAV prediction models to predict SAV cover and presence/absence, with
 #' optional post-hoc processing.
 #'
-#' @param dat {`data.frame`|`sf`}\cr{} A `data.frame` or a `sf` object containing some or all of the
-#' following columns:
+#' @param dat {`data.frame`|`sf`}\cr{} A `data.frame` or a `sf` object 
+#' containing some or all of the following columns:
 #'   - `depth_m`: Numeric, depth in meters.
 #'   - `fetch_km`: Numeric, fetch in kilometers.
 #'   - `secchi`: Numeric Secchi depth in meters (post_hoc)
@@ -21,10 +21,10 @@
 #' `"lmm"` (Linear Mixed Model). Default is the same as `method_pa`.
 #' @param pa_threshold {`numeric`}\cr{} Probability threshold for converting
 #' presence/absence predictions to binary values. Default is 0.5.
-#' @param depth,fetch {`character`}\cr{} Column specification for the predictors,
-#' see *Details*.
-#' @param substrate,secchi,limitation {`character`}\cr{}Column specification for post_hoc
-#' variables, see *Details*.
+#' @param depth,fetch {`character`}\cr{} Column specification for the 
+#' predictors, see *Details*.
+#' @param substrate,secchi,limitation {`character`}\cr{}Column specification 
+#' for post_hoc variables, see *Details*.
 #' @param vmax_par {`named list`}\cr{} intercept and slope of the equation from
 #' Chambers and Kalff (1985) to compute the maximum depth of plant colonization
 #' (Vmax), see *Details* below.
