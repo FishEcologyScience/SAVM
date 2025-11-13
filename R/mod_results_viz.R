@@ -746,7 +746,16 @@ mod_results_viz_server <- function(id, app_data) {
         req(app_data$model_results)
 
         data <- app_data$model_results
-        export_data <- if (inherits(data, "sf")) sf::st_drop_geometry(data) else data
+        export_data <- data 
+        if (inherits(data, "sf")) {
+          coords <- sf::st_coordinates(data) |> as.data.frame()
+          export_data  <- dplyr::bind_cols(
+            sf::st_drop_geometry(data),
+            coords |>
+              dplyr::select(c(X, Y)) |>
+              dplyr::rename(longitue = X, latitude = Y)
+          )
+         } 
 
         utils::write.csv(export_data, file, row.names = FALSE)
       }

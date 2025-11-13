@@ -7,7 +7,7 @@
 globalVariables(c(
   "cardinal_direction", "direction", "fetch", "id_point", "weight", "outsider",
   "Cover_Bin", "Depth_Bin", "Fetch_Bin", "Mean_Value", "PA_Factor", "depth_m", "fetch_km", "limitation_secchi", "transect_length", "vmax", "pa", "geometry",
-  "weighted_fetch_km"
+  "weighted_fetch_km", "X", "Y"
 ))
 
 
