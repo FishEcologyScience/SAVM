@@ -21,15 +21,32 @@ mod_data_input_ui <- function(id) {
           tabPanel(
             title = tagList(icon("upload"), " Upload Data"),
             value = "upload_data",
+            fluidRow(
+              column(
+                8,
+                h5(strong("Data Input"))
+              ),
+              column(
+                4,
+                div(
+                  style = "text-align: right; padding-top: 5px;",
+                  actionButton(
+                    ns("show_data_input_help"),
+                    label = NULL,
+                    icon = icon("info-circle"),
+                    class = "btn-sm btn-info",
+                    style = "padding: 5px 10px;"
+                  )
+                )
+              )
+            ),
             h6(strong("Data Type:")),
             conditionalPanel(
               condition = sprintf("input['%s'] == 'csv'", ns("data_source_type")),
-              data_format_text("csv"),
               template_download_button(ns("download_csv_template"), "Data Template"),
             ),
             conditionalPanel(
               condition = sprintf("input['%s'] == 'spatial_points'", ns("data_source_type")),
-              data_format_text("spatial_points"),
               template_download_button(ns("download_spatial_template"), "Data Template"),
             ),
             selectInput(
@@ -98,6 +115,25 @@ mod_data_input_ui <- function(id) {
           tabPanel(
             title = tagList(icon("hand-pointer"), " Manual Entry"),
             value = "manual_entry",
+            fluidRow(
+              column(
+                8,
+                h5(strong("Data Input"))
+              ),
+              column(
+                4,
+                div(
+                  style = "text-align: right; padding-top: 5px;",
+                  actionButton(
+                    ns("show_data_input_help2"),
+                    label = NULL,
+                    icon = icon("info-circle"),
+                    class = "btn-sm btn-info",
+                    style = "padding: 5px 10px;"
+                  )
+                )
+              )
+            ),
             h6(strong("Data Type:")),
             selectInput(
               ns("manual_data_type"),
@@ -220,6 +256,33 @@ mod_data_input_server <- function(id, app_data, app_session) {
       manual_map_generation = 0
     )
 
+    # Data input modals
+    observeEvent(input$show_data_input_help, {
+      showModal(modalDialog(
+        title = tags$div(
+          icon("database"),
+          " Data Input Guide"
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        includeHTML(app_sys("app/www/doc/input_data.html"))
+      ))
+    })
+
+    observeEvent(input$show_data_input_help2, {
+      showModal(modalDialog(
+        title = tags$div(
+          icon("database"),
+          " Data Input Guide"
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        includeHTML(app_sys("app/www/doc/input_data.html"))
+      ))
+    })
+
     manual_map_ui <- reactive({
       generation <- values$manual_map_generation
       module_id <- sprintf("manual_editor_%s", generation)
@@ -269,18 +332,24 @@ mod_data_input_server <- function(id, app_data, app_session) {
       values$manual_map_generation <- values$manual_map_generation + 1
     }
 
-    observeEvent(input$manual_data_type, {
-      reset_manual_editor()
-    }, ignoreNULL = FALSE)
+    observeEvent(input$manual_data_type,
+      {
+        reset_manual_editor()
+      },
+      ignoreNULL = FALSE
+    )
 
-    observeEvent(manual_map_data(), {
-      feats <- manual_map_data()
-      if (is.null(feats) || is.null(feats$finished) || nrow(feats$finished) == 0) {
-        values$manual_features <- NULL
-      } else {
-        values$manual_features <- feats$finished
-      }
-    }, ignoreNULL = TRUE)
+    observeEvent(manual_map_data(),
+      {
+        feats <- manual_map_data()
+        if (is.null(feats) || is.null(feats$finished) || nrow(feats$finished) == 0) {
+          values$manual_features <- NULL
+        } else {
+          values$manual_features <- feats$finished
+        }
+      },
+      ignoreNULL = TRUE
+    )
 
     output$manual_draw_summary <- renderUI({
       feats <- values$manual_features
@@ -766,40 +835,6 @@ shp_help_text <- function() {
       "): import all files."
     )
   )
-}
-
-#' Data format Help Text Helper Function
-#'
-#' @description Helper function to generate data format help text
-#'
-#' @noRd
-#'
-data_format_text <- function(type) {
-  if (type == "csv") {
-    txt <- helpText(
-      tags$span(
-        style = "color: #6c757d;",
-        icon("info-circle"),
-        " Required: ", em("latitude"), " and ", em("longitude"), ". ",
-        "Optional: ", em("fetch_km"), " (0-50 km), ",
-        em("depth_m"), " (0-30 m), ", em("secchi"), " (0-10 m), ",
-        em("substrate"), " (logical), ", em("limitation"), " (logical)."
-      )
-    )
-  }
-
-  if (type == "spatial_points") {
-    txt <- helpText(
-      tags$span(
-        style = "color: #6c757d;",
-        icon("info-circle"),
-        "Optional: ", em("fetch_km"), " (0-50 km), ",
-        em("depth_m"), " (0-30 m), ", em("secchi"), " (0-10 m), ",
-        em("substrate"), " (logical), ", em("limitation"), " (logical)."
-      )
-    )
-  }
-  txt
 }
 
 #' Template Download Button Helper Function

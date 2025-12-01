@@ -86,7 +86,7 @@ app_ui <- function(request) {
                   tags$li("Upload and validate your spatial data for modelling"),
                   tags$li("Optionally calculate wind fetch for your points"),
                   tags$li("Optionally extract depth for your points from a bathymetry raster"),
-                  tags$li("Apply Random Forest models to predict SAV presence/cover"),
+                  tags$li("Apply models to predict SAV presence/cover"),
                   tags$li("Visualize and explore your results"),
                 ),
                 hr(),
