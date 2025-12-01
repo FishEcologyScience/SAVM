@@ -27,7 +27,7 @@
 #' Numeric value specifying the maximum depth bin (default: 30 meters).
 #' @param max_fetch {`numeric`}\cr{}
 #' Numeric value specifying the maximum fetch bin (default: 15 km).
-#' @param ... Further arguments passed to [ggplot2::theme()]. 
+#' @param ... Further arguments passed to [ggplot2::theme()].
 #'
 #' @return A set of ggplot2 plots displayed in a grid layout.
 #'
@@ -92,6 +92,20 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
     rlang::abort("Requested layer `cover` is unavailable in provided data)")
   }
 
+  cover_levels <- c(
+    "0%",
+    ">0-10%",
+    "10-20%",
+    "20-30%",
+    "30-40%",
+    "40-50%",
+    "50-60%",
+    "60-70%",
+    "70-80%",
+    "80-90%",
+    "90-100%"
+  )
+
   # Process data
   dat <- dat |>
     dplyr::mutate(
@@ -120,11 +134,31 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
       } else {
         NULL
       },
-      Cover_Bin = if (has_cover) cut(dat[, cover_col], breaks = seq(0, 100, by = 10), include.lowest = TRUE, right = FALSE) else NULL
+      Cover_Bin = if (has_cover) {
+        cov_vals <- dat[[cover_col]]
+        bins <- dplyr::case_when(
+          cov_vals == 0 ~ "0%",
+          cov_vals > 0 & cov_vals <= 10 ~ ">0-10%",
+          cov_vals > 10 & cov_vals <= 20 ~ "10-20%",
+          cov_vals > 20 & cov_vals <= 30 ~ "20-30%",
+          cov_vals > 30 & cov_vals <= 40 ~ "30-40%",
+          cov_vals > 40 & cov_vals <= 50 ~ "40-50%",
+          cov_vals > 50 & cov_vals <= 60 ~ "50-60%",
+          cov_vals > 60 & cov_vals <= 70 ~ "60-70%",
+          cov_vals > 70 & cov_vals <= 80 ~ "70-80%",
+          cov_vals > 80 & cov_vals <= 90 ~ "80-90%",
+          cov_vals > 90 & cov_vals <= 100 ~ "90-100%",
+          TRUE ~ NA_character_
+        )
+        factor(bins, levels = cover_levels, ordered = TRUE)
+      } else {
+        NULL
+      }
     )
 
   # Define colors
   cover_palette <- c(
+    "#878787",
     "#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8",
     "#D7EED1", "#9CCE97", "#54A35B", "#1A7234", "#00401A"
   )
@@ -136,7 +170,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
       ggplot2::geom_bar() +
       ggplot2::scale_fill_manual(values = cols) +
       ggplot2::labs(x = "Fetch Bin", y = "Number of Records", fill = "SAV P/A") +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 
@@ -146,7 +180,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
       ggplot2::geom_bar() +
       ggplot2::scale_fill_manual(values = cols) +
       ggplot2::labs(x = "Depth Bin", y = "Number of Records", fill = "SAV P/A") +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 
@@ -156,7 +190,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
       ggplot2::geom_bar() +
       ggplot2::scale_fill_manual(values = cover_palette, drop = FALSE) +
       ggplot2::labs(x = "Fetch Bin", y = "Number of Records", fill = "SAV Cover") +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 
@@ -166,7 +200,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
       ggplot2::geom_bar() +
       ggplot2::scale_fill_manual(values = cover_palette, drop = FALSE) +
       ggplot2::labs(x = "Depth Bin", y = "Number of Records", fill = "SAV Cover") +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 
@@ -196,7 +230,7 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
 #' @param max_depth Numeric value specifying the maximum depth bin (default: 30 meters).
 #' @param post_hoc Logical value indicating whether to use post-hoc analyzed column (`pa_post_hoc`) instead of raw column (`pa`). Default is `TRUE`.
 #' @param ... Further arguments passed to [ggplot2::theme()].
-#' 
+#'
 #' @return One or two ggplot2 density plots visualizing SAV presence/absence by depth and/or fetch.
 #'
 #' @rdname plot_sav
@@ -271,7 +305,7 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
         fill = "SAV P/A",
         color = "SAV P/A"
       ) +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 
@@ -296,7 +330,7 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
         fill = "SAV P/A",
         color = "SAV P/A"
       ) +
-      ggplot2::theme_minimal() + 
+      ggplot2::theme_minimal() +
       ggplot2::theme(...)
   }
 

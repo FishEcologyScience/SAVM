@@ -391,7 +391,7 @@ mod_results_viz_server <- function(id, app_data) {
         if (is.null(sf_col)) {
           sf_col <- "geometry"
         }
-        dplyr::rename_with(model, ~ paste0("sav_", .x), -all_of(sf_col))
+        dplyr::rename_with(model, ~ paste0("sav_", .x), -dplyr::all_of(sf_col))
       } else {
         dplyr::rename_with(model, ~ paste0("sav_", .x))
       }
@@ -608,7 +608,6 @@ mod_results_viz_server <- function(id, app_data) {
 
           # Convert sf to data.frame for plotting
           plot_data <- if (inherits(data, "sf")) sf::st_drop_geometry(data) else data
-
           values$dist_plot <- plot_sav_distribution(
             dat = plot_data,
             type = input$dist_type,
