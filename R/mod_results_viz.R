@@ -364,6 +364,59 @@ mod_results_viz_server <- function(id, app_data) {
       density_plot_ready = FALSE
     )
 
+    prefixed_results <- reactive({
+      req(app_data$model_results)
+
+      model <- app_data$model_results
+
+      if (inherits(model, "sf")) {
+        sf_col <- attr(model, "sf_column")
+        if (is.null(sf_col)) {
+          sf_col <- "geometry"
+        }
+        dplyr::rename_with(model, ~ paste0("sav_", .x), -all_of(sf_col))
+      } else {
+        dplyr::rename_with(model, ~ paste0("sav_", .x))
+      }
+    })
+
+    viz_data <- reactive({
+      model_prefixed <- prefixed_results()
+      input_data <- app_data$original_data
+
+      if (is.null(input_data)) {
+        return(model_prefixed)
+      }
+
+      input_df <- tryCatch(
+        {
+          if (inherits(input_data, "sf")) {
+            sf::st_drop_geometry(input_data)
+          } else if (is.list(input_data) && "points" %in% names(input_data)) {
+            pts_input <- input_data$points
+            if (inherits(pts_input, "sf")) {
+              sf::st_drop_geometry(pts_input)
+            } else {
+              as.data.frame(pts_input)
+            }
+          } else {
+            as.data.frame(input_data)
+          }
+        },
+        error = function(e) NULL
+      )
+
+      if (is.null(input_df)) {
+        return(model_prefixed)
+      }
+
+      if (nrow(input_df) == nrow(model_prefixed)) {
+        cbind(model_prefixed, input_df)
+      } else {
+        model_prefixed
+      }
+    })
+
     # Check if results are available
     output$results_available <- reactive({
       !is.null(app_data$model_results) && app_data$model_applied
@@ -374,13 +427,16 @@ mod_results_viz_server <- function(id, app_data) {
     observe({
       req(app_data$model_results)
 
-      data <- app_data$model_results
-      available_cols <- names(data)
+      data_model <- app_data$model_results
+      data_viz <- viz_data()
+
+      available_cols_model <- names(data_model)
+      available_cols_viz <- names(data_viz)
 
       # Update distribution predictors
       dist_choices <- list()
-      if ("depth_m" %in% available_cols) dist_choices[["Depth"]] <- "depth"
-      if ("fetch_km" %in% available_cols) dist_choices[["Fetch"]] <- "fetch"
+      if ("depth_m" %in% available_cols_model) dist_choices[["Depth"]] <- "depth"
+      if ("fetch_km" %in% available_cols_model) dist_choices[["Fetch"]] <- "fetch"
 
       updateCheckboxGroupInput(
         session, "dist_predictors",
@@ -396,23 +452,23 @@ mod_results_viz_server <- function(id, app_data) {
 
       # Update map layer dropdown
       map_choices <- list()
-      if ("pa_pred" %in% available_cols) {
-        map_choices[["Presence/Absence Predictions"]] <- "pa_pred"
+      if ("sav_pa_pred" %in% available_cols_viz) {
+        map_choices[["Presence/Absence Predictions"]] <- "sav_pa_pred"
       }
-      if ("pa_post_hoc" %in% available_cols) {
-        map_choices[["Presence/Absence (Post-hoc)"]] <- "pa_post_hoc"
+      if ("sav_pa_post_hoc" %in% available_cols_viz) {
+        map_choices[["Presence/Absence (Post-hoc)"]] <- "sav_pa_post_hoc"
       }
-      if ("cover_pred" %in% available_cols) {
-        map_choices[["Cover Predictions"]] <- "cover_pred"
+      if ("sav_cover_pred" %in% available_cols_viz) {
+        map_choices[["Cover Predictions"]] <- "sav_cover_pred"
       }
-      if ("cover_post_hoc" %in% available_cols) {
-        map_choices[["Cover (Post-hoc)"]] <- "cover_post_hoc"
+      if ("sav_cover_post_hoc" %in% available_cols_viz) {
+        map_choices[["Cover (Post-hoc)"]] <- "sav_cover_post_hoc"
       }
-      if ("depth_m" %in% available_cols) {
-        map_choices[["Depth Values"]] <- "depth_m"
+      if ("sav_depth_m" %in% available_cols_viz) {
+        map_choices[["Depth Values"]] <- "sav_depth_m"
       }
-      if ("fetch_km" %in% available_cols) {
-        map_choices[["Fetch Values"]] <- "fetch_km"
+      if ("sav_fetch_km" %in% available_cols_viz) {
+        map_choices[["Fetch Values"]] <- "sav_fetch_km"
       }
 
       updateSelectInput(
@@ -422,7 +478,7 @@ mod_results_viz_server <- function(id, app_data) {
       )
 
       # Update table columns
-      display_cols <- available_cols[!available_cols %in% c("geometry")]
+      display_cols <- available_cols_viz[!available_cols_viz %in% c("geometry")]
       table_choices <- stats::setNames(display_cols, display_cols)
 
       updateCheckboxGroupInput(
@@ -623,8 +679,13 @@ mod_results_viz_server <- function(id, app_data) {
       req(app_data$model_results)
       req(input$map_layer)
 
-      pts <- app_data$model_results |>
+      pts <- viz_data() |>
         sf::st_make_valid()
+
+      # Add point ID if not present
+      if (!"point_id" %in% names(pts)) {
+        pts$point_id <- seq_len(nrow(pts))
+      }
 
       # Transform if needed
       if (sf::st_crs(pts)$epsg != 4326) {
@@ -638,15 +699,19 @@ mod_results_viz_server <- function(id, app_data) {
         leaflet::addProviderTiles("CartoDB.Positron")
 
       pts_data <- sf::st_drop_geometry(pts)
+      id_col <- if ("point_id" %in% names(pts_data)) "point_id" else if ("sav_point_id" %in% names(pts_data)) "sav_point_id" else NULL
+      depth_col <- if ("depth_m" %in% names(pts_data)) "depth_m" else if ("sav_depth_m" %in% names(pts_data)) "sav_depth_m" else NULL
+      fetch_col <- if ("fetch_km" %in% names(pts_data)) "fetch_km" else if ("sav_fetch_km" %in% names(pts_data)) "sav_fetch_km" else NULL
+
       tooltip_labels <- sprintf(
         "<strong>Point ID:</strong> %s<br/><strong>Depth:</strong> %.2f m<br/>
         <strong>Fetch:</strong> %.2f km<br/><strong>PA Pred:</strong> %.3f<br/>
         <strong>Cover Pred:</strong> %.1f%%",
-        if ("point_id" %in% names(pts_data)) pts_data$point_id else NA,
-        if ("depth_m" %in% names(pts_data)) pts_data$depth_m else NA,
-        if ("fetch_km" %in% names(pts_data)) pts_data$fetch_km else NA,
-        if ("pa_pred" %in% names(pts_data)) pts_data$pa_pred else NA,
-        if ("cover_pred" %in% names(pts_data)) pts_data$cover_pred else NA
+        if (!is.null(id_col)) pts_data[[id_col]] else NA,
+        if (!is.null(depth_col)) pts_data[[depth_col]] else NA,
+        if (!is.null(fetch_col)) pts_data[[fetch_col]] else NA,
+        if ("sav_pa_pred" %in% names(pts_data)) pts_data$sav_pa_pred else NA,
+        if ("sav_cover_pred" %in% names(pts_data)) pts_data$sav_cover_pred else NA
       ) |> lapply(shiny::HTML)
 
       if (!is.null(color_var) && color_var %in% names(pts)) {
@@ -658,12 +723,12 @@ mod_results_viz_server <- function(id, app_data) {
 
         # Determine legend title based on variable
         legend_title <- switch(color_var,
-          "pa_pred" = "Presence Prob.",
-          "pa_post_hoc" = "Presence (Post-hoc)",
-          "cover_pred" = "Cover (%)",
-          "cover_post_hoc" = "Cover (Post-hoc)",
-          "depth_m" = "Depth (m)",
-          "fetch_km" = "Fetch (km)",
+          "sav_pa_pred" = "Presence Prob.",
+          "sav_pa_post_hoc" = "Presence (Post-hoc)",
+          "sav_cover_pred" = "Cover (%)",
+          "sav_cover_post_hoc" = "Cover (Post-hoc)",
+          "sav_depth_m" = "Depth (m)",
+          "sav_fetch_km" = "Fetch (km)",
           color_var
         )
 
@@ -712,9 +777,9 @@ mod_results_viz_server <- function(id, app_data) {
 
     # Data table
     output$data_table <- DT::renderDT({
-      req(app_data$model_results)
+      req(viz_data())
 
-      data <- app_data$model_results
+      data <- viz_data()
 
       # Convert sf to data.frame for table
       table_data <- if (inherits(data, "sf")) sf::st_drop_geometry(data) else data
@@ -733,6 +798,13 @@ mod_results_viz_server <- function(id, app_data) {
         dplyr::mutate(
           dplyr::across(dplyr::where(is.numeric), ~ round(.x, 3))
         )
+
+      # Ensure id_point is the first column when present
+      col_order <- names(table_data)
+      if ("id_point" %in% col_order) {
+        col_order <- c("id_point", setdiff(col_order, "id_point"))
+        table_data <- table_data[, col_order, drop = FALSE]
+      }
 
       DT::datatable(
         table_data,
@@ -772,18 +844,29 @@ mod_results_viz_server <- function(id, app_data) {
         paste0("sav_results_data_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        req(app_data$model_results)
+        req(viz_data())
 
-        data <- app_data$model_results
+        data <- viz_data()
         export_data <- data
         if (inherits(data, "sf")) {
-          coords <- sf::st_coordinates(data) |> as.data.frame()
-          export_data <- dplyr::bind_cols(
-            sf::st_drop_geometry(data),
-            coords |>
-              dplyr::select(c(X, Y)) |>
-              dplyr::rename(longitue = X, latitude = Y)
-          )
+          export_data <- sf::st_drop_geometry(data)
+
+          # Always add EPSG:4326 coordinates for export
+          pts_4326 <- if (is.na(sf::st_crs(data)$epsg) || sf::st_crs(data)$epsg != 4326) {
+            sf::st_transform(data, 4326)
+          } else {
+            data
+          }
+
+          coords <- sf::st_coordinates(pts_4326) |> as.data.frame()
+          coord_cols <- coords |>
+            dplyr::select(c(X, Y)) |>
+            dplyr::rename(longitude_epsg4326 = X, latitude_epsg4326 = Y)
+
+          # Avoid duplicating columns if already present
+          coord_cols <- coord_cols[, setdiff(names(coord_cols), names(export_data)), drop = FALSE]
+
+          export_data <- dplyr::bind_cols(export_data, coord_cols)
         }
 
         utils::write.csv(export_data, file, row.names = FALSE)
@@ -796,9 +879,9 @@ mod_results_viz_server <- function(id, app_data) {
         paste0("sav_results_spatial_", Sys.Date(), ".gpkg")
       },
       content = function(file) {
-        req(app_data$model_results)
+        req(viz_data())
 
-        data <- app_data$model_results
+        data <- viz_data()
 
         # Ensure it's an sf object
         if (!inherits(data, "sf")) {
@@ -816,9 +899,9 @@ mod_results_viz_server <- function(id, app_data) {
         paste0("sav_results_spatial_", Sys.Date(), ".gpkg")
       },
       content = function(file) {
-        req(app_data$model_results)
+        req(viz_data())
 
-        data <- app_data$model_results
+        data <- viz_data()
 
         # Ensure it's an sf object
         if (!inherits(data, "sf")) {
