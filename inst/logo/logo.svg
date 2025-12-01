@@ -61,7 +61,10 @@
        id="image1"
        x="2.1746445"
        y="43.163776"
-       clip-path="url(#clipPath3)" /><text
+       clip-path="url(#clipPath3)"
+       inkscape:export-filename="logo.png"
+       inkscape:export-xdpi="244"
+       inkscape:export-ydpi="244" /><text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:29.0129px;line-height:1.2;font-family:Ramabhadra;-inkscape-font-specification:'Ramabhadra, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;writing-mode:lr-tb;direction:ltr;text-anchor:middle;fill:#aedfef;fill-opacity:1;stroke:#aee0f0;stroke-width:0.548274;stroke-linecap:round;stroke-miterlimit:10;stroke-opacity:1"
        x="24.675291"
