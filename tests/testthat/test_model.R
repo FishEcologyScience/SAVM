@@ -32,10 +32,9 @@ res1 <- structure(
     depth_m = c(5, 1, 10),
     fetch_km = c(1, 3, 2),
     limitation = c(TRUE, FALSE, TRUE),
-    pa_pred = c(0.984, 0.44, 0),
-    pa = c(1, 0, 0),
-    cover_pred = c(88.3866124814003, 39.3158240240619, 45.7916938687299),
-    cover = c(88.3866124814003, 0, 0),
+    pa_prob = c(0.984, 0.44, 0),
+    pa_pred = c(1, 0, 0),
+    cover_pred = c(88.3866124814003, 0, 0),
     pa_post_hoc = c(
       1,
       0, 0
@@ -54,10 +53,9 @@ res2 <- structure(
     depth_m = c(5, 1, 10),
     fetch_km = c(1, 3, 2),
     limitation = c(TRUE, FALSE, TRUE),
-    pa_pred = c(0.984, 0.44, 0),
-    pa = c(1, 1, 0),
-    cover_pred = c(85.2773622236459, 58.8615007837882, 41.9112417990861),
-    cover = c(85.2773622236459, 58.8615007837882, 0),
+    pa_prob = c(0.984, 0.44, 0),
+    pa_pred = c(1, 1, 0),
+    cover_pred = c(85.2773622236459, 58.8615007837882, 0),
     pa_post_hoc = c(1, 0, 0),
     cover_post_hoc = c(85.2773622236459, 0, 0)
   ),
@@ -92,10 +90,9 @@ res3_e <- data.frame(
   limitation_secchi = c(TRUE, FALSE, TRUE),
   vmax = c(28.242038767358, 1.7689, 28.242038767358),
   limitation = c(FALSE, TRUE, TRUE),
-  pa_pred = c(0.887758272418952, 0.887758272418952, 0.750382647568143),
-  pa = c(1, 1, 1),
+  pa_prob = c(0.887758272418952, 0.887758272418952, 0.750382647568143),
+  pa_pred = c(1, 1, 1),
   cover_pred = c(100, 100, 100),
-  cover = c(100, 100, 100),
   pa_post_hoc = c(0, 0, 0),
   cover_post_hoc = c(0, 0, 0)
 )

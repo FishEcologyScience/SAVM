@@ -469,8 +469,8 @@ mod_results_viz_server <- function(id, app_data) {
 
       # Update map layer dropdown
       map_choices <- list()
-      if ("sav_pa_pred" %in% available_cols_viz) {
-        map_choices[["Presence/Absence Predictions"]] <- "sav_pa_pred"
+      if ("pa_prob" %in% available_cols) {
+        map_choices[["Presence/Absence Predictions"]] <- "pa_prob"
       }
       if ("sav_pa_post_hoc" %in% available_cols_viz) {
         map_choices[["Presence/Absence (Post-hoc)"]] <- "sav_pa_post_hoc"
@@ -543,8 +543,8 @@ mod_results_viz_server <- function(id, app_data) {
       )
 
       # Results summary
-      if ("pa_pred" %in% names(results)) {
-        pa_mean <- mean(results$pa_pred, na.rm = TRUE)
+      if ("pa_prob" %in% names(results)) {
+        pa_mean <- mean(results$pa_prob, na.rm = TRUE)
         summary_items[[length(summary_items) + 1]] <- p(
           strong("Mean presence probability:"), paste0(round(pa_mean * 100, 1), "%")
         )
@@ -579,7 +579,7 @@ mod_results_viz_server <- function(id, app_data) {
 
       # Model outputs
       outputs <- c()
-      if ("pa_pred" %in% available_cols) outputs <- c(outputs, "Presence/Absence predictions")
+      if ("pa_prob" %in% available_cols) outputs <- c(outputs, "Presence/Absence predictions")
       if ("cover_pred" %in% available_cols) outputs <- c(outputs, "Cover predictions")
       if ("pa_post_hoc" %in% available_cols) outputs <- c(outputs, "Post-hoc Presence/Absence")
       if ("cover_post_hoc" %in% available_cols) outputs <- c(outputs, "Post-hoc Cover")

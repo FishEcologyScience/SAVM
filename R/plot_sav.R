@@ -9,8 +9,8 @@
 #' A data frame containing some or all of the following columns:
 #'   - `depth_m`: Numeric, depth in meters.
 #'   - `fetch_km`: Numeric, fetch in kilometers.
-#'   - `pa`: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
-#'   - `cover`: Numeric, percent cover of SAV.
+#'   - `pa_pred`: Binary (0 = absent, 1 = present), indicating SAV presence/absence.
+#'   - `cover_pred`: Numeric, percent cover of SAV.
 #' @param type {`character vector`}\cr{}
 #' Character vector specifying the type of plots to generate. Options:
 #'   - `"pa"` (default) for presence/absence plots
@@ -57,17 +57,30 @@
 #' plot_sav_distribution(dat, post_hoc = TRUE)
 #'
 #' @export
-plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("depth", "fetch"), post_hoc = TRUE, max_depth = 30, max_fetch = 15, ...) {
+plot_sav_distribution <- function(
+  dat,
+  type = c("pa", "cover"),
+  predictors = c("depth", "fetch"),
+  post_hoc = TRUE,
+  max_depth = 30,
+  max_fetch = 15,
+  ...
+) {
   plots <- list()
 
   dat <- as.data.frame(dat)
 
   # Check post-hoc
   if ("pa" %in% type && post_hoc && !"pa_post_hoc" %in% names(dat)) {
-    rlang::abort("Requested post-hoc presence/absence predictions, but they are missing from the provided data.")
+    rlang::abort(
+      "Requested post-hoc presence/absence predictions, but they are missing
+      from the provided data."
+    )
   }
   if ("cover" %in% type && post_hoc && !"cover_post_hoc" %in% names(dat)) {
-    rlang::abort("Requested post-hoc cover predictions, but they are missing from the provided data.")
+    rlang::abort(
+      "Requested post-hoc cover predictions, but they are missing from the provided data."
+    )
   }
 
   # Determine which columns to use based on post_hoc flag
@@ -77,19 +90,19 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
   # Check for requested columns, abort if unavailable
   has_depth <- "depth_m" %in% names(dat)
   if (!has_depth && "depth" %in% predictors) {
-    rlang::abort("Requested layer `depth` is unavailable in provided data)")
+    abort_unavailable_column("depth_m")
   }
   has_fetch <- "fetch_km" %in% names(dat)
   if (!has_fetch && "fetch" %in% predictors) {
-    rlang::abort("Requested layer `fetch` is unavailable in provided data)")
+    abort_unavailable_column("fetch_km")
   }
   has_pa <- pa_col %in% names(dat)
   if (!has_pa && "pa" %in% type) {
-    rlang::abort("Requested layer `pa` is unavailable in provided data)")
+    abort_unavailable_column("pa_pred")
   }
   has_cover <- cover_col %in% names(dat)
   if (!has_cover && "cover" %in% type) {
-    rlang::abort("Requested layer `cover` is unavailable in provided data)")
+    abort_unavailable_column("cover_pred")
   }
 
   cover_levels <- c(
@@ -114,7 +127,14 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
           dat$depth_m,
           breaks = c(seq(0, max_depth, by = 1), Inf),
           include.lowest = TRUE, right = FALSE,
-          labels = c(paste0(seq(0, max_depth - 1, by = 1), "-", seq(1, max_depth, by = 1)), paste0(max_depth, "+"))
+          labels = c(
+            paste0(
+              seq(0, max_depth - 1, by = 1),
+              "-",
+              seq(1, max_depth, by = 1)
+            ),
+            paste0(max_depth, "+")
+          )
         )
       } else {
         NULL
@@ -124,7 +144,14 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
           dat$fetch_km,
           breaks = c(seq(0, max_fetch, by = 1), Inf),
           include.lowest = TRUE, right = FALSE,
-          labels = c(paste0(seq(0, max_fetch - 1, by = 1), "-", seq(1, max_fetch, by = 1)), paste0(max_fetch, "+"))
+          labels = c(
+            paste0(
+              seq(0, max_fetch - 1, by = 1),
+              "-",
+              seq(1, max_fetch, by = 1)
+            ),
+            paste0(max_fetch, "+")
+          )
         )
       } else {
         NULL
@@ -256,7 +283,13 @@ plot_sav_distribution <- function(dat, type = c("pa", "cover"), predictors = c("
 #' # Generate plots using post-hoc analyzed data
 #' plot_sav_density(dat, post_hoc = TRUE)
 #' @export
-plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 30, post_hoc = TRUE, ...) {
+plot_sav_density <- function(
+  dat,
+  predictors = c("depth", "fetch"),
+  max_depth = 30,
+  post_hoc = TRUE,
+  ...
+) {
   plots <- list()
   dat <- as.data.frame(dat)
 
@@ -271,11 +304,11 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
   # Check for requested predictors, abort if unavailable
   has_depth <- "depth_m" %in% names(dat)
   if (!has_depth && "depth" %in% predictors) {
-    rlang::abort("Requested layer `depth` is unavailable in provided data)")
+    abort_unavailable_layer("depth_m")
   }
   has_fetch <- "fetch_km" %in% names(dat)
   if (!has_fetch && "fetch" %in% predictors) {
-    rlang::abort("Requested layer `fetch` is unavailable in provided data)")
+    abort_unavailable_layer("fetch_km")
   }
 
   # Convert PA to factor
@@ -353,8 +386,8 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 #'   - `polygon`: An `sf` polygon object representing the area of interest.
 #'   - `points`: An `sf` points object containing SAV-related attributes.
 #' @param layers Character vector specifying the layers to generate. Options:
-#'   - `"pa"` (default) for presence/absence model predictions
-#'   - `"cover"` (default) for cover percentage model predictions
+#'   - `"pa_pred"` (default) for presence/absence model predictions
+#'   - `"cover_pred"` (default) for cover percentage model predictions
 #'   - `"depth"` (default) for depth predictor values
 #'   - `"fetch"` (default) for fetch predictor values
 #' @param post_hoc Logical value indicating whether to use post-hoc analyzed columns (`pa_post_hoc`, `cover_post_hoc`) instead of raw columns (`pa`, `cover`). Default is `FALSE`.
@@ -392,7 +425,7 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 #' plot_sav_tmap(study_zone, interactive = TRUE)
 #'
 #' # Generate a static map
-#' plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+#' plot_sav_tmap(study_zone, layers = "cover_pred", interactive = FALSE)
 #'
 #' # Save map to html file
 #' \dontrun{
@@ -401,11 +434,17 @@ plot_sav_density <- function(dat, predictors = c("depth", "fetch"), max_depth = 
 #'
 #' # Visualize interactive map & save map to static png file
 #' \dontrun{
-#' plot_sav_tmap(study_zone, layers = "pa", export_path = "sav_map.png")
+#' plot_sav_tmap(study_zone, layers = "pa_pred", export_path = "sav_map.png")
 #' }
 #'
 #' @export
-plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"), interactive = TRUE, export_path = NULL, post_hoc = TRUE) {
+plot_sav_tmap <- function(
+  study_zone,
+  layers = c("pa_pred", "cover_pred", "depth", "fetch"),
+  interactive = TRUE,
+  export_path = NULL,
+  post_hoc = TRUE
+) {
   # Set tmap mode
   suppressMessages(tmap::tmap_mode(if (interactive) "view" else "plot"))
 
@@ -418,13 +457,21 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
 
   # Check for requested columns, abort if unavailable
   has_depth <- "depth_m" %in% names(study_zone$points)
-  if (!has_depth && "depth" %in% layers) rlang::abort("Requested layer `depth` is unavailable in provided data)")
+  if (!has_depth && "depth" %in% layers) {
+    abort_unavailable_layer("depth_m")
+  }
   has_fetch <- "fetch_km" %in% names(study_zone$points)
-  if (!has_fetch && "fetch" %in% layers) rlang::abort("Requested layer `fetch` is unavailable in provided data)")
+  if (!has_fetch && "fetch" %in% layers) {
+    abort_unavailable_layer("fetch")
+  }
   has_pa <- pa_col %in% names(study_zone$points)
-  if (!has_pa && "pa" %in% layers) rlang::abort("Requested layer `pa` is unavailable in provided data)")
+  if (!has_pa && "pa_pred" %in% layers) {
+    abort_unavailable_layer("pa_pred")
+  }
   has_cover <- cover_col %in% names(study_zone$points)
-  if (!has_cover && "cover" %in% layers) rlang::abort("Requested layer `cover` is unavailable in provided data)")
+  if (!has_cover && "cover_pred" %in% layers) {
+    abort_unavailable_layer("cover_pred")
+  }
 
 
   # Base map with polygon
@@ -439,7 +486,7 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
 
   suppressMessages({
     # Overlay points with different attributes if they exist
-    if ("cover" %in% layers) {
+    if ("cover_pred" %in% layers) {
       map <- map + tmap::tm_shape(study_zone$points) +
         tmap::tm_dots(
           col = cover_col,
@@ -451,7 +498,7 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
         )
     }
 
-    if ("pa" %in% layers) {
+    if ("pa_pred" %in% layers) {
       if (!is.factor(study_zone$points[[pa_col]])) {
         study_zone$points[[pa_col]] <- factor(
           c("Absent", "Present")[study_zone$points[[pa_col]] + 1]
@@ -508,4 +555,17 @@ plot_sav_tmap <- function(study_zone, layers = c("pa", "cover", "depth", "fetch"
   }
 
   return(map)
+}
+
+
+abort_unavailable_column <- function(colname) {
+  rlang::abort(
+    paste0("Requested column `", colname, "` is unavailable in provided data.")
+  )
+}
+
+abort_unavailable_layer <- function(layer) {
+  rlang::abort(
+    paste0("Requested layer `", layer, "` is unavailable in provided data.")
+  )
 }

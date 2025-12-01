@@ -45,10 +45,9 @@
 #' predictions. Column names are standardized to `depth_m` and `fetch_km`.
 #'
 #' The following prediction columns are always returned:
-#' * `pa_pred`: Raw presence/absence probability predictions (0-1).
-#' * `pa`: Binary presence/absence classification based on `pa_threshold`.
+#' * `pa_prob`: Raw presence/absence probability predictions (0-1).
+#' * `pa_pred`: Binary presence/absence classification based on `pa_threshold`.
 #' * `cover_pred`: Raw cover predictions (percent, 0-100).
-#' * `cover`: Cover predictions adjusted by presence/absence (0 if absent).
 #' * `pa_post_hoc`: Presence/absence after post-hoc treatment (0 if any limitation).
 #' * `cover_post_hoc`: Cover after post-hoc treatment (0 if any limitation).
 #'
@@ -238,19 +237,19 @@ sav_model <- function(
   pa_mod <- sav_load_model("pa", method_pa)
   if (method_pa == "rf") {
     tmp <- stats::predict(pa_mod, d_predict, type = "prob")
-    out$pa_pred <- tmp[, colnames(tmp) == "1"]
+    out$pa_prob <- tmp[, colnames(tmp) == "1"]
   }
   if (method_pa == "gam") {
     # use logit function
-    out$pa_pred <- mgcv::predict.gam(pa_mod, d_predict) |>
+    out$pa_prob <- mgcv::predict.gam(pa_mod, d_predict) |>
       inv_logit()
   }
   if (method_pa == "lmm") {
-    out$pa_pred <- stats::predict(pa_mod, d_predict, re.form = NA)
-    out$pa_pred[out$pa_pred > 1] <- 1
-    out$pa_pred[out$pa_pred < 0] <- 0
+    out$pa_prob <- stats::predict(pa_mod, d_predict, re.form = NA)
+    out$pa_prob[out$pa_prob > 1] <- 1
+    out$pa_prob[out$pa_prob < 0] <- 0
   }
-  out$pa <- (out$pa_pred > pa_threshold) * 1
+  out$pa_pred <- (out$pa_prob > pa_threshold) * 1
 
   # COVER
   cover_mod <- sav_load_model("cover", method_cover)
@@ -259,14 +258,14 @@ sav_model <- function(
   }
   if (method_cover == "lmm") {
     out$cover_pred <- stats::predict(cover_mod, d_predict, re.form = NA)
-    out$cover_pred[out$cover > 100] <- 100
-    out$cover_pred[out$cover < 0] <- 0
+    out$cover_pred[out$cover_pred > 100] <- 100
+    out$cover_pred[out$cover_pred < 0] <- 0
   }
   if (method_cover == "gam") {
     out$cover_pred <- mgcv::predict.gam(cover_mod, d_predict)
     out$cover_pred <- inv_logit(out$cover_pred) * 100
   }
-  out$cover <- out$cover_pred * out$pa
+  out$cover_pred <- out$cover_pred * out$pa_pred
 
   out <- out |>
     rename_if_present("^depth$", "depth_m") |>
@@ -284,8 +283,8 @@ sav_model <- function(
       dplyr::relocate(limitation_secchi, .after = secchi)
   }
 
-  out$pa_post_hoc <- out$pa
-  out$cover_post_hoc <- out$cover
+  out$pa_post_hoc <- out$pa_pred
+  out$cover_post_hoc <- out$cover_pred
   out <- out |>
     scrub_if_present("limitation", "pa_post_hoc") |>
     scrub_if_present("substrate", "pa_post_hoc") |>

@@ -70,10 +70,9 @@ predictions. Column names are standardized to \code{depth_m} and \code{fetch_km}
 
 The following prediction columns are always returned:
 \itemize{
-\item \code{pa_pred}: Raw presence/absence probability predictions (0-1).
-\item \code{pa}: Binary presence/absence classification based on \code{pa_threshold}.
+\item \code{pa_prob}: Raw presence/absence probability predictions (0-1).
+\item \code{pa_pred}: Binary presence/absence classification based on \code{pa_threshold}.
 \item \code{cover_pred}: Raw cover predictions (percent, 0-100).
-\item \code{cover}: Cover predictions adjusted by presence/absence (0 if absent).
 \item \code{pa_post_hoc}: Presence/absence after post-hoc treatment (0 if any limitation).
 \item \code{cover_post_hoc}: Cover after post-hoc treatment (0 if any limitation).
 }

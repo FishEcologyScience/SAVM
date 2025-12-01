@@ -530,8 +530,8 @@ mod_model_apply_server <- function(id, app_data, app_session) {
       summary_items <- list()
       summary_items[[length(summary_items) + 1]] <- p(strong("Points processed:"), nrow(data))
 
-      if ("pa_pred" %in% names(data)) {
-        pa_mean <- mean(data$pa_pred, na.rm = TRUE)
+      if ("pa_prob" %in% names(data)) {
+        pa_mean <- mean(data$pa_prob, na.rm = TRUE)
         summary_items[[length(summary_items) + 1]] <- p(
           strong("Mean presence probability:"),
           paste0(round(pa_mean * 100, 1), "%")
@@ -605,9 +605,13 @@ mod_model_apply_server <- function(id, app_data, app_session) {
       # Create tooltip labels
       pts_data <- sf::st_drop_geometry(pts)
       tooltip_labels <- sprintf(
-        "<strong>Point ID:</strong> %s<br/><strong>Depth:</strong> %.2f m<br/>
-        <strong>Fetch:</strong> %.2f km<br/><strong>PA Pred:</strong> %.3f<br/>
-        <strong>Cover Pred:</strong> %.1f%%",
+        "
+        <strong>Point ID:</strong> %s<br/>
+        <strong>Depth:</strong> %.2f m<br/>
+        <strong>Fetch:</strong> %.2f km<br/>
+        <strong>PA 'pa_pred':</strong> %d<br/>
+        <strong>Cover 'cover_pred':</strong> %.1f%%
+        ",
         pts_data$point_id,
         if ("depth_m" %in% names(pts_data)) pts_data$depth_m else NA,
         if ("fetch_km" %in% names(pts_data)) pts_data$fetch_km else NA,

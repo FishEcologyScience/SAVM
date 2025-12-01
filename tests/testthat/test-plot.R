@@ -50,7 +50,7 @@ test_that("Function runs with post-hoc data", {
 test_that("Function errors when required columns are missing", {
   incomplete_data <- test_data[, !names(test_data) %in% "depth_m"]
   pdf(NULL)
-  expect_error(plot_sav_distribution(incomplete_data), "Requested layer `depth` is unavailable in provided data")
+  expect_error(plot_sav_distribution(incomplete_data), "Requested column `depth_m` is unavailable in provided data")
   dev.off()
 })
 
@@ -236,7 +236,7 @@ test_that("plot_sav_tmap can export file", {
 
 test_that("plots have known output", {
   pdf(NULL)
-  plots <- plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+  plots <- plot_sav_tmap(study_zone, layers = "cover_pred", interactive = FALSE)
   vdiffr::expect_doppelganger("plot_sav_tmap", plots)
   dev.off()
 })

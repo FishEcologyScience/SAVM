@@ -26,7 +26,7 @@ plot_sav_density(
 
 plot_sav_tmap(
   study_zone,
-  layers = c("pa", "cover", "depth", "fetch"),
+  layers = c("pa_pred", "cover_pred", "depth", "fetch"),
   interactive = TRUE,
   export_path = NULL,
   post_hoc = TRUE
@@ -70,8 +70,8 @@ Numeric value specifying the maximum fetch bin (default: 15 km).}
 
 \item{layers}{Character vector specifying the layers to generate. Options:
 \itemize{
-\item \code{"pa"} (default) for presence/absence model predictions
-\item \code{"cover"} (default) for cover percentage model predictions
+\item \code{"pa_pred"} (default) for presence/absence model predictions
+\item \code{"cover_pred"} (default) for cover percentage model predictions
 \item \code{"depth"} (default) for depth predictor values
 \item \code{"fetch"} (default) for fetch predictor values
 }}
@@ -168,7 +168,7 @@ study_zone <- list(polygon = polygon, points = points)
 plot_sav_tmap(study_zone, interactive = TRUE)
 
 # Generate a static map
-plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+plot_sav_tmap(study_zone, layers = "cover_pred", interactive = FALSE)
 
 # Save map to html file
 \dontrun{
@@ -177,7 +177,7 @@ plot_sav_tmap(study_zone, export_path = "sav_map.html")
 
 # Visualize interactive map & save map to static png file
 \dontrun{
-plot_sav_tmap(study_zone, layers = "pa", export_path = "sav_map.png")
+plot_sav_tmap(study_zone, layers = "pa_pred", export_path = "sav_map.png")
 }
 
 }
