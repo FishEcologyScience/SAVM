@@ -261,6 +261,7 @@ mod_results_viz_ui <- function(id) {
                     solidHeader = TRUE,
                     width = NULL,
                     fluidRow(
+                      column(1),
                       column(
                         3,
                         selectInput(
@@ -270,12 +271,21 @@ mod_results_viz_ui <- function(id) {
                           width = "300px"
                         )
                       ),
-                      column(4,
+                      column(3,
                         style = "margin-top: 25px;",
                         downloadButton(
                           ns("download_spatial_2"),
                           "Download Spatial Data (GPKG)",
                           class = "btn-info btn-block",
+                          icon = icon("map")
+                        )
+                      ),
+                      column(3,
+                        style = "margin-top: 25px;",
+                        downloadButton(
+                          ns("download_shapefile_2"),
+                          "Download Spatial Data (Shapefile)",
+                          class = "btn-warning btn-block",
                           icon = icon("map")
                         )
                       )
@@ -322,6 +332,13 @@ mod_results_viz_ui <- function(id) {
                       ns("download_spatial"),
                       "Download Spatial Data (GPKG)",
                       class = "btn-info btn-block",
+                      icon = icon("map")
+                    ),
+                    br(),
+                    downloadButton(
+                      ns("download_shapefile"),
+                      "Download Spatial Data (Shapefile)",
+                      class = "btn-warning btn-block",
                       icon = icon("map")
                     )
                   )
@@ -911,6 +928,68 @@ mod_results_viz_server <- function(id, app_data) {
         # Write as GeoPackage
         sf::st_write(data, file, driver = "GPKG", delete_dsn = TRUE)
       }
+    )
+
+    output$download_shapefile <- downloadHandler(
+      filename = function() {
+        paste0("sav_results_spatial_", Sys.Date(), ".zip")
+      },
+      content = function(file) {
+        req(viz_data())
+
+        data <- viz_data()
+
+        if (!inherits(data, "sf")) {
+          stop("Data is not a spatial object", call. = FALSE)
+        }
+
+        showNotification(
+          "Shapefile export: field names may be abbreviated by the ESRI Shapefile driver.",
+          type = "warning",
+          duration = 6
+        )
+
+        tmp_dir <- tempfile("shp_export_")
+        dir.create(tmp_dir)
+
+        shp_path <- file.path(tmp_dir, "sav_results_spatial.shp")
+        sf::st_write(data, shp_path, driver = "ESRI Shapefile", delete_dsn = TRUE)
+
+        shp_files <- list.files(tmp_dir, pattern = "sav_results_spatial", full.names = TRUE)
+        utils::zip(zipfile = file, files = shp_files, flags = "-j")
+      },
+      contentType = "application/zip"
+    )
+
+    output$download_shapefile_2 <- downloadHandler(
+      filename = function() {
+        paste0("sav_results_spatial_", Sys.Date(), ".zip")
+      },
+      content = function(file) {
+        req(viz_data())
+
+        data <- viz_data()
+
+        if (!inherits(data, "sf")) {
+          stop("Data is not a spatial object", call. = FALSE)
+        }
+
+        showNotification(
+          "Shapefile export: field names may be abbreviated by the ESRI Shapefile driver.",
+          type = "warning",
+          duration = 6
+        )
+
+        tmp_dir <- tempfile("shp_export_")
+        dir.create(tmp_dir)
+
+        shp_path <- file.path(tmp_dir, "sav_results_spatial.shp")
+        sf::st_write(data, shp_path, driver = "ESRI Shapefile", delete_dsn = TRUE)
+
+        shp_files <- list.files(tmp_dir, pattern = "sav_results_spatial", full.names = TRUE)
+        utils::zip(zipfile = file, files = shp_files, flags = "-j")
+      },
+      contentType = "application/zip"
     )
   })
 }
