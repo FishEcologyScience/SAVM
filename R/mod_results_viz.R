@@ -637,6 +637,18 @@ mod_results_viz_server <- function(id, app_data) {
       map <- leaflet::leaflet() |>
         leaflet::addProviderTiles("CartoDB.Positron")
 
+      pts_data <- sf::st_drop_geometry(pts)
+      tooltip_labels <- sprintf(
+        "<strong>Point ID:</strong> %s<br/><strong>Depth:</strong> %.2f m<br/>
+        <strong>Fetch:</strong> %.2f km<br/><strong>PA Pred:</strong> %.3f<br/>
+        <strong>Cover Pred:</strong> %.1f%%",
+        if ("point_id" %in% names(pts_data)) pts_data$point_id else NA,
+        if ("depth_m" %in% names(pts_data)) pts_data$depth_m else NA,
+        if ("fetch_km" %in% names(pts_data)) pts_data$fetch_km else NA,
+        if ("pa_pred" %in% names(pts_data)) pts_data$pa_pred else NA,
+        if ("cover_pred" %in% names(pts_data)) pts_data$cover_pred else NA
+      ) |> lapply(shiny::HTML)
+
       if (!is.null(color_var) && color_var %in% names(pts)) {
         # Create color palette
         pal <- leaflet::colorNumeric(
@@ -662,7 +674,13 @@ mod_results_viz_server <- function(id, app_data) {
             color = ~ pal(get(color_var)),
             fillOpacity = 0.8,
             stroke = TRUE,
-            weight = 1
+            weight = 1,
+            label = tooltip_labels,
+            labelOptions = leaflet::labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "12px",
+              direction = "auto"
+            )
           ) |>
           leaflet::addLegend(
             pal = pal,
@@ -679,7 +697,13 @@ mod_results_viz_server <- function(id, app_data) {
             color = "blue",
             fillOpacity = 0.7,
             stroke = TRUE,
-            weight = 1
+            weight = 1,
+            label = tooltip_labels,
+            labelOptions = leaflet::labelOptions(
+              style = list("font-weight" = "normal", padding = "3px 8px"),
+              textsize = "12px",
+              direction = "auto"
+            )
           )
       }
 
