@@ -146,10 +146,30 @@ mod_model_apply_ui <- function(id) {
             ),
             conditionalPanel(
               condition = sprintf("input['%s'] == true", ns("use_secchi")),
-              selectInput(
-                ns("secchi_column"),
-                "Secchi Depth Column:",
-                choices = NULL
+              radioButtons(
+                ns("secchi_source"),
+                "Secchi input type:",
+                choices = c("Column" = "column", "Constant value" = "constant"),
+                selected = "column"
+              ),
+              conditionalPanel(
+                condition = sprintf("input['%s'] == 'column'", ns("secchi_source")),
+                selectInput(
+                  ns("secchi_column"),
+                  "Secchi Depth Column:",
+                  choices = NULL
+                )
+              ),
+              conditionalPanel(
+                condition = sprintf("input['%s'] == 'constant'", ns("secchi_source")),
+                numericInput(
+                  ns("secchi_constant"),
+                  "Secchi Depth (m):",
+                  value = 2,
+                  min = 0,
+                  max = 50,
+                  step = 0.1
+                )
               ),
               helpText(tags$span(style = "color: #6c757d;", icon("info-circle"), " Chambers and Kalff (1985) equation parameters for maximum colonization depth.")),
               selectInput(
@@ -405,7 +425,15 @@ mod_model_apply_server <- function(id, app_data, app_session) {
 
           # Prepare post-hoc column specifications if enabled
           substrate_col <- if (input$use_substrate) input$substrate_column else NULL
-          secchi_col <- if (input$use_secchi) input$secchi_column else NULL
+          secchi_col <- NULL
+          if (input$use_secchi) {
+            if (input$secchi_source == "constant") {
+              secchi_col <- "secchi_constant"
+              modeling_data[[secchi_col]] <- input$secchi_constant
+            } else {
+              secchi_col <- input$secchi_column
+            }
+          }
           limitation_col <- if (input$use_limitation) input$limitation_column else NULL
           # Apply the model to assembled data
           sav_model(
@@ -453,7 +481,15 @@ mod_model_apply_server <- function(id, app_data, app_session) {
           use_substrate = input$use_substrate,
           substrate_column = if (input$use_substrate) input$substrate_column else "not used",
           use_secchi = input$use_secchi,
-          secchi_column = if (input$use_secchi) input$secchi_column else "not used",
+          secchi_column = if (input$use_secchi) {
+            if (input$secchi_source == "constant") {
+              paste0("constant value: ", input$secchi_constant)
+            } else {
+              input$secchi_column
+            }
+          } else {
+            "not used"
+          },
           use_limitation = input$use_limitation,
           limitation_column = if (input$use_limitation) input$limitation_column else "not used",
           vmax_model = input$vmax_model,
