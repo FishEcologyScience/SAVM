@@ -4,15 +4,19 @@ withr::with_options(
     test_that("read_sav() correctly reads a CSV file", {
       # Create a temporary CSV file
       temp_csv <- tempfile(fileext = ".csv")
-      write.csv(data.frame(
-        longitude = c(-82.5, -83.0, -83.2), # Lake Erie coordinates
-        latitude = c(42.5, 42.8, 42.6),
-        depth_m = c(5, 10, 7),
-        fetch_km = c(2.5, 3.0, 2.8),
-        secchi = c(1.2, 2.3, 1.8),
-        substrate = c(TRUE, FALSE, TRUE),
-        limitation = c(FALSE, FALSE, TRUE)
-      ), temp_csv, row.names = FALSE)
+      write.csv(
+        data.frame(
+          longitude = c(-82.5, -83.0, -83.2), # Lake Erie coordinates
+          latitude = c(42.5, 42.8, 42.6),
+          depth_m = c(5, 10, 7),
+          fetch_km = c(2.5, 3.0, 2.8),
+          secchi = c(1.2, 2.3, 1.8),
+          substrate = c(TRUE, FALSE, TRUE),
+          limitation = c(FALSE, FALSE, TRUE)
+        ),
+        temp_csv,
+        row.names = FALSE
+      )
 
       # Run the function
       result <- read_sav(temp_csv)
@@ -31,7 +35,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326
@@ -95,11 +103,15 @@ withr::with_options(
     test_that("read_sav() correctly exports data when export path is provided", {
       # Create a temporary CSV file
       temp_csv <- tempfile(fileext = ".csv")
-      write.csv(data.frame(
-        longitude = c(-82.5, -83.0, -83.2),
-        latitude = c(42.5, 42.8, 42.6),
-        depth_m = c(5, 10, 7)
-      ), temp_csv, row.names = FALSE)
+      write.csv(
+        data.frame(
+          longitude = c(-82.5, -83.0, -83.2),
+          latitude = c(42.5, 42.8, 42.6),
+          depth_m = c(5, 10, 7)
+        ),
+        temp_csv,
+        row.names = FALSE
+      )
 
       # Temporary export directory
       temp_dir <- tempdir()
@@ -115,11 +127,15 @@ withr::with_options(
     test_that("read_sav() correctly updates longitude and latitude after CRS transformation", {
       # Create a CSV file with EPSG:4326
       temp_csv <- tempfile(fileext = ".csv")
-      write.csv(data.frame(
-        longitude = c(-82.5, -83.0),
-        latitude = c(42.5, 42.8),
-        depth_m = c(5, 10)
-      ), temp_csv, row.names = FALSE)
+      write.csv(
+        data.frame(
+          longitude = c(-82.5, -83.0),
+          latitude = c(42.5, 42.8),
+          depth_m = c(5, 10)
+        ),
+        temp_csv,
+        row.names = FALSE
+      )
 
       # Run function (should transform to EPSG:32617)
       result <- read_sav(temp_csv)
@@ -137,7 +153,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326

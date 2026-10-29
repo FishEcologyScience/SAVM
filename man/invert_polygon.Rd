@@ -11,7 +11,7 @@ invert_polygon(polygon, ratio = 0.5)
 Polygon defining land boundaries that needs to be inverted.}
 
 \item{ratio}{{\code{numeric [0-1]}}\cr{}
-Fraction convex, see \code{\link[sf:geos_unary]{sf::st_concave_hull()}}. This may need to be tweaked
+Fraction convex, see \code{\link[sf:st_concave_hull]{sf::st_concave_hull()}}. This may need to be tweaked
 depending on the form of the polygon to be inverted.}
 }
 \description{
@@ -19,23 +19,23 @@ Invert a Polygon
 }
 \details{
 Utility function that inverts a polygon by drawing a concave hull around
-\code{polygon} (see \code{\link[sf:geos_unary]{sf::st_concave_hull()}}) and then computes the differences
-between the polygon and the concave hull (see \code{\link[sf:geos_unary]{sf::st_concave_hull()}}).
+\code{polygon} (see \code{\link[sf:st_concave_hull]{sf::st_concave_hull()}}) and then computes the difference
+between the polygon and the concave hull (see \code{\link[sf:st_difference]{sf::st_difference()}}).
 }
 \examples{
 \donttest{
 erie_land <- system.file(
- "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
+  "example", "lake_erie_land", "LkErie_Land_fromGLAF_Water_WGS_Feb2020.shx",
   package = "SAVM", mustWork = TRUE
 ) |> sf::st_read()
 
 erie_land |>
-   sf::st_geometry() |>
-   plot(col = 1)
+  sf::st_geometry() |>
+  plot(col = 1)
 
 erie_land |>
-   sf::st_geometry() |>
-   invert_polygon() |>
-   plot(col = 1)
+  sf::st_geometry() |>
+  invert_polygon() |>
+  plot(col = 1)
 }
 }

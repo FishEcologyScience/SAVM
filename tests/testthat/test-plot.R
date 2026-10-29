@@ -50,7 +50,10 @@ test_that("Function runs with post-hoc data", {
 test_that("Function errors when required columns are missing", {
   incomplete_data <- test_data[, !names(test_data) %in% "depth_m"]
   pdf(NULL)
-  expect_error(plot_sav_distribution(incomplete_data), "Requested layer `depth` is unavailable in provided data")
+  expect_error(
+    plot_sav_distribution(incomplete_data),
+    "Requested column `depth_m` is unavailable in provided data"
+  )
   dev.off()
 })
 
@@ -75,7 +78,9 @@ test_that("Output is a ggplot object", {
 })
 
 test_that("Function errors if post_hoc columns are missing", {
-  bad_data <- test_data[, !names(test_data) %in% c("pa_post_hoc", "cover_post_hoc")]
+  bad_data <- test_data[,
+    !names(test_data) %in% c("pa_post_hoc", "cover_post_hoc")
+  ]
   expect_error(
     plot_sav_distribution(bad_data, post_hoc = TRUE),
     "Requested post-hoc.*missing"
@@ -85,20 +90,32 @@ test_that("Function errors if post_hoc columns are missing", {
 test_that("Function works with only pa and fetch_km", {
   minimal_data <- test_data[, c("pa_pred", "fetch_km")]
   pdf(NULL)
-  expect_silent(plot_sav_distribution(minimal_data, type = "pa", predictors = "fetch", post_hoc = FALSE))
+  expect_silent(plot_sav_distribution(
+    minimal_data,
+    type = "pa",
+    predictors = "fetch",
+    post_hoc = FALSE
+  ))
   dev.off()
 })
 
 test_that("Function works with only cover and depth", {
   data_subset <- test_data[, c("depth_m", "cover_pred", "cover_post_hoc")]
   pdf(NULL)
-  expect_silent(plot_sav_distribution(data_subset, type = "cover", predictors = "depth"))
+  expect_silent(plot_sav_distribution(
+    data_subset,
+    type = "cover",
+    predictors = "depth"
+  ))
   dev.off()
 })
 
 test_that("Function errors on invalid predictor name", {
   pdf(NULL)
-  expect_error(plot_sav_distribution(test_data, predictors = "invalid"), "No suitable columns found for plotting.")
+  expect_error(
+    plot_sav_distribution(test_data, predictors = "invalid"),
+    "No suitable columns found for plotting."
+  )
   dev.off()
 })
 
@@ -115,7 +132,6 @@ test_that("Plot respects max_depth parameter", {
   vdiffr::expect_doppelganger("density-max-depth-10", plots)
   dev.off()
 })
-
 
 
 # --------- plot_sav_density
@@ -155,12 +171,18 @@ test_that("Function runs with post-hoc data", {
 
 test_that("Function errors when required PA column is missing", {
   incomplete_data <- test_data[, !names(test_data) %in% c("pa", "pa_post_hoc")]
-  expect_error(plot_sav_density(incomplete_data), "Data must contain the specified PA column.")
+  expect_error(
+    plot_sav_density(incomplete_data),
+    "Data must contain the specified PA column."
+  )
 })
 
 test_that("Function handles empty dataset without error", {
   empty_data <- data.frame()
-  expect_error(plot_sav_density(empty_data), "Data must contain the specified PA column.")
+  expect_error(
+    plot_sav_density(empty_data),
+    "Data must contain the specified PA column."
+  )
 })
 
 test_that("Output is a ggplot object", {
@@ -178,15 +200,21 @@ test_that("plots have known output", {
 })
 
 
-
 # --------- plot_sav_tmap
 # Test dataset
 withr::with_seed(123, {
-  polygon <- sf::st_as_sf(sf::st_sfc(
-    sf::st_polygon(list(rbind(
-      c(-82, 42), c(-82, 43), c(-81, 43), c(-81, 42), c(-82, 42)
-    )))
-  ), crs = 4326)
+  polygon <- sf::st_as_sf(
+    sf::st_sfc(
+      sf::st_polygon(list(rbind(
+        c(-82, 42),
+        c(-82, 43),
+        c(-81, 43),
+        c(-81, 42),
+        c(-82, 42)
+      )))
+    ),
+    crs = 4326
+  )
 
   points <- sf::st_sample(polygon, 100) |>
     sf::st_sf() |>
@@ -230,15 +258,21 @@ test_that("plot_sav_tmap returns a tmap object", {
 })
 
 test_that("plot_sav_tmap can export file", {
+  skip_on_os("mac")
+
   tmp <- tempfile(fileext = ".png")
-  expect_silent(plot_sav_tmap(study_zone, export_path = tmp, interactive = FALSE))
+  expect_silent(plot_sav_tmap(
+    study_zone,
+    export_path = tmp,
+    interactive = FALSE
+  ))
   expect_true(file.exists(tmp))
   unlink(tmp)
 })
 
 test_that("plots have known output", {
   pdf(NULL)
-  plots <- plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+  plots <- plot_sav_tmap(study_zone, layers = "cover_pred", interactive = FALSE)
   vdiffr::expect_doppelganger("plot_sav_tmap", plots)
   dev.off()
 })

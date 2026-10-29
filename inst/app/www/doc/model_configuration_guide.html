@@ -1,0 +1,59 @@
+<p>
+  <strong>Overview:</strong>
+  Apply SAV prediction models using depth and fetch data. Three statistical methods are available:
+</p>
+
+<ul>
+  <li>
+    <strong>Random Forest (RF):</strong>
+    Non-parametric ensemble method, robust to non-linear relationships. Best for complex patterns and when you don't
+    need to interpret individual variable effects.
+  </li>
+  <li>
+    <strong>Linear Mixed Model (LMM):</strong>
+    Parametric approach accounting for hierarchical data structure. Useful when you have grouped data and want to
+    account for random effects.
+  </li>
+  <li>
+    <strong>Generalized Additive Model (GAM):</strong>
+    Flexible semi-parametric method with smooth functions. Good balance between interpretability and flexibility for
+    non-linear relationships.
+  </li>
+</ul>
+
+<hr>
+
+<p>
+  <strong>Model Selection:</strong>
+  You can select different methods for Presence/Absence and Cover predictions. For example, you might use Random Forest
+  for presence/absence and GAM for cover estimation.
+</p>
+
+<p>
+  <strong>PA Threshold:</strong>
+  Adjust the probability threshold (0-1) for converting presence/absence predictions to binary values. Lower values
+  (e.g., 0.3) are more liberal in predicting SAV presence, while higher values (e.g., 0.7) are more conservative.
+</p>
+
+<p>
+  <strong>Predictor Columns:</strong>
+  By default, the model auto-detects columns named 'depth', 'depth_m', 'fetch', or 'fetch_km'. Enable custom column
+  specification if your data uses different column names.
+</p>
+
+<p>
+  <strong>Post-hoc Adjustments:</strong>
+  Optional columns (secchi depth, substrate, limitation) can be used to refine predictions:
+</p>
+<ul>
+  <li><strong>Secchi depth:</strong> Used to calculate maximum colonization depth (Vmax, see below) based on light
+    availability.</li>
+  <li><strong>Substrate:</strong> Binary indicator of substrate limitations that prevent SAV growth.</li>
+  <li><strong>Limitation:</strong> User-supplied limitation data for additional constraints.</li>
+</ul>
+
+<p>
+  <strong>Vmax Parameters:</strong>
+  Chambers and Kalff (1985) equation parameters control how light availability affects maximum colonization depth. Model
+  A uses parameters from Quebec and international lakes, while Model B is calibrated for Quebec lakes only.
+</p>

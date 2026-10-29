@@ -1,0 +1,127 @@
+<h4>SAVM Help</h4>
+
+<h5>Getting Started</h5>
+
+<p>
+    This tool is intended to support researchers, environmental managers, and conservation practitioners who wish to
+    assess potential SAV distribution and cover in their area of interest. The SAVM application applies statistical
+    models to predict the probability of SAV occurrence and potential cover. The application offers three statistical
+    approaches (Random Forest, Generalized Additive Models, and Linear Mixed Models). These models are based on data
+    collected through extensive field surveys of SAV distribution patterns in portions of the Great Lakes (Croft-White
+    et al. 2022). The models use water depth (m) and fetch (with 15 km set as the maximum fetch distance) as primary
+    predictors, recognizing that these environmental factors strongly influence SAV colonization and growth. Post-hoc
+    adjustments for water clarity (Secchi depth), substrate limitations, and user-defined constraints can also be
+    imposed. Development of the original random forest model and potential use cases for this tool are outlined in
+    Croft-White et al. (2022). Models have since been updated with additional field data.
+</p>
+
+<p>
+    Importantly, model development and validation occurred solely in Lake Ontario and Severn Sound, Lake Huron. At this
+    time, <u>application of this tool outside of these areas is not recommended without independent verification of
+        model predictions.</u>
+</p>
+
+<hr>
+
+<h5>Key Features of the Application</h5>
+
+<ul>
+    <li><strong>Multiple Statistical Methods:</strong> Choose between Random Forest, Generalized Additive Models (GAM),
+        or Linear Mixed Models (LMM) for both presence/absence and percent cover predictions. Each model type has
+        benefits and limitations and additional details on these factors as well as details on the accuracy of the
+        updated models will be provided in a future technical report.</li>
+
+    <li><strong>Flexible Column Mapping:</strong> Easily map your data columns to model requirements, with automatic
+        detection of common naming conventions and also example templates.</li>
+
+    <li><strong>Post-hoc Refinements:</strong> Incorporate water clarity (Secchi depth), substrate limitations, and
+        custom constraints to refine predictions. Results from such adjustments are coded with “post_hoc”.</li>
+
+    <li><strong>Interactive Visualization:</strong> Explore predictions on interactive maps with tooltips showing
+        detailed information for each point.</li>
+
+    <li><strong>Integrated Fetch Calculator:</strong> Calculate fetch directly within the application using lake
+        polygons and customizable parameters.</li>
+</ul>
+
+<hr>
+
+<h5>Step Details</h5>
+
+<div class="workflow-step">
+    <span class="step-number">1</span>
+    <strong>Data Input:</strong>  Upload your spatial data (GeoPackage, GeoJSON, or Shapefile) containing location
+    information and environmental variables. Alternately, toggle to “Manual Entry” to select point(s) or areas of
+    interest (polygon).
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">2</span>
+    <strong>Fetch Calculation:</strong> Calculate fetch distances for your study sites using the integrated fetch
+    calculator with customizable parameters (maximum fetch distance (km), number of bearings, and wind weighting). Base
+    water layers for the Great Lakes are available within the app, but users can also supply their own water polygon.
+    Note: processing time will increase with increasing file size, number of points, and number of fetch bearings.
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">3</span>
+    <strong>Depth Extraction:</strong> Extract depth information from user-supplied raster sources (GeoTIFF (.tif),
+    NetCDF (.nc), ESRI Grid (.grd), ASCII (.asc).) or assign fixed depth values for the entire study area.
+</div>
+
+<div class="workflow-step">
+    <span class="step-number">4</span>
+    <strong>Model Application:</strong> Apply SAV prediction models (presence/absence and percent cover) by selecting
+    your preferred statistical method, specifying predictor columns, and configuring post-hoc adjustments.
+</div>
+
+<ul>
+    <div><strong>Post-hoc Adjustments:</strong></div>
+    <li>
+        <strong>Substrate:</strong> If the user has information about potential limitations related to
+        substrate composition at their sites (e.g., &gt;75% sand; Barko and Smart 1986 or &gt;20%
+        organic matter; Capers and Les 2005), a “substrate” column can be added to the input data
+        where 1 = no limitations and 0 = No SAV.
+    </li>
+    <li>
+        <strong>Secchi depth:</strong> When Secchi depth data are available, SAVM calculates the maximum
+        depth of plant colonization (Vmax) using equations presented in Chambers and Kalff (1985).
+        This is used as a post-hoc adjustment of model predictions to account for the effect of light
+        limitations on SAV distribution. The user can provide Secchi depth information in the input
+        table or select an overall Secchi depth value to apply to all data.
+    </li>
+    <li>
+        <strong>User-supplied Limitation:</strong> If the user has information on “other” factors that
+        may limit growth at a site (e.g., substrate toxicity), a “limitation” column can be added to
+        the input data where 1 = no limitations and 0 = No SAV.
+    </li>
+</ul>
+</li>
+
+<div class="workflow-step">
+    <span class="step-number">5</span>
+    <strong>Results & Export:</strong> Review model predictions, visualize results on interactive maps, and export your
+    data for further analysis.
+
+</div>
+
+<hr>
+
+<div class="reference">
+    <strong>References:</strong><br />
+    SAVM Tool: https://github.com/FishEcologyScience/SAVM <br />
+
+    Barko, J., and Smart, M. 1986. Sediment-Related Mechanisms of Growth Limitation in Submersed Macrophytes. Ecology
+    67(5): 1328–1340.<br />
+
+    Capers, R.S., and Les, D.H. 2005. Plant community structure in a freshwater tidal wetland. Rhodora 107(932):
+    386–407. doi:10.3119/02-29.1.<br />
+
+    Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of Submerged aquatic macrophyte communities in
+    relation to secchi depth. Can. J. Fish. Aquat. Sci. 42: 701–709<br />
+
+    Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and Midwood, J.D. 2022. Modelling submerged aquatic
+    vegetation presence and percent cover to support the development of a freshwater fish habitat management tool. Can.
+    Tech. Rep. Fish. Aquat. Sci. 3497: vi + 30 p.
+    https://publications.gc.ca/collections/collection_2022/mpo-dfo/Fs97-6-3497-eng.pdf
+</div>

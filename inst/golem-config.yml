@@ -1,0 +1,13 @@
+default:
+  golem_name: SAVM
+  golem_version: 0.0.2
+  show_welcome_dialog: no
+
+production:
+  app_prod: yes
+  show_welcome_dialog: yes
+
+dev:
+  golem_wd: !expr golem::pkg_path()
+  show_welcome_dialog: no
+

@@ -6,7 +6,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326
@@ -26,7 +30,6 @@ withr::with_options(
       expect_true(sf::st_crs(result$polygon)$epsg == 32617) # default proj
     })
 
-
     test_that("read_sav_aoi() throws an error when provided a non-polygon file", {
       # Create a temporary points file instead of polygon
       temp_pts <- sf::st_sf(
@@ -40,7 +43,10 @@ withr::with_options(
       temp_file <- tempfile(fileext = ".gpkg")
       sf::st_write(temp_pts, temp_file, quiet = TRUE)
 
-      expect_error(read_sav_aoi(temp_file), "does not contain polygon geometries")
+      expect_error(
+        read_sav_aoi(temp_file),
+        "does not contain polygon geometries"
+      )
     })
 
     test_that("read_sav_aoi() handles missing files gracefully", {
@@ -55,7 +61,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326
@@ -76,7 +86,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326
@@ -101,7 +115,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-82.5, 42.5), c(-82.5, 42.8), c(-82.0, 42.8), c(-82.0, 42.5), c(-82.5, 42.5)
+            c(-82.5, 42.5),
+            c(-82.5, 42.8),
+            c(-82.0, 42.8),
+            c(-82.0, 42.5),
+            c(-82.5, 42.5)
           )
         ))),
         crs = 4326

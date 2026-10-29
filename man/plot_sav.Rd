@@ -12,19 +12,21 @@ plot_sav_distribution(
   predictors = c("depth", "fetch"),
   post_hoc = TRUE,
   max_depth = 30,
-  max_fetch = 15
+  max_fetch = 15,
+  ...
 )
 
 plot_sav_density(
   dat,
   predictors = c("depth", "fetch"),
   max_depth = 30,
-  post_hoc = TRUE
+  post_hoc = TRUE,
+  ...
 )
 
 plot_sav_tmap(
   study_zone,
-  layers = c("pa", "cover", "depth", "fetch"),
+  layers = c("pa_pred", "cover_pred", "depth", "fetch"),
   interactive = TRUE,
   export_path = NULL,
   post_hoc = TRUE
@@ -58,6 +60,8 @@ Character vector specifying the type of plots to generate. Options:
 \item{max_fetch}{{\code{numeric}}\cr{}
 Numeric value specifying the maximum fetch bin (default: 15 km).}
 
+\item{...}{Further arguments passed to \code{\link[ggplot2:theme]{ggplot2::theme()}}.}
+
 \item{study_zone}{A list containing spatial objects:
 \itemize{
 \item \code{polygon}: An \code{sf} polygon object representing the area of interest.
@@ -66,8 +70,8 @@ Numeric value specifying the maximum fetch bin (default: 15 km).}
 
 \item{layers}{Character vector specifying the layers to generate. Options:
 \itemize{
-\item \code{"pa"} (default) for presence/absence model predictions
-\item \code{"cover"} (default) for cover percentage model predictions
+\item \code{"pa_pred"} (default) for presence/absence model predictions
+\item \code{"cover_pred"} (default) for cover percentage model predictions
 \item \code{"depth"} (default) for depth predictor values
 \item \code{"fetch"} (default) for fetch predictor values
 }}
@@ -99,12 +103,12 @@ visualizing cover, presence/absence, depth, and fetch values.
 \examples{
 # Example dataset
 dat <- data.frame(
-    depth_m = runif(100, 0, 15),
-    fetch_km = runif(100, 0, 15),
-    pa_pred = sample(0:1, 100, replace = TRUE),
-    cover_pred = runif(100, 0, 100),
-    pa_post_hoc = sample(0:1, 100, replace = TRUE),
-    cover_post_hoc = runif(100, 0, 100)
+  depth_m = runif(100, 0, 15),
+  fetch_km = runif(100, 0, 15),
+  pa_pred = sample(0:1, 100, replace = TRUE),
+  cover_pred = runif(100, 0, 100),
+  pa_post_hoc = sample(0:1, 100, replace = TRUE),
+  cover_post_hoc = runif(100, 0, 100)
 )
 
 # Generate all available plots
@@ -121,10 +125,10 @@ plot_sav_distribution(dat, post_hoc = TRUE)
 
 # Example dataset
 dat <- data.frame(
-    depth_m = runif(100, 0, 15),
-    fetch_km = runif(100, 0, 15),
-    pa_pred = sample(0:1, 100, replace = TRUE),
-    pa_post_hoc = sample(0:1, 100, replace = TRUE)
+  depth_m = runif(100, 0, 15),
+  fetch_km = runif(100, 0, 15),
+  pa_pred = sample(0:1, 100, replace = TRUE),
+  pa_post_hoc = sample(0:1, 100, replace = TRUE)
 )
 
 # Generate all available plots
@@ -139,23 +143,23 @@ plot_sav_density(dat, predictors = "fetch")
 # Generate plots using post-hoc analyzed data
 plot_sav_density(dat, post_hoc = TRUE)
 polygon <- system.file("example", "lake_erie.gpkg", package = "SAVM") |>
-    sf::st_read() |>
-    sf::st_simplify(dTolerance = 1000)
+  sf::st_read() |>
+  sf::st_simplify(dTolerance = 1000)
 
 # Create sample points with attributes
 set.seed(42)
 points <- sf::st_sample(polygon, 100) |>
-    sf::st_sf() |>
-    dplyr::mutate(
-        cover_pred = runif(100, 0, 100),
-        pa_pred = sample(0:1, 100, replace = TRUE) |>
-            factor(levels = c(0, 1), labels = c("Absent", "Present")),
-        depth_m = runif(100, 0, 15),
-        fetch_km = runif(100, 0, 10),
-        cover_post_hoc = runif(100, 0, 100),
-        pa_post_hoc = sample(0:1, 100, replace = TRUE) |>
-            factor(levels = c(0, 1), labels = c("Absent", "Present")),
-    )
+  sf::st_sf() |>
+  dplyr::mutate(
+    cover_pred = runif(100, 0, 100),
+    pa_pred = sample(0:1, 100, replace = TRUE) |>
+      factor(levels = c(0, 1), labels = c("Absent", "Present")),
+    depth_m = runif(100, 0, 15),
+    fetch_km = runif(100, 0, 10),
+    cover_post_hoc = runif(100, 0, 100),
+    pa_post_hoc = sample(0:1, 100, replace = TRUE) |>
+      factor(levels = c(0, 1), labels = c("Absent", "Present")),
+  )
 
 # Combine into study_zone list
 study_zone <- list(polygon = polygon, points = points)
@@ -164,7 +168,7 @@ study_zone <- list(polygon = polygon, points = points)
 plot_sav_tmap(study_zone, interactive = TRUE)
 
 # Generate a static map
-plot_sav_tmap(study_zone, layers = "cover", interactive = FALSE)
+plot_sav_tmap(study_zone, layers = "cover_pred", interactive = FALSE)
 
 # Save map to html file
 \dontrun{
@@ -173,7 +177,7 @@ plot_sav_tmap(study_zone, export_path = "sav_map.html")
 
 # Visualize interactive map & save map to static png file
 \dontrun{
-plot_sav_tmap(study_zone, layers = "pa", export_path = "sav_map.png")
+plot_sav_tmap(study_zone, layers = "pa_pred", export_path = "sav_map.png")
 }
 
 }

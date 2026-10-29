@@ -113,9 +113,21 @@ withr::with_options(
       result <- read_sav_pts(temp_file)
 
       # Expected columns
-      expected_cols <- c("longitude", "latitude", "depth_m", "fetch_km", "secchi", "substrate", "limitation", "geom")
+      expected_cols <- c(
+        "longitude",
+        "latitude",
+        "depth_m",
+        "fetch_km",
+        "secchi",
+        "substrate",
+        "limitation",
+        "geom"
+      )
 
-      expect_setequal(colnames(result), intersect(colnames(result), expected_cols)) # Ensure only expected columns exist
+      expect_setequal(
+        colnames(result),
+        intersect(colnames(result), expected_cols)
+      ) # Ensure only expected columns exist
       expect_false("extra_col" %in% colnames(result)) # Extra column should be removed
     })
 
@@ -124,7 +136,11 @@ withr::with_options(
       temp_poly <- sf::st_sf(
         geometry = sf::st_sfc(sf::st_polygon(list(
           rbind(
-            c(-81, 43), c(-81, 44), c(-80, 44), c(-80, 43), c(-81, 43)
+            c(-81, 43),
+            c(-81, 44),
+            c(-80, 44),
+            c(-80, 43),
+            c(-81, 43)
           )
         ))),
         crs = 4326

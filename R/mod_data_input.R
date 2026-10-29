@@ -1,0 +1,1003 @@
+#' Data Input Module UI Function
+#'
+#' @description A shiny Module for data input and validation
+#'
+#' @param id,input,output,session Internal parameters for {shiny}.
+#'
+#' @noRd
+#'
+mod_data_input_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(
+      # File Upload Section
+      column(
+        4,
+        bs4Dash::tabBox(
+          id = ns("data_input_tabs"),
+          status = "primary",
+          solidHeader = TRUE,
+          width = NULL,
+          tabPanel(
+            title = tagList(icon("upload"), " Upload Data"),
+            value = "upload_data",
+            fluidRow(
+              column(
+                8,
+                h5(strong("Data Input"))
+              ),
+              column(
+                4,
+                div(
+                  style = "text-align: right; padding-top: 5px;",
+                  actionButton(
+                    ns("show_data_input_help"),
+                    label = NULL,
+                    icon = icon("info-circle"),
+                    class = "btn-sm btn-info",
+                    style = "padding: 5px 10px;"
+                  )
+                )
+              )
+            ),
+            h6(strong("Data Type:")),
+            conditionalPanel(
+              condition = sprintf(
+                "input['%s'] == 'csv'",
+                ns("data_source_type")
+              ),
+              template_download_button(
+                ns("download_csv_template"),
+                "Data Template"
+              ),
+            ),
+            conditionalPanel(
+              condition = sprintf(
+                "input['%s'] == 'spatial_points'",
+                ns("data_source_type")
+              ),
+              template_download_button(
+                ns("download_spatial_template"),
+                "Data Template"
+              ),
+            ),
+            selectInput(
+              ns("data_source_type"),
+              NULL,
+              choices = list(
+                "Point Data (CSV)" = "csv",
+                "Point Data (Spatial)" = "spatial_points",
+                "Area of Interest (Polygon)" = "spatial_polygon"
+              ),
+              selected = "csv"
+            ),
+            br(),
+            h6(strong("Choose file:")),
+            shp_help_text(),
+            fileInput(
+              ns("data_file"),
+              NULL,
+              accept = c(
+                ".csv",
+                ".shp",
+                ".geojson",
+                ".gpkg",
+                ".cpg",
+                ".dbf",
+                ".prj",
+                ".sbn",
+                ".sbx",
+                ".xml",
+                ".shx"
+              ),
+              multiple = TRUE
+            ),
+            hr(),
+            # Conditional inputs based on data type
+            conditionalPanel(
+              condition = sprintf(
+                "input['%s'] == 'csv'",
+                ns("data_source_type")
+              ),
+              numericInput(
+                ns("crs_input"),
+                "Input CRS (EPSG):",
+                value = 4326,
+                min = 1,
+                max = 99999
+              )
+            ),
+            conditionalPanel(
+              condition = sprintf(
+                "input['%s'] == 'spatial_polygon'",
+                ns("data_source_type")
+              ),
+              numericInput(
+                ns("grid_spacing"),
+                "Grid Spacing (meters):",
+                value = 500,
+                min = 10,
+                max = 10000,
+                step = 50
+              )
+            ),
+            numericInput(
+              ns("crs_output"),
+              "Output CRS (EPSG):",
+              value = 32617,
+              min = 1,
+              max = 99999
+            ),
+            crs_help_text(),
+            br(),
+            fluidRow(
+              column(2),
+              column(
+                4,
+                actionButton(
+                  ns("process_data"),
+                  "Process Data",
+                  class = "btn-primary btn-block",
+                  icon = icon("upload")
+                )
+              ),
+              column(
+                4,
+                actionButton(
+                  ns("clear_data"),
+                  "Clear Data",
+                  class = "btn-danger btn-block",
+                  icon = icon("eraser")
+                )
+              )
+            )
+          ),
+          tabPanel(
+            title = tagList(icon("hand-pointer"), " Manual Entry"),
+            value = "manual_entry",
+            fluidRow(
+              column(
+                8,
+                h5(strong("Data Input"))
+              ),
+              column(
+                4,
+                div(
+                  style = "text-align: right; padding-top: 5px;",
+                  actionButton(
+                    ns("show_data_input_help2"),
+                    label = NULL,
+                    icon = icon("info-circle"),
+                    class = "btn-sm btn-info",
+                    style = "padding: 5px 10px;"
+                  )
+                )
+              )
+            ),
+            h6(strong("Data Type:")),
+            selectInput(
+              ns("manual_data_type"),
+              NULL,
+              choices = list(
+                "Point Data" = "points",
+                "Area of Interest (Polygon)" = "polygon"
+              ),
+              selected = "points"
+            ),
+            conditionalPanel(
+              condition = sprintf(
+                "input['%s'] == 'polygon'",
+                ns("manual_data_type")
+              ),
+              numericInput(
+                ns("manual_grid_spacing"),
+                "Grid Spacing (meters):",
+                value = 500,
+                min = 10,
+                max = 10000,
+                step = 50
+              )
+            ),
+            numericInput(
+              ns("manual_crs_output"),
+              "Output CRS (EPSG):",
+              value = 32617,
+              min = 1,
+              max = 99999
+            ),
+            crs_help_text(),
+            hr(),
+            h6(strong("Draw or edit features:")),
+            helpText(tags$span(
+              style = "color: #6c757d;",
+              icon("info-circle"),
+              " Use the map tools to add points or polygons. Switch tools using the buttons on the map toolbar."
+            )),
+            uiOutput(ns("manual_editor_container")),
+            br(),
+            uiOutput(ns("manual_draw_summary")),
+            hr(),
+            fluidRow(
+              column(2),
+              column(
+                4,
+                actionButton(
+                  ns("manual_process_data"),
+                  "Process Data",
+                  class = "btn-primary btn-block",
+                  icon = icon("upload")
+                )
+              ),
+              column(
+                4,
+                actionButton(
+                  ns("manual_clear_data"),
+                  "Clear Data",
+                  class = "btn-danger btn-block",
+                  icon = icon("eraser")
+                )
+              )
+            )
+          )
+        )
+      ),
+
+      # Data Preview Section
+      column(
+        8,
+        bs4Dash::box(
+          title = "Data Preview",
+          status = "info",
+          solidHeader = TRUE,
+          width = NULL,
+          conditionalPanel(
+            condition = sprintf("output['%s'] == false", ns("data_processed")),
+            div(
+              style = "text-align: center; padding: 50px;",
+              icon("upload", "fa-3x", style = "color: #ccc;"),
+              h4("No Data Loaded", style = "color: #ccc;"),
+              p(
+                "Upload a file and click 'Process Data' to see preview",
+                style = "color: #999;"
+              )
+            )
+          ),
+          conditionalPanel(
+            condition = sprintf("output['%s'] == true", ns("data_processed")),
+            div(
+              fluidRow(
+                # Data Summary & Column Info
+                column(
+                  6,
+                  h4("Data Summary"),
+                  htmlOutput(ns("data_summary")),
+                  hr(),
+                  h4("Column Information"),
+                  htmlOutput(ns("column_info"))
+                ),
+                # Grid Preview
+                column(
+                  6,
+                  h4("Point Locations"),
+                  # plotOutput(ns("point_plot"), height = "400px")
+                  leaflet::leafletOutput(ns("point_map"), height = "400px")
+                )
+              ),
+              hr(),
+              # Full width - Data Preview (unchanged)
+              h4("Data Preview (first 100 rows)"),
+              DT::DTOutput(ns("data_preview"))
+            )
+          )
+        )
+      )
+    )
+  )
+}
+
+#' Data Input Module Server Function
+#'
+#' @param id Internal parameter for {shiny}.
+#' @param app_data Reactive values object from main app
+#'
+#' @noRd
+#'
+mod_data_input_server <- function(id, app_data, app_session) {
+  moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
+    # Reactive values for module
+    manual_map <- reactiveVal(NULL)
+
+    values <- reactiveValues(
+      processed_data = NULL,
+      validation_results = NULL,
+      manual_features = NULL,
+      manual_map_generation = 0
+    )
+
+    # Data input modals
+    observeEvent(input$show_data_input_help, {
+      showModal(modalDialog(
+        title = tags$div(
+          icon("database"),
+          " Data Input Guide"
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        includeHTML(app_sys("app/www/doc/input_data.html"))
+      ))
+    })
+
+    observeEvent(input$show_data_input_help2, {
+      showModal(modalDialog(
+        title = tags$div(
+          icon("database"),
+          " Data Input Guide"
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        includeHTML(app_sys("app/www/doc/input_data.html"))
+      ))
+    })
+
+    manual_map_ui <- reactive({
+      generation <- values$manual_map_generation
+      module_id <- sprintf("manual_editor_%s", generation)
+
+      draw_points <- isTRUE(input$manual_data_type == "points")
+
+      base_manual_map <- leaflet::leaflet() |>
+        leaflet::setView(lng = -83.5, lat = 45.0, zoom = 6) |>
+        add_basemap() |>
+        leaflet::addScaleBar(position = "bottomleft") |>
+        leafpm::addPmToolbar(
+          toolbarOptions = leafpm::pmToolbarOptions(
+            position = "topleft",
+            drawMarker = draw_points,
+            drawPolygon = !draw_points,
+            drawPolyline = FALSE,
+            drawCircle = FALSE,
+            drawRectangle = !draw_points,
+            editMode = TRUE,
+            removalMode = TRUE
+          )
+        )
+
+      manual_map(callModule(
+        mapedit::editMod,
+        module_id,
+        leafmap = base_manual_map,
+        editor = "leafpm"
+      ))
+
+      mapedit::editModUI(ns(module_id), height = 360)
+    })
+
+    output$manual_editor_container <- renderUI({
+      manual_map_ui()
+    })
+
+    manual_map_data <- reactive({
+      map_fun <- manual_map()
+      req(map_fun)
+      map_fun()
+    })
+
+    reset_manual_editor <- function() {
+      values$manual_features <- NULL
+      manual_map(NULL)
+      values$manual_map_generation <- values$manual_map_generation + 1
+    }
+
+    observeEvent(
+      input$manual_data_type,
+      {
+        reset_manual_editor()
+      },
+      ignoreNULL = FALSE
+    )
+
+    observeEvent(
+      manual_map_data(),
+      {
+        feats <- manual_map_data()
+        if (
+          is.null(feats) || is.null(feats$finished) || nrow(feats$finished) == 0
+        ) {
+          values$manual_features <- NULL
+        } else {
+          values$manual_features <- feats$finished
+        }
+      },
+      ignoreNULL = TRUE
+    )
+
+    output$manual_draw_summary <- renderUI({
+      feats <- values$manual_features
+      if (is.null(feats)) {
+        return(tags$p(class = "text-muted", "No features drawn yet."))
+      }
+
+      geom_types <- paste(
+        unique(as.character(sf::st_geometry_type(feats))),
+        collapse = ", "
+      )
+      tagList(
+        p(strong("Features drawn:"), nrow(feats)),
+        p(strong("Geometry types:"), geom_types)
+      )
+    })
+
+    reset_data_state <- function() {
+      values$processed_data <- NULL
+      values$validation_results(NULL)
+
+      app_data$original_data <- NULL
+      app_data$data_loaded <- FALSE
+      app_data$data_valid <- FALSE
+
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
+    }
+
+    clear_manual_map <- function() {
+      values$manual_features <- NULL
+      reset_manual_editor()
+    }
+
+    prepare_manual_points <- function(features, target_epsg) {
+      target_epsg <- as.integer(target_epsg)
+      pts <- features |>
+        sf::st_make_valid() |>
+        sf::st_zm(drop = TRUE) |>
+        sf::st_cast("POINT") |>
+        sf::st_transform(target_epsg)
+
+      coords <- sf::st_coordinates(pts)
+      pts <- pts |>
+        dplyr::mutate(
+          longitude = coords[, 1],
+          latitude = coords[, 2],
+          id_point = dplyr::row_number()
+        )
+
+      polygon_geom <- sf::st_union(pts) |> sf::st_convex_hull()
+      polygon <- sf::st_sf(geometry = polygon_geom, crs = sf::st_crs(pts))
+
+      structure(
+        list(points = pts, polygon = polygon),
+        class = "sav_data"
+      )
+    }
+
+    prepare_manual_polygon <- function(features, spacing, target_epsg) {
+      target_epsg <- as.integer(target_epsg)
+      poly_geom <- features |>
+        sf::st_make_valid() |>
+        sf::st_zm(drop = TRUE) |>
+        sf::st_union()
+      poly <- sf::st_sf(geometry = poly_geom, crs = sf::st_crs(features)) |>
+        sf::st_transform(target_epsg)
+
+      grid <- sf::st_make_grid(poly, cellsize = spacing, what = "centers")
+      grid <- grid[poly]
+
+      if (length(grid) == 0) {
+        stop(
+          "No grid points were created inside the polygon. Try using a smaller grid spacing or draw a larger polygon.",
+          call. = FALSE
+        )
+      }
+
+      pts <- sf::st_sf(geometry = grid, crs = sf::st_crs(poly))
+      coords <- sf::st_coordinates(pts)
+      pts <- pts |>
+        dplyr::mutate(
+          longitude = coords[, 1],
+          latitude = coords[, 2],
+          id_point = dplyr::row_number()
+        )
+
+      structure(
+        list(points = pts, polygon = poly),
+        class = "sav_data"
+      )
+    }
+
+    observeEvent(input$manual_process_data, {
+      drawn <- values$manual_features
+
+      if (is.null(drawn)) {
+        showNotification(
+          "Draw at least one feature on the map before processing.",
+          type = "error",
+          duration = 4
+        )
+        return()
+      }
+
+      result <- tryCatch(
+        {
+          if (input$manual_data_type == "points") {
+            if (
+              !all(sf::st_geometry_type(drawn) %in% c("POINT", "MULTIPOINT"))
+            ) {
+              stop(
+                "Please draw point features when 'Point Data' is selected.",
+                call. = FALSE
+              )
+            }
+            prepare_manual_points(drawn, input$manual_crs_output)
+          } else {
+            if (
+              !all(
+                sf::st_geometry_type(drawn) %in% c("POLYGON", "MULTIPOLYGON")
+              )
+            ) {
+              stop(
+                "Please draw polygon features when 'Area of Interest' is selected.",
+                call. = FALSE
+              )
+            }
+            prepare_manual_polygon(
+              drawn,
+              input$manual_grid_spacing,
+              input$manual_crs_output
+            )
+          }
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error processing manual data:", e$message),
+            type = "error",
+            duration = 6
+          )
+          return(NULL)
+        }
+      )
+
+      req(result)
+
+      values$processed_data <- result
+      app_data$original_data <- result
+      app_data$data_loaded <- TRUE
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
+
+      showNotification(
+        "Manual data processed successfully!",
+        type = "message",
+        duration = 3
+      )
+    })
+
+    # File processing logic
+    observeEvent(input$process_data, {
+      req(input$data_file)
+
+      showNotification("Processing data...", type = "message", duration = 2)
+
+      # Run the data processing safely
+      result <- tryCatch(
+        {
+          process_input_data(
+            file_path = input$data_file$datapath,
+            data_type = input$data_source_type,
+            grid_spacing = input$grid_spacing,
+            crs_input = input$crs_input,
+            crs_output = input$crs_output
+          )
+        },
+        error = function(e) {
+          # Notify user with a clear message
+          showNotification(
+            paste("Error processing data:", e$message),
+            type = "error",
+            duration = 5
+          )
+          # Return NULL so downstream code stops gracefully
+          return(NULL)
+        }
+      )
+
+      # Stop if the process failed
+      req(!is.null(result))
+      # Store processed data as original data (never modified)
+      values$processed_data <- result
+      app_data$original_data <- result
+      app_data$data_loaded <- TRUE
+      clear_calculation_results(app_data, c("fetch", "depth", "model"))
+
+      showNotification(
+        "Data processed successfully!",
+        type = "message",
+        duration = 3
+      )
+    })
+
+    # Compute validation once, stored in reactiveVal
+    values$validation_results <- reactiveVal(NULL)
+
+    observeEvent(values$processed_data, {
+      req(values$processed_data)
+      points_data <- values$processed_data$points
+
+      required_cols <- c("longitude", "latitude")
+      optional_cols <- c(
+        "depth_m",
+        "fetch_km",
+        "secchi",
+        "substrate",
+        "limitation"
+      )
+
+      val <- list(
+        has_required = all(required_cols %in% names(points_data)),
+        available_optional = intersect(optional_cols, names(points_data)),
+        missing_optional = setdiff(optional_cols, names(points_data)),
+        n_points = nrow(points_data),
+        crs = sf::st_crs(points_data)$input
+      )
+
+      val$is_valid <- val$has_required && val$n_points > 0
+      values$validation_results(val)
+      app_data$data_valid <- val$is_valid
+    })
+
+    # Clear data
+    observeEvent(input$clear_data, {
+      reset_data_state()
+      clear_manual_map()
+      showNotification(
+        "Data cleared successfully.",
+        type = "message",
+        duration = 2
+      )
+    })
+
+    observeEvent(input$manual_clear_data, {
+      reset_data_state()
+      clear_manual_map()
+      showNotification(
+        "Manual data cleared successfully.",
+        type = "message",
+        duration = 2
+      )
+    })
+
+    # Output: Data valid flag
+    output$data_valid <- reactive({
+      vals <- values$validation_results()
+      !is.null(vals) && vals$is_valid
+    })
+    outputOptions(output, "data_valid", suspendWhenHidden = FALSE)
+
+    # Output: Data processed flag
+    output$data_processed <- reactive({
+      !is.null(values$processed_data)
+    })
+    outputOptions(output, "data_processed", suspendWhenHidden = FALSE)
+
+    # Output: Data summary
+    output$data_summary <- renderUI({
+      req(values$processed_data)
+
+      points <- values$processed_data$points
+      polygon <- values$processed_data$polygon
+
+      file_names <- input$data_file$name
+      if (length(file_names) > 1) {
+        file_names <- paste(basename(file_names), collapse = ", ")
+      }
+
+      tagList(
+        p(strong("Points:"), nrow(points), "locations"),
+        p(strong("CRS:"), sf::st_crs(points)$input),
+        p(strong("Bounds:"), "Polygon defined"),
+        p(strong("File(s):"), file_names)
+      )
+    })
+
+    # Output: Column information
+    output$column_info <- renderUI({
+      req(values$validation_results())
+
+      val <- values$validation_results()
+
+      tagList(
+        if (val$has_required) {
+          p(
+            icon("check", style = "color: green;"),
+            strong("Required columns present:"),
+            "longitude, latitude"
+          )
+        } else {
+          p(
+            icon("times", style = "color: red;"),
+            strong("Missing required columns")
+          )
+        },
+        if (length(val$available_optional) > 0) {
+          p(
+            icon("check", style = "color: green;"),
+            strong("Optional columns available:"),
+            paste(val$available_optional, collapse = ", ")
+          )
+        },
+        if (length(val$missing_optional) > 0) {
+          p(
+            icon("info-circle", style = "color: orange;"),
+            strong("Optional columns missing:"),
+            paste(val$missing_optional, collapse = ", ")
+          )
+        }
+      )
+    })
+
+    # Output: Data preview table
+    output$data_preview <- DT::renderDT({
+      req(values$processed_data)
+
+      # Convert sf to regular data frame for preview
+      preview_data <- sf::st_drop_geometry(values$processed_data$points)
+
+      DT::datatable(
+        utils::head(preview_data, 100),
+        options = list(
+          scrollX = TRUE,
+          pageLength = 10,
+          dom = "ftip"
+        ),
+        class = "cell-border stripe"
+      )
+    })
+
+    output$point_map <- leaflet::renderLeaflet({
+      req(values$processed_data)
+      pts <- values$processed_data$points
+      pol <- values$processed_data$polygon |>
+        sf::st_make_valid()
+
+      # Transform if needed
+      if (sf::st_crs(pts)$epsg != 4326) {
+        pts <- sf::st_transform(pts, 4326)
+        pol <- sf::st_transform(pol, 4326)
+      }
+
+      # Base map
+      m <- leaflet::leaflet() |>
+        add_basemap() |>
+        leaflet::addPolygons(
+          data = pol,
+          fillColor = "#a1d99b",
+          fillOpacity = 0.3,
+          color = "#31a354",
+          weight = 2
+        ) |>
+        leaflet::addCircleMarkers(
+          data = pts,
+          radius = 4,
+          color = "#2c7fb8",
+          fillOpacity = 0.7
+        )
+    })
+
+    # Download handlers for CSV and spatial template
+    output$download_csv_template <- downloadHandler(
+      filename = function() {
+        "sav_data_template.csv"
+      },
+      content = function(file) {
+        template_path <- system.file(
+          "extdata",
+          "templates",
+          "file_input_template.csv",
+          package = "SAVM"
+        )
+        file.copy(template_path, file)
+      }
+    )
+
+    output$download_spatial_template <- downloadHandler(
+      filename = function() {
+        "sav_data_template.csv"
+      },
+      content = function(file) {
+        template_path <- system.file(
+          "extdata",
+          "templates",
+          "file_input_template.csv",
+          package = "SAVM"
+        )
+        file.copy(template_path, file)
+      }
+    )
+  })
+}
+
+
+# -----------------------------------------------------------------------------------------
+process_input_data <- function(
+  file_path,
+  data_type = c("csv", "spatial_points", "spatial_polygon"),
+  grid_spacing = 500,
+  crs_input = 4326,
+  crs_output = 32617
+) {
+  data_type <- match.arg(data_type)
+
+  # -------------------------------------------------------------
+  # Handle multi-file shapefile uploads
+  if (length(file_path) > 1) {
+    file_path <- filepath_shp(file_path)
+  }
+
+  # -------------------------------------------------------------
+  # Validate file existence
+  if (!file.exists(file_path)) {
+    stop("File not found: ", file_path, call. = FALSE)
+  }
+
+  # -------------------------------------------------------------
+  # check file extension vs. expected type
+  ext <- tolower(tools::file_ext(file_path))
+
+  csv_exts <- c("csv")
+  spatial_exts <- c("shp", "geojson", "gpkg")
+
+  valid <- switch(
+    data_type,
+    csv = ext %in% csv_exts,
+    spatial_points = ext %in% spatial_exts,
+    spatial_polygon = ext %in% spatial_exts,
+    FALSE
+  )
+
+  if (!valid) {
+    stop(
+      sprintf(
+        "File type mismatch: you selected '%s' but uploaded a '.%s' file.",
+        data_type,
+        ext
+      ),
+      call. = FALSE
+    )
+  }
+
+  # -------------------------------------------------------------
+  # Read and process data (using provided parameters directly)
+  tryCatch(
+    {
+      result <- read_sav(
+        file_path = file_path,
+        spacing = grid_spacing,
+        crs = crs_output,
+        crs_input = crs_input
+      )
+    },
+    error = function(e) {
+      stop("Failed to read or process data: ", e$message, call. = FALSE)
+    }
+  )
+
+  # Add id_point column to points data
+  result$points <- result$points |>
+    dplyr::mutate(id_point = dplyr::row_number())
+
+  # Basic structural validation
+  if (is.null(result$points) || nrow(result$points) == 0) {
+    stop(
+      "No point data produced - check input format or CRS parameters.",
+      call. = FALSE
+    )
+  }
+
+  result
+}
+
+
+filepath_shp <- function(file_path) {
+  shp_idx <- grep("\\.shp$", file_path, ignore.case = TRUE)
+
+  if (length(shp_idx) == 1) {
+    # Define a consistent base name
+    base_dir <- dirname(file_path[shp_idx])
+    new_base <- file.path(base_dir, "uploaded_shapefile")
+
+    # Rename all shapefile components to have the same basename
+    for (f in file_path) {
+      ext <- tools::file_ext(f)
+      file.rename(f, file.path(base_dir, paste0("uploaded_shapefile.", ext)))
+    }
+    print(dir(base_dir))
+    # Use the .shp file for reading
+    file_path <- paste0(new_base, ".shp")
+  } else if (length(shp_idx) == 0) {
+    stop(
+      "Multiple files uploaded, but none have a .shp extension.
+      Include the .shp, .dbf, .shx, and .prj files together.",
+      call. = FALSE
+    )
+  } else {
+    stop(
+      "Multiple .shp files detected - please upload only one shapefile at a time.",
+      call. = FALSE
+    )
+  }
+
+  return(file_path)
+}
+
+
+#' CRS Help Text Helper Function
+#'
+#' @description Helper function to generate CRS help text
+#'
+#' @noRd
+#'
+crs_help_text <- function() {
+  helpText(
+    tags$span(
+      style = "color: #6c757d;",
+      icon("info-circle"),
+      " Coordinate Reference System. ",
+      "Common codes: ",
+      tags$strong("4326"),
+      " (WGS84), ",
+      tags$strong("4269"),
+      " (NAD83), ",
+      tags$strong("32617"),
+      " (UTM Zone 17N - Great Lakes). ",
+      tags$a(
+        "Learn more",
+        href = "https://en.wikipedia.org/wiki/Spatial_reference_system",
+        target = "_blank"
+      ),
+      " or ",
+      tags$a("lookup EPSG codes", href = "https://epsg.io", target = "_blank"),
+      "."
+    )
+  )
+}
+
+
+#' Shapefile Help Text Helper Function
+#'
+#' @description Helper function to generate SHP help text
+#'
+#' @noRd
+#'
+shp_help_text <- function() {
+  helpText(
+    tags$span(
+      style = "color: #6c757d;",
+      icon("info-circle"),
+      " Supported formats: GeoPackage (",
+      em("gpkg"),
+      "), GeoJSON (",
+      em("geojson"),
+      "), ESRI Shapefile (",
+      em("shp, dbf, shx, prj, cpg, sbn, sbx, xml"),
+      "): import all files."
+    )
+  )
+}
+
+#' Template Download Button Helper Function
+#'
+#' @description Helper function to generate template download button
+#'
+#' @noRd
+#'
+template_download_button <- function(id, label) {
+  tags$div(
+    style = "margin-top: 10px; margin-bottom: 10px;",
+    downloadButton(
+      id,
+      label = paste("Download", label),
+      class = "btn-outline-primary btn-sm",
+      icon = icon("download")
+    )
+  )
+}

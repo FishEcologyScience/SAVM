@@ -17,6 +17,6 @@ Preview grid
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{preview_grid(sav_data)}: Preview spatail grid.
+\item \code{preview_grid(sav_data)}: Preview spatial grid.
 
 }}

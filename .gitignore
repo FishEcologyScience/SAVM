@@ -1,7 +1,7 @@
 # Project-specific files
 fetchR
 tmp
-
+inst/extdata/polygons/Great_Lakes_High_Resolution_Shorelines_
 
 # vscode
 .vscode
@@ -48,3 +48,5 @@ vignettes/*.pdf
 inst/doc
 docs
 .DS_Store
+/doc/
+/Meta/

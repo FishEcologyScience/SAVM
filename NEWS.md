@@ -1,4 +1,32 @@
-# SAVM (devel)
+# SAVM 0.1.1
+
+* Notify users when predictor values are all NAs.
+* Drop empty columns from user input data. 
+* Add SAVM version in the top left of the navbar.  
+
+
+# SAVM 0.1.0
+
+* Fix problematic conversion to one-column matrix.
+* Lint code. 
+* CI update + manifest update.
+
+
+# SAVM 0.0.2
+
+* New shiny app that exposes the package capacities.
+* `compute_fetch()` gains argument `land_polygon` to work with land polygons.
+* Bearings are oriented properly and the element `transect_lines` of the object returned by `compute_fetch()` gains a column `cardinal_direction` (see #15).
+* Argument `remove_outsiders` has been removed from `compute_fetch()`, instead
+a column `outsider` which identifies outsiders has been added.  
+* `identify_outsiders()` has been renamed `visualize_outsiders()`.
+* `sav_load_model()` is now exposed and the vignette "SAV Prediction Models" details the model available.
+* Only models using both fetch and depth are supported, therefore argument 
+`type` has been dropped from `sav_model()`.
+* New `glmm` and `gam` models available.
+
+
+# SAVM 0.0.1
 
 * `compute_fetch()` has a new argument `remove_outsider` to remove points falling outside the polygon. Also, `identify_outsiders()` helps visualize outsiders (see #13).
 * Model and plot functions have been adjusted to handle `sf` objects (see #11).

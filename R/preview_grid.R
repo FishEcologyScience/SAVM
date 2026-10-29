@@ -5,14 +5,14 @@
 #' @export
 #'
 preview_grid <- function(x) {
-    UseMethod("preview_grid")
+  UseMethod("preview_grid")
 }
 
-#' @describeIn preview_grid  Preview spatail grid.
+#' @describeIn preview_grid  Preview spatial grid.
 #'
 #' @export
 #'
 preview_grid.sav_data <- function(x) {
-    plot(x$polygon |> sf::st_geometry(), border = 1)
-    plot(x$points |> sf::st_geometry(), col = "grey50", pch = 19, add = TRUE)
+  plot(x$polygon |> sf::st_geometry(), border = 1)
+  plot(x$points |> sf::st_geometry(), col = "grey50", pch = 19, add = TRUE)
 }
