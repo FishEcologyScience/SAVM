@@ -1,0 +1,301 @@
+# SAV Prediction Models
+
+``` r
+
+library(SAVM)
+#> Loading required package: randomForest
+#> randomForest 4.7-1.2
+#> Type rfNews() to see new features/changes/bug fixes.
+library(lme4)
+#> Loading required package: Matrix
+```
+
+## Introduction
+
+The SAVM package includes multiple pre-trained models for predicting
+submerged aquatic vegetation (SAV) presence/absence and percent cover.
+This vignette provides details about the available models and
+demonstrates how to load and use them directly with the
+[`sav_load_model()`](../reference/sav_load_model.md) function.
+
+For most users, the high-level
+[`sav_model()`](../reference/sav_model.md) function (documented in the
+“Get started with SAVM” vignette) will be sufficient. However, advanced
+users may want to access the underlying models directly for custom
+predictions, model inspection, or integration into other workflows.
+
+The current models were last updated on October 10, 2025.
+
+## Available Models
+
+The package includes three types of models, each predicting either
+presence/absence (pa) or percent cover (cover):
+
+1.  **Random Forest (RF)** - Default models with flexible predictor
+    selection
+2.  **Generalized Additive Models (GAM)** - Captures non-linear
+    relationships
+3.  **Linear Mixed Models (LMM)** - Accounts for hierarchical structure
+
+### Model Specifications
+
+#### Random Forest Models
+
+**Cover Model (rf_cover)**
+
+- Type: Regression
+- Trees: 250
+- Variables tried at each split: 1
+- Training size: 435 observations
+- Variance explained: ~41.4% (OOB estimate)
+- Response: Percent cover (0-100)
+
+**Presence/Absence Model (rf_pa)**
+
+- Type: Classification
+- Predictors: Depth (m) and Fetch (km)
+- Response: Binary (0 = absent, 1 = present)
+
+#### Generalized Additive Models (GAMs)
+
+GAMs use smooth terms to capture non-linear relationships. These models
+require both depth and fetch.
+
+**Cover Model (gam_cover)**
+
+- Family: Gaussian with identity link
+- Formula: `Cover ~ s(Depth) + s(Fetch)`
+- Smooths: Thin plate regression splines
+- Training size: 36,193 observations
+- Deviance explained: ~17.5%
+
+**Presence/Absence Model (gam_pa)**
+
+- Family: Binomial with logit link
+- Formula: `Presence ~ s(Depth) + s(Fetch)`
+- Smooths: Thin plate regression splines
+- Output: Probability of presence
+
+#### Linear Mixed Models (LMMs)
+
+LMMs incorporate random effects for Project and Year, accounting for
+hierarchical structure in the data. These models require both depth and
+fetch.
+
+**Cover Model (lmm_cover)**
+
+- Formula:
+  `Cover ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
+- Fixed effects: Linear and quadratic terms for Depth and Fetch, plus
+  interaction
+- Random effects: Random intercepts for Project (6 levels) and Year (5
+  levels)
+- Training size: 36,193 observations
+- Residual SD: ~28.4
+
+**Presence/Absence Model (lmm_pa)**
+
+- Family: Binomial with logit link
+- Formula:
+  `Presence ~ Depth * Fetch + I(Depth^2) + I(Fetch^2) + (1 | Project) + (1 | Year)`
+- Random effects: Random intercepts for Project and Year
+
+## Using sav_load_model()
+
+The [`sav_load_model()`](../reference/sav_load_model.md) function
+provides direct access to the pre-trained models. This is useful for:
+
+- Inspecting model structure and parameters
+- Making custom predictions
+- Comparing different modeling approaches
+- Integrating models into custom workflows
+
+### Function Syntax
+
+``` r
+
+sav_load_model(type = c("cover", "pa"), method = "rf")
+```
+
+**Parameters:**
+
+- `type`: Model output type - `"cover"` for percent cover or `"pa"` for
+  presence/absence
+- `method`: Modeling approach - `"rf"` (default), `"gam"`, or `"lmm"`
+
+**Note:** GAM and LMM methods only support both depth and fetch as
+predictors.
+
+### Examples
+
+#### Loading Random Forest Models
+
+``` r
+
+# Load presence/absence model
+model_pa <- sav_load_model("pa", "rf")
+class(model_pa)
+#> [1] "randomForest.formula" "randomForest"
+
+# Load cover model
+model_cover <- sav_load_model("cover", "rf")
+model_cover
+#> 
+#> Call:
+#>  randomForest(formula = Perc.Cover ~ Depth + Fetch, data = GL.SAV.Training,      replace = FALSE, do.trace = 100, ntree = 250, importance = TRUE,      na.action = na.omit) 
+#>                Type of random forest: regression
+#>                      Number of trees: 250
+#> No. of variables tried at each split: 1
+#> 
+#>           Mean of squared residuals: 283.5598
+#>                     % Var explained: 60.11
+```
+
+#### Making Predictions with Random Forest
+
+``` r
+
+# Create sample data
+new_data <- data.frame(
+  Depth = c(2.5, 5.0, 8.0),
+  Fetch = c(1.0, 2.5, 5.0)
+)
+
+# Predict presence/absence (returns 0 or 1)
+predict(model_pa, new_data)
+#> 1 2 3 
+#> 1 1 0 
+#> Levels: 0 1
+
+# Predict cover (returns percent cover)
+predict(model_cover, new_data)
+#>        1        2        3 
+#> 92.65790 77.99482 35.37530
+```
+
+#### Loading and Using GAM Models
+
+``` r
+
+# Load GAM for cover prediction
+model_gam_cover <- sav_load_model("cover", "gam")
+
+# Make predictions
+predictions_gam <- predict(model_gam_cover, new_data)
+
+# For presence/absence GAM, use type = "response" for probabilities
+model_gam_pa <- sav_load_model("pa", "gam")
+prob_presence <- predict(model_gam_pa, new_data, type = "response")
+```
+
+#### Loading and Using LMM Models
+
+``` r
+
+# Load LMM for cover prediction
+model_lmm_cover <- sav_load_model("cover", "lmm")
+
+# LMMs require Project and Year for predictions
+# For new predictions without these variables, use re.form = NA to ignore random effects
+predictions_lmm <- predict(
+  model_lmm_cover,
+  new_data,
+  re.form = NA
+)
+```
+
+### Model Inspection
+
+You can inspect model objects to understand their structure:
+
+``` r
+
+# Random Forest: variable importance
+importance(model_cover)
+#>        %IncMSE IncNodePurity
+#> Depth 68.19135      79186.67
+#> Fetch 70.02532      72244.53
+
+# Random Forest: number of trees
+model_cover$ntree
+#> [1] 250
+
+# Random Forest: OOB error
+tail(model_cover$mse, 1) # For regression
+#> [1] 283.5598
+```
+
+``` r
+
+# GAM: summary statistics
+summary(model_gam_cover)
+
+# GAM: plot smooth terms
+plot(model_gam_cover, pages = 1)
+
+# LMM: fixed effects
+lme4::fixef(model_lmm_cover)
+
+# LMM: random effects
+lme4::ranef(model_lmm_cover)
+```
+
+## Choosing a Model
+
+**Use Random Forest (default) when:**
+
+- You need predictions with limited predictor availability (depth only
+  or fetch only)
+- You want robust predictions with minimal assumptions
+- You prefer the default [`sav_model()`](../reference/sav_model.md)
+  workflow
+
+**Use GAM when:**
+
+- You want to visualize and interpret non-linear relationships
+- You have both depth and fetch available
+- You need smooth response curves
+
+**Use LMM when:**
+
+- Your data has hierarchical structure (multiple projects/years)
+- You want to account for random effects
+- You need to make inferences about fixed effects
+
+For most applications, the Random Forest models provide a good balance
+of accuracy, flexibility, and ease of use.
+
+## Integration with sav_model()
+
+The [`sav_model()`](../reference/sav_model.md) function automatically
+selects the appropriate Random Forest model based on available
+predictors. Under the hood, it calls
+[`sav_load_model()`](../reference/sav_load_model.md):
+
+``` r
+
+# These are equivalent:
+result1 <- sav_model(data.frame(depth_m = 5, fetch_km = 2))
+
+# Manual approach:
+model <- sav_load_model("cover", "rf")
+result2 <- predict(model, data.frame(Depth = 5, Fetch = 2))
+```
+
+The advantage of [`sav_model()`](../reference/sav_model.md) is that it
+handles column name matching, post-hoc treatments, and returns a
+properly formatted data frame. Use
+[`sav_load_model()`](../reference/sav_load_model.md) when you need
+direct model access for custom workflows.
+
+## References
+
+- Croft-White, M.V., Tang, R., Gardner Costa, J., Doka, S.E., and
+  Midwood, J. D. 2022. Modelling submerged aquatic vegetation presence
+  and percent cover to support the development of a freshwater fish
+  habitat management tool. Can. Tech. Rep. Fish. Aquat. Sci. 3497: vi +
+  30 p.
+
+- Chambers, P.A., and Kalff, J. 1985. Depth Distribution and Biomass of
+  Submerged aquatic macrophyte communities in relation to secchi depth.
+  Can. J. Fish. Aquat. Sci. 42: 701–709
